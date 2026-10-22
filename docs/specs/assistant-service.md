@@ -246,6 +246,7 @@ thread and `OutOfMemoryError` keep Android's handler.
 | MCP port busy | `PhoneMcp` gives up; ZeroClaw is not started; the owner is told |
 | Gateway not ZeroClaw's or not healthy in ~60 s | logged; the process destroyed; tried again with the growing pause; told at the third failure |
 | Daemon dies later | `supervise` sees the exit, stops returning the token, starts it again |
+| Daemon alive but its gateway hung | the `zeroclaw-watch` thread checks `/health` every 60 s (`WATCH_MS`, 5 s timeout `HEALTH_MS`); two misses in a row: logged, recorded in Activity ("assistant engine → restarted"), the process killed with SIGKILL (`stopStale`), and `supervise` starts it again. Not checked while paused |
 | No pairing code / pairing throws | caught in `supervise`; tried again |
 | 401 on chat | `pairingTaken` (owner told once), then `pair(refused = token)` once per refused token |
 | App process killed | Android kills the daemon with it; `stopStale` kills one that outlived it; `START_STICKY` restarts the service |
