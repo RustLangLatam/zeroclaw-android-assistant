@@ -26,16 +26,17 @@ window, and a stranger's email would reach an agent.
 
 ## Decision
 
-Option 1. `[channels.email.gmail]` is enabled with `observer_mode = true` (no flag ever changed), no
-peer group (its allowlist is empty, so no sender is let in) and bound to no agent (so it is not even
-started); it exists so ZeroClaw registers `email_search` and `email_read`, which `allowed_tools`
-gives to the owner's agent alone. Acting is the app's: `email_mark_read`, `email_archive`
-(`ITEMS_MANAGE`), `email_delete` (`ITEMS_DELETE`, asks) and `send_email` (`MESSAGE_SEND`, asks or
-the undo window), over IMAP and SMTP with the same account. Sign-in is a Google app password
-(2-Step Verification), entered by the owner in the app, sealed on the phone (Vault) and written into
-ZeroClaw's config; never seen by the model. Option 2 bypasses the policy; option 3 needs a Google
-Cloud project, a 7-day sign-in in testing mode and Google's verification to go further, and leaves
-ZeroClaw out.
+Option 1. `[channels.email.<alias>]` (`EmailAccounts.config`) is enabled with `observer_mode = true`
+(no flag ever changed), with no peer group or allowlist (no sender is let in) and bound to no agent
+(so it is not even started); it exists so ZeroClaw registers `email_search` and `email_read`, which
+`allowed_tools` gives to the owner's agent alone. Acting is the app's: `email_mark_read`,
+`email_archive` (`ITEMS_MANAGE`), `email_delete` (`ITEMS_DELETE`, asks) and `send_email`
+(`MESSAGE_SEND`, asks or the undo window), over IMAP and SMTP with the same account. Sign-in is a
+Google app password (2-Step Verification), entered by the owner in the app, sealed on the phone
+(Vault) and written into ZeroClaw's config; never seen by the model. Option 2 bypasses the policy;
+option 3 needs a Google Cloud project, a 7-day sign-in in testing mode and Google's verification to
+go further, and leaves ZeroClaw out. Accounts are connected in the Connectors screen
+(`Connectors.kt`).
 
 ## Consequences
 

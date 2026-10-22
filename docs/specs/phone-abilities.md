@@ -6,7 +6,7 @@
 | Code | `app/.../PhoneMcp.kt` (handlers `create_alarm`, `cancel_alarm`, `next_alarm`, `send_message`, `list_messages`, `act_on`, `search_contacts`, `add_contact`, `edit_contact`, `delete_contact`, `list_events`, `free_time`, `add_event`, `move_event`, `delete_event`, `list_apps`, `open_app`, `play_media`, `media_control`, `device_setting`, `device_status`, `weather`, `find_photos`, `find_files`; helpers `deliver`, `searchContacts`, `addContact`, `editContact`, `listEvents`, `busyOn`, `addEvent`, `createAlarm`, `ownAlarms`, `nextAlarm`, `events`), `app/.../Apps.kt`, `PhoneApps.kt`, `Device.kt`, `PhoneDevice.kt`, `Agenda.kt`, `Photos.kt`, `PhoneGallery.kt`, `Files.kt`, `PhoneFiles.kt`, `MessageListener.kt` (`press`, `buttonsOf`, `replyTo`), `Policy.kt` (`Capability`, `DEFAULT_RULES`), `AndroidManifest.xml` (permissions, `<queries>`) |
 | Tests | `app/src/test/.../AppsTest.kt`, `DeviceTest.kt`, `AgendaTest.kt`, `PhotosTest.kt`, `FilesTest.kt`, `PolicyTest.kt` (decisions per capability), `PhoneMcpTest.kt`; `scripts/e2e.sh` checks that a third party's message asking for `create_alarm`, `send_message` and `list_events` reaches no owner tool |
 | Decisions | [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md), [ADR-0011](../adr/0011-notification-channel-for-messages.md) |
-| Last checked against code | 2026-10-22, commit `37f416d` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -64,6 +64,19 @@ Runtime permissions are requested together in the setup's permissions step
 write, microphone, images). Usage access, all-files access, overlay and notification access are
 optional items there that open their system screens.
 
+## Configuration
+
+| What | Where | Default |
+|---|---|---|
+| Autonomy per capability | `Policy.DEFAULT_RULES` (table above); the owner changes a rule in "What I can do" or by voice `set_rule` (credential) within its risk ceiling ([policy-engine.md](policy-engine.md)) | as in the table |
+| Family and work groups (`send_message` ceiling, third-party `availability`) | Settings › People; by voice `set_contact_group` (credential) | empty |
+| Undo window | Settings; by voice `set_preference undo_seconds` | 30 s |
+| Argument words (kinds, media actions, settings, levels, photo labels, stop words, delete words) | `assets/lexicon.json`: `apps.*`, `device.*`, `photos.labels`, `files.stop`, `items.delete` (ADR-0029) | — |
+| Runtime permissions | setup step "Phone permissions" (`open_section phone_permissions`), Home's *Fix it* moment, Settings › Phone permissions | — |
+| Special permissions | usage access (`PACKAGE_USAGE_STATS`), all-files access (`MANAGE_EXTERNAL_STORAGE`), `WRITE_SETTINGS`, do-not-disturb access: opened on demand by the tool or from the setup | off |
+| `local.properties` | none for this set: the weather needs no key; video search is under [news.md](news.md) | — |
+| Offline agent | `Offline.TOOLS` (constant): `remind`, `list_reminders`, `create_alarm`, `next_alarm`, `list_events`, `open_app` | — |
+
 ## State and data
 
 | What | Where | Survives |
@@ -106,7 +119,8 @@ Everything else is read from Android on each call.
 - DND and ringer changes always notify the owner (`Guard.onNotify`), whoever asked.
 - `device_status`: brightness (and automatic), media and ring volume, DND, airplane, Bluetooth, Wi-Fi.
 - `weather`: the reading the Home weather widget holds (`PhoneWidgets.weather`): now, min/max, a
-  forecast word and the highest rain chance over 12 hours; or `unknown` when location is off.
+  forecast word, the highest rain chance over 12 hours and day or night; `The weather is unknown: the
+  phone's location is off.` when location is off, `The weather is not known yet.` before the first fetch.
 
 **Calendar** (`Agenda`, `PhoneMcp`). `PhoneMcp.events(context, from, to)` reads
 `CalendarContract.Instances` of every calendar (recurrences expanded), keeps what overlaps and sorts
@@ -130,7 +144,8 @@ by start; `null` without `READ_CALENDAR`.
 `name: number` lines. `add_contact`: a local (account-less) raw contact with a mobile number; the
 number needs at least 6 digits. `edit_contact`: the exact display name (case-insensitive); new name
 and/or number (a phone row is inserted if none exists). `delete_contact`: by exact name, after
-approval.
+approval. The three writing tools check `WRITE_CONTACTS` before the policy and answer `Not …: there
+is no permission to write contacts` (pointing to Home's *Fix it* button) without it.
 
 **Alarms.** `create_alarm`: hour 0–23 and minute 0–59 checked; `AlarmClock.ACTION_SET_ALARM` with
 `EXTRA_SKIP_UI` and an optional label; the time is added to the `alarms` set. `next_alarm`: Android's
@@ -161,7 +176,9 @@ that is not the next one cannot be verified and the answer says so.
   Downloads, WhatsApp, Telegram, Documents), every `Mailbox` email (subject and body) and every `Inbox`
   message. `Files.rank`: score > 0, most terms, then newest.
 - All hits go to `Ui.showFiles` (Files screen: a tap opens the file); the agent gets the best 10, plus
-  a note when all-files access is missing.
+  a note when all-files access is missing. Because the hits carry email and message text, `find_files`
+  is in `PhoneMcp.OTHERS_WORDS`: the turn counts as having read third-party content
+  (`Guard.heardOthers`).
 
 **Messages** ([notification-channel.md](notification-channel.md)).
 - `send_message` resolves `to` with `contactName` (a number becomes the contact's name), decides on
@@ -212,6 +229,8 @@ that is not the next one cannot be verified and the answer says so.
 
 ## Open issues
 
-- Contact targets are display names ([ADR-0019](../adr/0019-contacts-by-stable-identity.md), proposed).
+- `send_message` resolves `to` by contact name (`contactName`), so two contacts with the same name are
+  ambiguous; incoming senders are resolved by stable identity instead
+  ([ADR-0019](../adr/0019-contacts-by-stable-identity.md), `Identity.kt`).
 - `device_setting` and `create_alarm` started from the background may be dropped silently by Android;
   the agent can only report the request.

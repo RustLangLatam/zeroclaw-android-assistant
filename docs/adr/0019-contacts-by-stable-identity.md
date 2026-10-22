@@ -18,9 +18,10 @@ Resolve the sender to a saved contact through the notification's person (URI or 
 matches the address, never the display name.
 
 As built: `Identity.clue` reads the person's `tel:`, `mailto:` or contacts URI, WhatsApp's
-`<number>@s.whatsapp.net` key, or a number written as the name; `saved` looks it up in the owner's
-contacts; any other sender is shown as "<name> (unverified)". Email importance is taken from the
-address's contact. Checked end to end: a stranger using the name "Ana" with no number gets no reply.
+`<number>@s.whatsapp.net` key, or a number written as the name; `saved` (`MessageListener.kt`) looks
+it up in the owner's contacts (`PhoneLookup`, email lookup, or the contact URI); `Identity.named`
+shows any other sender as "<name> (unverified)". Email importance is taken from the address's
+contact. Checked end to end: a stranger using the name "Ana" with no number gets no reply.
 
 ## Consequences
 

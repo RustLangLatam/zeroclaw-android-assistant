@@ -14,9 +14,11 @@ the owner's tools.
 
 ## Decision
 
-Each endpoint has its own Bearer key: 32 random bytes, kept in encrypted preferences, written into
-ZeroClaw's MCP server entries, compared in constant time. Only ZeroClaw, with that endpoint's key,
-is answered.
+Each endpoint has its own Bearer key: 32 random bytes (`Loopback.newKey`), written into ZeroClaw's
+MCP server entries in `config.toml`, compared in constant time (`MessageDigest.isEqual`). Only
+ZeroClaw, with that endpoint's key, is answered. As first built the keys were kept in encrypted
+preferences; since [ADR-0020](0020-fail-closed-daemon-start.md) they are generated per process
+(`AssistantService.mcpSecret`) and never stored.
 
 ## Consequences
 

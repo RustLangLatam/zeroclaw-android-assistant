@@ -16,7 +16,7 @@ plaintext, read as is and sealed on its next write. A copy on another device can
 |---|---|---|
 | `files/policy.json` | `Guard.save` on one IO thread (write to `.tmp`, then rename) | rules, kill switch, undo seconds, daily-limit counters, messaging apps read, group chats on/off, owner's name, contacts → groups (family, work), voice and voice ceiling, floating mark, palette, form of address, warmth, language, email reading, open mic, offline opt-in, Home widgets, app mode |
 | `files/activity.jsonl` | `Guard`, one line appended per entry, trimmed to the last entries | the activity log: time, principal, action, outcome, reason; actions still in the undo window when the app stopped are logged once as lost |
-| `files/email_accounts` | `EmailAccounts` | connected IMAP/SMTP accounts: alias, provider, servers, address, app password, whether also seen on the phone |
+| `files/email_accounts` | `EmailAccounts` | connected IMAP/SMTP accounts: alias, provider, servers, address, app password, whether also seen on the phone (an earlier `files/gmail` is migrated and deleted) |
 | `files/mail.json` | `Mailbox` (`.tmp` + rename) | the last 100 emails read from notifications, which were opened, the next id, the last 1000 seen keys |
 | `files/introduced.txt` | `Inbox` | conversations that already received the introduction |
 | `files/digest.json` | `Inbox`, one writer thread | the last 200 incoming messages (id, time, sender, text, `Inbox.Status`, app, conversation) and the last one read; shown in Activity and the messages widget |
@@ -29,7 +29,7 @@ plaintext, read as is and sealed on its next write. A copy on another device can
 | `files/topics.json` | `PhoneNews` (`.tmp` + rename) | followed topics, their time or interval, the last 60 headline links already reported |
 | `files/briefings.json` | `PhoneNews` (`.tmp` + rename) | the last 30 briefings: text and headlines |
 | `files/photo-index.json` | `PhoneGallery` | per photo id: on-device image labels and face count (computed on the phone with bundled models) |
-| `cache/voice/` | `CloudVoice` | cloud voice audio for lines up to 160 characters, sealed, keyed by text, voice and style |
+| `cache/voice/` | `CloudVoice` | cloud voice audio for lines up to 160 characters, sealed, keyed by text, voice and style; the last 300 files kept |
 
 Other app state:
 
@@ -37,6 +37,12 @@ Other app state:
 |---|---|---|
 | `shared_prefs/gateway.xml` | `AssistantService.prefs` | `EncryptedSharedPreferences` (keys AES-256-SIV, values AES-256-GCM, master key in the Keystore): the gateway **token**, the owner's chat **session id**, the offline agent's session id, the config version mark |
 | `shared_prefs/absence.xml` | `CatchUp` | plain: last heartbeat, offline since, the last catch-up text and when |
+| `shared_prefs/offline.xml` | `Offline` | plain: the running download's id, whether the downloaded model passed its SHA-256 check, answers given and seconds spent offline |
+| `shared_prefs/cloud-voice.xml` | `CloudVoice` | plain: the month and the seconds of natural voice spoken in it |
+| `shared_prefs/voices.xml` | `Voice` | plain: the measured pitch of each platform voice probed |
+| `shared_prefs/weather.xml` | `PhoneWidgets` | plain: the last weather fetched and when |
+| `shared_prefs/alarms.xml` | `PhoneMcp` | plain: the alarms the app set in the clock app |
+| `shared_prefs/empathy.xml`, `shared_prefs/greeting.xml` | `Empathy`, `MainActivity` | plain: when the weekly reflection and the last greeting ran |
 | `cache/zeroclaw.log`, `cache/zeroclaw.previous.log` | the daemon's stdout and stderr | ZeroClaw's log for this run and the previous one |
 | `cache/llama.log` | `llama-server` | the local engine's log |
 | `cache/slots/` | `llama-server` | the saved prompt-cache slot (a few hundred MB), restored on the next engine start |

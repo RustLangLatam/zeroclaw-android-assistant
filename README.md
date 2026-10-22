@@ -407,21 +407,39 @@ repository's GitHub issues.
 
 ## Build and run
 
-Requirements: JDK 21, the Android SDK (platform 35, build-tools 35), NDK 29.0.14206865, and `patchelf` on the `PATH`.
-Model, search, voice, offline model and signing settings go in `local.properties` (never committed); the full sample
-is in [AGENTS.md](AGENTS.md#build-run-test), the contribution workflow in [CONTRIBUTING.md](CONTRIBUTING.md).
+Requirements: JDK 21, the Android SDK (platform 35, build-tools 35.0.0), NDK 29.0.14206865, and `patchelf` in
+`/usr/bin`, `/usr/local/bin` or `~/.local/bin`. The first build downloads the ZeroClaw v0.8.5 and llama.cpp b11381
+Android binaries from their GitHub releases and verifies their SHA-256.
+
+The minimum `local.properties` (never committed) is the SDK path and the model:
+
+```properties
+sdk.dir=/path/to/Android/Sdk
+zeroclaw.provider=...
+zeroclaw.model=...
+zeroclaw.apiKey=...
+```
+
+Everything else (model price, web search, YouTube key, natural voice, offline model, release signing) is optional and
+listed with its `BuildConfig` field and the code that reads it in
+[docs/architecture/configuration.md](docs/architecture/configuration.md), together with the emulator and device notes.
 
 ```sh
-./gradlew testDebugUnitTest          # JVM unit tests
-./gradlew assembleDebug              # fetches and verifies the ZeroClaw v0.8.5 binary on first build
+./gradlew testDebugUnitTest          # JVM unit tests, no device needed
+./gradlew assembleDebug              # fetches and verifies the native binaries on first build
 adb install -r -g app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n org.rustlanglatam.zeroclaw.android/.MainActivity
-scripts/e2e.sh                       # end-to-end checks on the emulator, with the fakechat module
+scripts/e2e.sh                       # end-to-end checks, emulator only, with the fakechat module
 scripts/screenshots.sh en            # regenerates docs/images from the emulator
 ```
 
-**On a device:** Android 11 or later, arm64. Install the APK, open *Ksandra* and complete setup. Notification access,
-messaging apps and the family and work groups are needed only for reading and answering messages.
+**First run.** On an arm64 phone with Android 11 or later, or on an API 34 x86_64 emulator (the arm64 binaries run
+through translation). Open *Ksandra*: the service starts the daemon and pairs with it. The setup asks for a name and
+language, the permissions (notifications, contacts, calendar, photos; battery optimization off; full-screen reminders;
+optionally files, usage access, the overlay and notification access), and who the assistant talks to (messaging apps,
+family and work contacts, speak aloud). Notification access and messaging apps are needed only to read and answer
+messages; never select apps with real contacts on a test phone. The contribution workflow is in
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation
 
@@ -431,6 +449,7 @@ messaging apps and the family and work groups are needed only for reading and an
 | [docs/product/vision.md](docs/product/vision.md) | vision, principles, scope, non-goals |
 | [docs/product/features.md](docs/product/features.md) | features with status |
 | [docs/architecture](docs/architecture/README.md) | arc42 overview, C4 diagrams, runtime, storage, security, ZeroClaw facts |
+| [docs/architecture/configuration.md](docs/architecture/configuration.md) | every build and runtime setting, with the minimal start-up path |
 | [docs/specs](docs/specs/README.md) | one spec per component, including the [access model](docs/specs/access-model.md) |
 | [docs/adr](docs/adr/README.md) | architecture decision records (MADR) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | build, ground rules, pull requests |

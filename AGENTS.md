@@ -47,6 +47,13 @@ GitHub issues.
 | `app/.../Approvals.kt` | ask flow (notification + credential), undo window, activity log |
 | `app/.../MessageListener.kt`, `Inbox.kt` | notification channel: incoming messages, replies, digest |
 | `app/.../MainActivity.kt` | the owner's chat (text and voice) and the Android services the screens need |
+| `app/.../OwnerChat.kt` | the owner's `/ws/chat` socket, scoped to the process; `Promises` withholds unbacked claims |
+| `app/.../Loopback.kt` | trust rules for loopback traffic: request limits, per-process MCP keys, gateway attribution (pure Kotlin) |
+| `app/.../Act.kt` | an action under the policy: log line, localized title and detail |
+| `app/.../Identity.kt` | a sender resolved against the owner's contacts, never by display name (ADR-0019) |
+| `app/.../Language.kt` | the assistant's language, `t()` and `tn()` for string resources |
+| `app/.../Routines.kt` | owner routines as ZeroClaw cron jobs; results from `/api/events` |
+| `app/.../Notes.kt` | notes pinned to Home (`show_on_home`), stored in ZeroClaw memory with a sealed copy |
 | `app/.../App.kt`, `Screens.kt` | the interface (Compose): setup, Home, Interactions, Activity, Settings, approvals |
 | `app/.../Theme.kt`, `Labels.kt` | design tokens and the Presence Mark; the policy in plain words |
 | `app/.../Lexicon.kt` | input keywords per language, loaded from `assets/lexicon.json` |
@@ -81,6 +88,8 @@ GitHub issues.
 | `fakechat/` | debug-only fake messaging and email app: posts notifications, records replies and drafts |
 | `scripts/e2e.sh` | end-to-end checks of the notification channel on the emulator, with `fakechat` |
 | `scripts/screenshots.sh` | regenerates `docs/images/` from the emulator |
+| `scripts/chime.py`, `scripts/splash.py` | generate the chime sound (`res/raw`) and the splash mark drawable |
+| `.github/workflows/ci.yml` | CI: JDK 21, SDK packages, `patchelf`, unit tests, debug build |
 | `docs/product/` | vision and scope, features with status |
 | `docs/architecture/` | arc42 overview, C4 diagrams, runtime, storage, security, ZeroClaw facts |
 | `docs/specs/` | one spec per component; the access model |
@@ -88,18 +97,22 @@ GitHub issues.
 
 ## Build, run, test
 
-Requirements: JDK 21, the Android SDK (platform 35, build-tools 35), NDK 29.0.14206865 (strips the local model's
-engine) and `patchelf` (on the `PATH` or in `~/.local/bin`). `local.properties` (ignored by git):
+Requirements: JDK 21, the Android SDK (platform 35, build-tools 35.0.0), NDK 29.0.14206865 (strips the local model's
+engine) and `patchelf` in `/usr/bin`, `/usr/local/bin` or `~/.local/bin` (the build looks there, not on the `PATH`).
+The first build downloads the ZeroClaw and llama.cpp Android binaries and checks their SHA-256 (`app/build.gradle.kts`).
+`local.properties` (ignored by git); the first four lines are enough to run, the rest are optional; each key's
+`BuildConfig` field and reader are in [docs/architecture/configuration.md](docs/architecture/configuration.md):
 
 ```properties
 sdk.dir=/path/to/Android/Sdk
 zeroclaw.provider=...
 zeroclaw.model=...
 zeroclaw.apiKey=...
-# optional: the model's price, US$ per million tokens, so ZeroClaw counts the cost
+# optional: the model's price, US$ per million tokens, so ZeroClaw counts the cost in US$
 zeroclaw.inputPerMTok=...
 zeroclaw.outputPerMTok=...
-# optional: ZeroClaw's web search: brave, tavily, jina or searxng (default duckduckgo, no key, often blocked)
+# optional: ZeroClaw's web search: brave, tavily, jina or bocha with an API key, searxng with its instance URL
+# (default duckduckgo, no key, often blocked)
 zeroclaw.search=...
 zeroclaw.searchKey=...
 # optional: YouTube search API key, for video options in cards
@@ -115,7 +128,7 @@ voice.model=...
 voice.apiKey=...
 voice.name=...
 voice.perMinute=...
-# optional: a release signed with your own key (./gradlew assembleRelease: shrunk, optimized)
+# optional: a release signed with your own key (./gradlew assembleRelease: shrunk, optimized; unsigned without it)
 release.storeFile=/path/to/release.jks
 release.storePassword=...
 release.keyAlias=...
@@ -123,18 +136,18 @@ release.keyPassword=...
 ```
 
 ```sh
-./gradlew testDebugUnitTest          # unit tests
-./gradlew assembleDebug              # downloads and verifies the v0.8.5 Android binary on first build
-emulator -avd zc34 -gpu host -no-audio -no-window &   # API 34 x86_64; runs the arm64 binary through translation
+./gradlew testDebugUnitTest          # unit tests (JVM; also what CI runs, with a debug build)
+./gradlew assembleDebug              # downloads and verifies the ZeroClaw v0.8.5 and llama.cpp b11381 binaries on first build
+emulator -avd zc34 -gpu host -no-audio -no-window &   # API 34 x86_64; runs the arm64 binaries through translation
 adb install -r -g app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n org.rustlanglatam.zeroclaw.android/.MainActivity
-scripts/e2e.sh                       # end-to-end checks, with fakechat installed
+scripts/e2e.sh                       # end-to-end checks, emulator only, with fakechat installed and a model key set
 scripts/screenshots.sh en            # README images (emulator only, ANDROID_SERIAL=emulator-...)
 ```
 
 Emulator notes:
 
-- The local image `zc34` holds fake contacts, calendar events and the device PIN `1234`.
+- The local image `zc34` (not in the repository) holds fake contacts, calendar events and the device PIN `1234`.
 - Unlock it after boot, before anything else (`adb shell input keyevent 82; adb shell input text 1234; adb shell input
   keyevent 66`): a locked user hides the app's activities ("Activity class does not exist").
 - `-gpu host` (or `hw.gpu.enabled=yes` in the AVD's `config.ini`): without it rendering is software-only and

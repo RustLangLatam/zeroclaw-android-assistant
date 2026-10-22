@@ -31,8 +31,9 @@ the speech request: read the text verbatim, never answer it, a fixed voice style
 accent for the assistant's language, and a pace set by the warmth setting.
 
 - The audio plays as it arrives (`AudioTrack`); the presence mark pulses on each syllable onset.
-- Platform TTS speaks instead when *Natural voice* is off, there is no internet or no
-  configuration, the monthly ceiling is reached, or no audio arrives within 2.5 s.
+- Platform TTS speaks instead when *Natural voice* is off (chosen in Settings or by
+  `set_preference`), there is no internet or no configuration, the monthly ceiling is reached, or
+  no audio arrives within 2.5 s (`CloudVoice.FIRST_SOUND_MS`).
 - Lines up to 160 characters are cached as audio on the phone, sealed (Vault), and replayed without
   the cloud.
 - Each second of cloud speech is counted; with `voice.perMinute` it is shown in dollars in

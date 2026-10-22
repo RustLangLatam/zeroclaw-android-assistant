@@ -6,7 +6,7 @@
 | Code | `app/.../Absence.kt` (pure), `app/.../CatchUp.kt`, `app/.../AssistantService.kt` (`onStartCommand`), `app/.../MessageListener.kt` (`Turns.scribe`, `retry`), `app/.../MainActivity.kt` (`onStart`), `app/.../Panorama.kt`, `app/.../Screens.kt` (`panorama`) |
 | Tests | `app/src/test/.../AbsenceTest.kt` (kinds, the immediate line, priorities), `BackOnlineTest.kt` (missed topics and unanswered messages after a cut), `PanoramaTest.kt`; `CatchUp` itself has none |
 | Decisions | [ADR-0001](../adr/0001-run-official-zeroclaw-daemon-in-app.md), [ADR-0018](../adr/0018-tool-less-agent-for-unattended-turns.md) |
-| Last checked against code | 2026-10-22, commit `01f6f19` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -40,6 +40,15 @@ was missed. Not for: firing missed reminders (that is `PhoneReminders.reschedule
 | `Turns.scribe(context, prompt, done)` | own new session of `scribe`; `done(text or null)`; timeout `OWNER_MS = 120 000` ms | `run` |
 | `MessageListener.retry` | answers an entry again (status `retrying`) | `missed` |
 | Notifications | id 9500; channels `back-quiet` (LOW) and `back` (DEFAULT) via `Chime.channel`; tap opens `MainActivity` | `tell` |
+
+## Configuration
+
+Nothing is configurable: no `local.properties` key, no Settings entry, no `set_preference` key.
+Thresholds are constants in `Absence` (`MIN_AWAY` 10 min, `MIN_OFFLINE` 5 min), the heartbeat
+period (60 s), the start delay (20 s) and the reconnect delay (10 s) in `CatchUp` and
+`AssistantService`. Android permissions: `ACCESS_NETWORK_STATE` (network watch),
+`POST_NOTIFICATIONS` (API 33+) for the two notifications. The kill switch (pause) suppresses
+reports and retries.
 
 ## State and data
 

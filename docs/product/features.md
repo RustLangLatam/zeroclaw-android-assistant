@@ -97,7 +97,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Feature | Description | Status |
 |---|---|---|
 | Phone voices | The platform's text-to-speech voices, offline and free; the owner picks one | Implemented |
-| Natural voice | A cloud speech model reads the agent's text verbatim (no conversation, no tools); platform voice as fallback without internet, past the monthly ceiling, or after 2.5 s without audio; short lines cached sealed on the phone ([ADR-0027](../adr/README.md)) | Implemented |
+| Natural voice | A cloud speech model reads the agent's text verbatim (no conversation, no tools); platform voice as fallback without internet, past the monthly ceiling, or after 2.5 s without audio; short lines cached sealed on the phone ([ADR-0027](../adr/0027-assistant-voice-from-a-cloud-speech-model.md)) | Implemented |
 | Full-duplex voice conversation | | Planned |
 
 ## Offline
@@ -136,22 +136,27 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 
 ## First run
 
-A setup in three steps; each permission shows whether it is granted and is rechecked on return from
-system settings.
+A setup in three steps (`SetupName`, `SetupNeeds`, `SetupPeople`); each permission shows whether it
+is granted and is rechecked on return from system settings.
 
-| Step | Purpose |
-|---|---|
-| Name | how the assistant addresses the owner and introduces itself to others |
-| Notifications, contacts, calendar | to notify, find people, know when the owner is busy |
-| Screen lock | approvals require the device credential |
-| Background running | battery optimization off, so Android does not stop the daemon |
-| Notification access (optional) | to read incoming messages |
-| Messaging apps | which apps' messages are read (none by default), and whether group chats too |
-| Family / Work | from the contacts: family is answered automatically, work only with approval |
-| Voice | speak answers aloud |
+| Step | Item | Purpose |
+|---|---|---|
+| 1 | Name and language | how the assistant addresses the owner and introduces itself to others; Spanish or English |
+| 2 | Notifications, contacts, calendar, photos | runtime permissions: to notify, find people, know when the owner is busy, find photos |
+| 2 | Fingerprint (optional) | approvals with a fingerprint instead of the screen lock |
+| 2 | Stay active | battery optimization off, so Android does not stop the daemon; on Xiaomi phones also autostart and the lock-screen permission |
+| 2 | Call when something matters | full-screen notifications for high reminders |
+| 2 | Search your files (optional) | all-files access, for documents other apps saved |
+| 2 | Know which apps you use most (optional) | usage access, to pick the most used app |
+| 2 | Always at hand (optional) | the overlay permission, for the floating mark |
+| 2 | Read your notifications (optional) | notification access, to read incoming messages |
+| 3 | Messaging apps | which apps' messages are read (none by default), and whether group chats too |
+| 3 | Family / Work | from the contacts: family is answered automatically, work only with approval; anyone else is never answered |
+| 3 | Speak aloud | speak answers aloud |
 
-Saving requires the device credential. The assistant then introduces itself with what it may do,
-generated from the rules in force (`introduction()`), so it never claims more than the policy allows.
+Saving requires the device credential when the phone has a screen lock. The assistant then
+introduces itself with what it may do, generated from the rules in force (`introduction()`), so it
+never claims more than the policy allows.
 
 ## Known limits
 

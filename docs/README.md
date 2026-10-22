@@ -7,6 +7,7 @@ Map of the project documentation. Standards and maintenance rules are defined in
 |---|---|---|
 | What is it for, what does it do? | [product/](product/): [vision](product/vision.md), [features](product/features.md) | — |
 | How is it built, how do the parts connect? | [architecture/](architecture/README.md) | arc42, C4 |
+| How is it configured, built and started? | [architecture/configuration.md](architecture/configuration.md) | — |
 | How does each component work? | [specs/](specs/README.md) | one spec per component, [template](specs/_template.md) |
 | Why is it built this way? | [adr/](adr/README.md) | MADR, [template](adr/_template.md) |
 | How to contribute? | [CONTRIBUTING.md](../CONTRIBUTING.md) | — |

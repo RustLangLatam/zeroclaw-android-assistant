@@ -1,7 +1,8 @@
 # Specs
 
 One spec per component, in a fixed format ([template](_template.md)): purpose, responsibilities,
-interfaces, state and data, behaviour, invariants, failure modes, security, open issues. Each spec
+interfaces, configuration, state and data, behaviour, invariants, failure modes, security, open
+issues. Each spec
 records the commit it was last checked against; a pull request that changes how a component works
 updates its spec ([ADR-0000](../adr/0000-documentation-standards.md)). Status values: **Draft**,
 **Stable**, **Changing** (work in progress is changing it).
