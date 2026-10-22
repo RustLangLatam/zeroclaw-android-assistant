@@ -78,6 +78,7 @@ class KsandraApplication : android.app.Application() {
     override fun onCreate() {
         Strings.init(this)
         Lexicon.init(this)
+        Keys.init(this)
         super.onCreate()
         Vault.open()
     }

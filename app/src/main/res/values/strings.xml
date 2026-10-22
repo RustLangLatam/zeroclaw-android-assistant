@@ -943,4 +943,24 @@
         <item quantity="other">%1$d messages wait for your decision</item>
     </plurals>
     <string name="mainactivity_set_a_screen_lock_first">Set a screen lock first: without it I can\'t confirm it\'s you, so I don\'t widen what I\'m allowed to do.</string>
+    <string name="connectors_services">Services</string>
+    <string name="connectors_model">Language model</string>
+    <string name="connectors_provider">Provider</string>
+    <string name="connectors_model_name">Model</string>
+    <string name="connectors_api_key">API key</string>
+    <string name="connectors_api_key_or_url">API key (or the instance URL for searxng)</string>
+    <string name="connectors_web_search">Web search</string>
+    <string name="connectors_videos">Video options (YouTube)</string>
+    <string name="connectors_natural_voice">Natural voice</string>
+    <string name="connectors_websocket_url">WebSocket URL (wss://…)</string>
+    <string name="connectors_voice_name">Voice</string>
+    <string name="connectors_usd_per_minute">US$ per minute</string>
+    <string name="connectors_not_set_i_can_t_think">Not set: I can\'t think without it</string>
+    <string name="connectors_services_explained">The services I use and their keys. They stay encrypted on this phone, never in the app itself. Changing them asks for your screen lock.</string>
+    <string name="connectors_x_saved_leave_empty">%1$s saved (leave empty to keep it)</string>
+    <string name="connectors_save">Save</string>
+    <string name="mainactivity_that_value_can_t_be_used">One of the values can\'t be used: no quotes, backslashes or line breaks; a provider is one word; the voice URL starts with wss://.</string>
+    <string name="mainactivity_saved_i_use_it_from_now">Saved. I use it from now on.</string>
+    <string name="mainactivity_change_the_services_i_use">Change the services I use</string>
+    <string name="mainactivity_i_have_no_model_to_think">I have no model to think with: add its key in Connectors › Services.</string>
 </resources>

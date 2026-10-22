@@ -223,5 +223,5 @@ can lift it for automated captures (`allowCapture` extra).
 ## Open issues
 
 - Adding and removing rules in the app is not built; only autonomy changes.
-- The model key ships inside the APK (`BuildConfig.MODEL_API_KEY`) and in `config.toml`; a settings
-  screen that stores it in the Keystore is not built (noted in `app/build.gradle.kts`).
+- The model key is entered in Connectors › Services and stored encrypted (ADR-0030), but ZeroClaw reads it from
+  `config.toml` in plain text (app-private storage; ADR-0004).

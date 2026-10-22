@@ -38,10 +38,12 @@ daemon can be executed.
 ## `local.properties`
 
 Read by `app/build.gradle.kts` at build time; never committed (`.gitignore`). Every value becomes a
-`String` field of `BuildConfig` (empty string when absent, unless a default is listed), so **the APK
-contains every key**: do not distribute a build made with your keys
-([security.md › Known gaps](security.md#known-gaps)). CI builds without the file and the build
-accepts every key empty.
+`String` field of `BuildConfig` (empty string when absent, unless a default is listed). These are **developer
+defaults**: the owner's own values, entered in Connectors › Services and kept encrypted on the phone (`Keys.kt`),
+take precedence ([ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)). **Release builds compile no keys**:
+the `release` build type empties `MODEL_API_KEY`, `SEARCH_KEY`, `YOUTUBE_KEY` and `VOICE_API_KEY`; debug builds
+contain every key in the file, so do not distribute a debug build made with your keys. CI builds without the file
+and the build accepts every key empty.
 
 | Key | `BuildConfig` field | Needed for | Default | Read by |
 |---|---|---|---|---|
@@ -126,6 +128,7 @@ names, values, defaults and keys is in
 | Offline | opt-in (`offline`, off); the download state in `shared_prefs/offline.xml` |
 | Memory | learning on or off (`memory.json`) |
 | Rules | one autonomy per capability, principal and scope, editable up to the risk class's ceiling; changes need the device credential |
+| Services (Connectors) | model provider, model and key; web search provider and key; YouTube key; natural voice URL, model, key, voice and price. Encrypted on the phone (`Keys.kt`), over the build's defaults; replacing them needs the device credential ([ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)) |
 
 ## Minimal start-up
 
@@ -133,8 +136,9 @@ From a clone to a working assistant, with nothing optional:
 
 1. Install JDK 21, the Android SDK (platform 35, build-tools 35.0.0, NDK 29.0.14206865) and
    `patchelf` (`apt install patchelf`, or `pip install patchelf`, which puts it in `~/.local/bin`).
-2. Create `local.properties` at the repository root with `sdk.dir`, `zeroclaw.provider`,
-   `zeroclaw.model` and `zeroclaw.apiKey`.
+2. Create `local.properties` at the repository root with `sdk.dir` and, for a debug build that works at once,
+   `zeroclaw.provider`, `zeroclaw.model` and `zeroclaw.apiKey`. Without them, enter the provider, model and key in
+   the app (Connectors › Services) after installing; a release build always takes this path.
 3. `./gradlew assembleDebug` (the first build downloads and verifies the two native archives).
    `./gradlew testDebugUnitTest` runs the JVM tests and needs no device.
 4. Install on an arm64 phone with Android 11 or later, or on the emulator:
@@ -154,8 +158,9 @@ From a clone to a working assistant, with nothing optional:
       too, the family and work contacts, and whether answers are spoken.
 7. Tap the mark and speak, or type in Interactions.
 
-Without the three `zeroclaw.*` keys the app builds and installs but the daemon has no model to
-call: every turn fails. Each optional key above adds its feature and nothing else depends on it.
+Without a model (neither the three `zeroclaw.*` keys nor values entered in the app) the app builds and installs,
+Home says it has no model to think with and opens Connectors › Services; until then every turn fails. Each optional
+key above adds its feature and nothing else depends on it; each can also be entered in the same form.
 
 ### Emulator
 

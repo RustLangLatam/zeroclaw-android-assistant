@@ -402,7 +402,8 @@ flowchart LR
 
 - **Languages:** Spanish and English for UI, voice and recognizer, following the phone or the owner's choice; third
   parties are answered in their language.
-- **Model provider:** any provider type ZeroClaw supports, set in `local.properties`; the speech provider likewise.
+- **Model provider:** any provider type ZeroClaw supports, entered by the owner in Connectors › Services (or set in
+  `local.properties` for development); the speech provider likewise.
 - **Online or offline**, with an optional local model.
 - **Presentation:** assistant mode or app mode, four palettes, three warmth levels, phone or natural voice.
 - **Accounts:** any email provider over IMAP/SMTP.
@@ -427,8 +428,8 @@ Tracked in GitHub issues, in phases. Each issue states the problem, the approach
 
 ## Limitations
 
-- Model and service keys are compiled into the APK from `local.properties`; do not distribute builds that contain
-  your keys.
+- Release builds contain no keys: the owner enters a model provider, model and key in Connectors › Services. Debug
+  builds contain the keys in `local.properties`; do not distribute them.
 - A message to a contact without a recent conversation is written in WhatsApp for the owner to send; Android lets no
   app press send. Replies to recent conversations are sent through the notification.
 - Outlook accounts require OAuth, not yet supported.

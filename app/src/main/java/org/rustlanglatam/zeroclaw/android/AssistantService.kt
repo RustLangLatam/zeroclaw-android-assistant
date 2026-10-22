@@ -183,11 +183,11 @@ class AssistantService : Service() {
         // ZeroClaw rewrites the file when it saves (e.g. pairing) and drops comments, so the written version is kept
         // in the app's prefs and the content is checked as well.
         val tools = Principal.entries.flatMap { PhoneMcp.toolNames(it) } + Offline.TOOLS.map { "${Offline.AGENT}__$it" }
-        if (!config.exists() || prefs(this).getString("config", null) != CONFIG_MARK ||
+        if (!config.exists() || prefs(this).getString("config", null) != CONFIG_MARK || prefs(this).getInt("config.keys", -1) != Keys.version ||
             config.readText().let { text -> !EmailAccounts.inConfig(text) || "[agents.third_party]" !in text || "[agents.$SCRIBE]" !in text || "[agents.${Offline.AGENT}]" !in text || tools.any { it !in text } }
         ) {
             config.writeText(initialConfig())
-            prefs(this).edit().remove("token").putString("config", CONFIG_MARK).apply()
+            prefs(this).edit().remove("token").putString("config", CONFIG_MARK).putInt("config.keys", Keys.version).apply()
         }
         // Injects this process's MCP keys, so a leaked key is invalid after the process ends (ADR-0020); the rest
         // of the file, including ZeroClaw's pairing, is kept.
@@ -309,7 +309,7 @@ class AssistantService : Service() {
                 else "memory_recall_limit = 0"
             ) + "\n\n" + """
             [agents.$name]
-            model_provider = "${BuildConfig.MODEL_PROVIDER}.${if (owner) "warm" else "main"}"
+            model_provider = "${Keys[Keys.Key.MODEL_PROVIDER]}.${if (owner) "warm" else "main"}"
             risk_profile = "$name"
             runtime_profile = "$name"
             mcp_bundles = ["$name"]
@@ -334,7 +334,7 @@ class AssistantService : Service() {
             memory_recall_limit = 0
 
             [agents.$SCRIBE]
-            model_provider = "${BuildConfig.MODEL_PROVIDER}.warm"
+            model_provider = "${Keys[Keys.Key.MODEL_PROVIDER]}.warm"
             risk_profile = "$SCRIBE"
             runtime_profile = "$SCRIBE"
         """.trimIndent() + "\n"
@@ -359,7 +359,7 @@ class AssistantService : Service() {
 
             [web_search]
             enabled = true
-            search_provider = "${BuildConfig.SEARCH_PROVIDER}"
+            search_provider = "${Keys[Keys.Key.SEARCH_PROVIDER]}"
             ${searchKey()}
             max_results = 6
             timeout_secs = 15
@@ -375,15 +375,15 @@ class AssistantService : Service() {
             enabled = false
 
             # Third parties: precise and short.
-            [providers.models.${BuildConfig.MODEL_PROVIDER}.main]
-            model = "${BuildConfig.MODEL}"
-            api_key = "${BuildConfig.MODEL_API_KEY}"
+            [providers.models.${Keys[Keys.Key.MODEL_PROVIDER]}.main]
+            model = "${Keys[Keys.Key.MODEL]}"
+            api_key = "${Keys[Keys.Key.MODEL_KEY]}"
             temperature = 0.3
 
             # The owner: a warmer, freer voice, with room to talk.
-            [providers.models.${BuildConfig.MODEL_PROVIDER}.warm]
-            model = "${BuildConfig.MODEL}"
-            api_key = "${BuildConfig.MODEL_API_KEY}"
+            [providers.models.${Keys[Keys.Key.MODEL_PROVIDER]}.warm]
+            model = "${Keys[Keys.Key.MODEL]}"
+            api_key = "${Keys[Keys.Key.MODEL_KEY]}"
             temperature = 0.75
             max_tokens = 1500
 
@@ -604,9 +604,11 @@ class AssistantService : Service() {
 
         /** Returns the model's cost rates from `local.properties`, or an empty string; without them ZeroClaw counts tokens but not cost. */
         private fun rates(): String {
+            // The build's price belongs to the build's model; another model entered by the owner has no known price.
+            if (Keys[Keys.Key.MODEL] != BuildConfig.MODEL) return ""
             val input = BuildConfig.MODEL_INPUT_PER_MTOK.toDoubleOrNull() ?: return ""
             val output = BuildConfig.MODEL_OUTPUT_PER_MTOK.toDoubleOrNull() ?: return ""
-            return "[cost.rates.providers.models.${BuildConfig.MODEL_PROVIDER}.\"${BuildConfig.MODEL}\"]\n" +
+            return "[cost.rates.providers.models.${Keys[Keys.Key.MODEL_PROVIDER]}.\"${Keys[Keys.Key.MODEL]}\"]\n" +
                 "input_per_mtok = $input\noutput_per_mtok = $output\n\n"
         }
 
@@ -641,9 +643,9 @@ class AssistantService : Service() {
 
         /** Returns the search provider's config line: an API key for brave, tavily, jina or bocha; the instance URL for searxng. */
         private fun searchKey(): String = when {
-            BuildConfig.SEARCH_KEY.isBlank() -> ""
-            BuildConfig.SEARCH_PROVIDER == "searxng" -> "searxng_instance_url = \"${BuildConfig.SEARCH_KEY}\""
-            else -> "${BuildConfig.SEARCH_PROVIDER}_api_key = \"${BuildConfig.SEARCH_KEY}\""
+            Keys[Keys.Key.SEARCH_KEY].isBlank() -> ""
+            Keys[Keys.Key.SEARCH_PROVIDER] == "searxng" -> "searxng_instance_url = \"${Keys[Keys.Key.SEARCH_KEY]}\""
+            else -> "${Keys[Keys.Key.SEARCH_PROVIDER]}_api_key = \"${Keys[Keys.Key.SEARCH_KEY]}\""
         }
 
         /** Domains (and their subdomains) that `web_fetch` may read for the owner's agent: news and reference sites. */

@@ -40,10 +40,10 @@ object CloudVoice {
     private const val KEEP_FILES = 300
     private const val RATE = 24_000
 
-    val configured get() = BuildConfig.VOICE_URL.isNotBlank() && BuildConfig.VOICE_API_KEY.isNotBlank()
+    val configured get() = Keys[Keys.Key.VOICE_URL].isNotBlank() && Keys[Keys.Key.VOICE_KEY].isNotBlank()
 
     /** Price in US$ per minute of generated audio (`voice.perMinute`), or `null` when not set. */
-    val perMinute get() = BuildConfig.VOICE_PER_MINUTE.toDoubleOrNull()
+    val perMinute get() = Keys[Keys.Key.VOICE_PER_MINUTE].toDoubleOrNull()
 
     /** Returns whether this voice is selected, configured, online, and under this month's cost ceiling (0 means no ceiling). */
     fun usable(chosen: String?, online: Boolean, spentUsd: Double, ceilingUsd: Double, set: Boolean = configured) =
@@ -187,9 +187,9 @@ object CloudVoice {
         main.removeCallbacks(idle)
         main.postDelayed(idle, IDLE_MS)
         socket?.let { return it }
-        val url = BuildConfig.VOICE_URL + (if ('?' in BuildConfig.VOICE_URL) "&" else "?") + "model=" + BuildConfig.VOICE_MODEL
+        val url = Keys[Keys.Key.VOICE_URL] + (if ('?' in Keys[Keys.Key.VOICE_URL]) "&" else "?") + "model=" + Keys[Keys.Key.VOICE_MODEL]
         val ws = http.newWebSocket(
-            Request.Builder().url(url).header("Authorization", "Bearer ${BuildConfig.VOICE_API_KEY}").build(),
+            Request.Builder().url(url).header("Authorization", "Bearer ${Keys[Keys.Key.VOICE_KEY]}").build(),
             object : WebSocketListener() {
                 override fun onMessage(ws: WebSocket, message: String) {
                     runCatching { JSONObject(message) }.getOrNull()?.let { e -> events?.invoke(e) }
@@ -204,7 +204,7 @@ object CloudVoice {
             },
         )
         // OkHttp queues this until the socket opens.
-        ws.send(session(BuildConfig.VOICE_NAME, style()))
+        ws.send(session(Keys[Keys.Key.VOICE_NAME], style()))
         socket = ws
         return ws
     }
@@ -225,7 +225,7 @@ object CloudVoice {
         if (!usable(Voices.chosen, Offline.online, spent(app) ?: 0.0, Guard.voiceCeiling)) return false
         stop()
         val my = ++turn
-        val voice = BuildConfig.VOICE_NAME
+        val voice = Keys[Keys.Key.VOICE_NAME]
         val style = style()
         val keep = text.length <= KEEP_CHARS
         val file = File(app.cacheDir, "voice/${key(text, voice, style)}")

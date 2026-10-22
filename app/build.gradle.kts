@@ -36,8 +36,8 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         ndk { abiFilters += "arm64-v8a" }
-        // ponytail: the key ships inside the APK; a settings screen that
-        // stores it in the Keystore replaces this before any release.
+        // Developer defaults from local.properties. The owner's own values, entered in Connectors and kept encrypted on
+        // the phone, take precedence (Keys.kt, ADR-0030). Release builds compile no keys: see buildTypes.release.
         buildConfigField("String", "MODEL_PROVIDER", localString("zeroclaw.provider"))
         buildConfigField("String", "MODEL", localString("zeroclaw.model"))
         buildConfigField("String", "MODEL_API_KEY", localString("zeroclaw.apiKey"))
@@ -75,6 +75,8 @@ android {
     }
     buildTypes {
         release {
+            // No key ships inside a release APK: the owner enters theirs in Connectors (ADR-0030).
+            listOf("MODEL_API_KEY", "SEARCH_KEY", "YOUTUBE_KEY", "VOICE_API_KEY").forEach { buildConfigField("String", it, "\"\"") }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

@@ -728,7 +728,7 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                 val query = args.optString("query").trim()
                 if (query.isBlank()) return@run "Needs what to look for."
                 Guard.gated(principal, Capability.NEWS, Policy.OWNER_TARGET, Act.findVideos(query)) {
-                    val key = BuildConfig.YOUTUBE_KEY
+                    val key = Keys[Keys.Key.YOUTUBE_KEY]
                     if (key.isBlank()) return@gated Videos.fallback(query)
                     val country = java.util.Locale.getDefault().country.takeIf { it.length == 2 } ?: "US"
                     runCatching {

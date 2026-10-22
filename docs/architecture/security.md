@@ -284,5 +284,5 @@ Every port is bound to `127.0.0.1`, which every app on the phone can reach.
 |---|---|
 | ZeroClaw's `/admin/paircode/new` trusts loopback alone: another app can revoke the app's pairing (detected and reported to the owner; the fix is upstream) | [zeroclaw.md](zeroclaw.md) |
 | ZeroClaw's memory database, sessions and `config.toml` are not sealed to the phone (the app's own files are) | [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md) |
-| The model key is compiled into the APK; secrets, including connected email app passwords, are plain text in `config.toml` (app-private, excluded from backups) | [ADR-0004](../adr/0004-secrets-encryption-off.md) |
+| Secrets the daemon reads (the model and search keys, connected email app passwords) are plain text in `config.toml` (app-private, excluded from backups). Release APKs contain no keys: the owner enters them, encrypted in the app's preferences ([ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)); debug builds contain the developer's `local.properties` keys | [ADR-0004](../adr/0004-secrets-encryption-off.md) |
 | No log of connections leaving the phone yet (proposed) | ADR-0028 |

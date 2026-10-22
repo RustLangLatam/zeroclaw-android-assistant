@@ -943,4 +943,24 @@
         <item quantity="other">%1$d mensajes esperan tu decisión</item>
     </plurals>
     <string name="mainactivity_set_a_screen_lock_first">Primero pon un bloqueo de pantalla: sin él no puedo confirmar que eres tú, así que no amplío lo que puedo hacer.</string>
+    <string name="connectors_services">Servicios</string>
+    <string name="connectors_model">Modelo de lenguaje</string>
+    <string name="connectors_provider">Proveedor</string>
+    <string name="connectors_model_name">Modelo</string>
+    <string name="connectors_api_key">Clave de API</string>
+    <string name="connectors_api_key_or_url">Clave de API (o la URL de la instancia para searxng)</string>
+    <string name="connectors_web_search">Búsqueda web</string>
+    <string name="connectors_videos">Opciones de video (YouTube)</string>
+    <string name="connectors_natural_voice">Voz natural</string>
+    <string name="connectors_websocket_url">URL WebSocket (wss://…)</string>
+    <string name="connectors_voice_name">Voz</string>
+    <string name="connectors_usd_per_minute">US$ por minuto</string>
+    <string name="connectors_not_set_i_can_t_think">Sin configurar: sin esto no puedo pensar</string>
+    <string name="connectors_services_explained">Los servicios que uso y sus claves. Quedan cifradas en este teléfono, nunca dentro de la app. Cambiarlas pide tu bloqueo de pantalla.</string>
+    <string name="connectors_x_saved_leave_empty">%1$s guardada (déjala vacía para mantenerla)</string>
+    <string name="connectors_save">Guardar</string>
+    <string name="mainactivity_that_value_can_t_be_used">Uno de los valores no sirve: sin comillas, barras invertidas ni saltos de línea; el proveedor es una palabra; la URL de la voz empieza por wss://.</string>
+    <string name="mainactivity_saved_i_use_it_from_now">Guardado. Lo uso desde ahora.</string>
+    <string name="mainactivity_change_the_services_i_use">Cambiar los servicios que uso</string>
+    <string name="mainactivity_i_have_no_model_to_think">No tengo un modelo con el que pensar: añade su clave en Conectores › Servicios.</string>
 </resources>
