@@ -963,4 +963,15 @@
     <string name="mainactivity_saved_i_use_it_from_now">Guardado. Lo uso desde ahora.</string>
     <string name="mainactivity_change_the_services_i_use">Cambiar los servicios que uso</string>
     <string name="mainactivity_i_have_no_model_to_think">No tengo un modelo con el que pensar: añade su clave en Conectores › Servicios.</string>
+    <string name="setting_model_budget">presupuesto del modelo</string>
+    <string name="budget_channel">Lo que cuesto</string>
+    <string name="budget_title">Presupuesto mensual</string>
+    <string name="budget_80">He usado el 80 %% de tu presupuesto mensual del modelo (%1$s).</string>
+    <string name="budget_reached">Llegué a tu presupuesto mensual del modelo (%1$s): hasta el mes que viene solo hago lo básico y no respondo a nadie más. Puedes subirlo en Ajustes.</string>
+    <string name="budget_reached_in_chat">Llegué a tu presupuesto mensual del modelo (%1$s), así que hasta el mes que viene solo hago lo básico: recordatorios, alarmas, el tiempo, abrir una app. Puedes subirlo en Ajustes.</string>
+    <string name="connectors_input_price">Precio, US$ por millón de tokens de entrada</string>
+    <string name="connectors_output_price">Precio, US$ por millón de tokens de salida</string>
+    <string name="screens_model_budget">Presupuesto mensual del modelo</string>
+    <string name="screens_model_budget_detail" formatted="false">Pasado este, solo lo básico hasta el mes que viene; te aviso al 80 %.</string>
+    <string name="screens_model_budget_no_price">El modelo no tiene precio, así que no sé lo que cuesta: añádelo en Conectores › Servicios.</string>
 </resources>

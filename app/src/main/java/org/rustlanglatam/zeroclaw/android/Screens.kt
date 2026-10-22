@@ -856,6 +856,21 @@ fun Control(ui: MainActivity, onBack: () -> Unit) {
                     }
                 }
             }
+            // The monthly budget for the model ([Budget]): past it, only the basics until next month.
+            val budget = Guard.modelBudget
+            Panel {
+                Item(t(R.string.screens_model_budget), if (Budget.priced) t(R.string.screens_model_budget_detail) else t(R.string.screens_model_budget_no_price), divider = false)
+                Row(Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(5.0, 10.0, 20.0, 0.0).forEach { usd ->
+                        val on = budget == usd
+                        Text(
+                            if (usd > 0) "US$ ${usd.toInt()}" else t(R.string.screens_no_cap),
+                            Modifier.weight(1f).let { if (on) it.clip(Pill).background(Glow) else it.glass(Pill) }.clickable { ui.setModelBudget(usd) }.padding(vertical = 11.dp),
+                            style = Technical, textAlign = TextAlign.Center, color = if (on) Ink.onLight else Ink.mist,
+                        )
+                    }
+                }
+            }
             // Cloud voice usage this month (minutes and cost) and the spending ceiling above which the system TTS is used.
             if (CloudVoice.configured) Panel {
                 val minutes = CloudVoice.month(ui).current() / 60

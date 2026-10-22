@@ -1057,6 +1057,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Sets the monthly budget in US dollars for the cloud model ([Budget]); 0 means none. */
+    fun setModelBudget(usd: Double) {
+        Guard.modelBudget = usd
+        Guard.save()
+        Budget.forget()
+        thread { runCatching { Budget.spent(this); Budget.check(this) } }
+        Ui.refresh()
+    }
+
     /** Sets the monthly spending ceiling in US dollars for the cloud voice; 0 means no ceiling. */
     fun setVoiceCeiling(usd: Double) {
         Guard.voiceCeiling = usd

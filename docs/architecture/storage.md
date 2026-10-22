@@ -36,6 +36,7 @@ Other app state:
 | Path | Written by | Contents |
 |---|---|---|
 | `shared_prefs/gateway.xml` | `AssistantService.prefs` | `EncryptedSharedPreferences` (keys AES-256-SIV, values AES-256-GCM, master key in the Keystore): the gateway **token**, the owner's chat **session id**, the offline agent's session id, the config version mark |
+| `shared_prefs/budget.xml` | `Budget` | plain: the month and the budget stage (80, 100) the owner was last told about |
 | `shared_prefs/health.xml` | `Health` | plain: what was missing at the last check (`lacking`), so a notice is posted only for something newly lost |
 | `shared_prefs/absence.xml` | `CatchUp` | plain: last heartbeat, offline since, the last catch-up text and when |
 | `shared_prefs/offline.xml` | `Offline` | plain: the running download's id, whether the downloaded model passed its SHA-256 check, answers given and seconds spent offline |

@@ -115,6 +115,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Feature | Description | Status |
 |---|---|---|
 | What I cost | Model use this month, today and by agent, from ZeroClaw's `/api/cost`, in US$ when the price is configured; natural voice minutes and ceiling; also by voice (`usage`) | Implemented |
+| Monthly model budget | "Don't spend more than 5 dollars a month": past the budget only the basics until next month; notices at 80 % and 100 %; by voice or in Settings | Implemented |
 
 ## Security and privacy
 

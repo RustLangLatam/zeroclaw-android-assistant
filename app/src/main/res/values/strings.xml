@@ -963,4 +963,15 @@
     <string name="mainactivity_saved_i_use_it_from_now">Saved. I use it from now on.</string>
     <string name="mainactivity_change_the_services_i_use">Change the services I use</string>
     <string name="mainactivity_i_have_no_model_to_think">I have no model to think with: add its key in Connectors › Services.</string>
+    <string name="setting_model_budget">model budget</string>
+    <string name="budget_channel">What I cost</string>
+    <string name="budget_title">Monthly budget</string>
+    <string name="budget_80">I have used 80 %% of your monthly budget for the model (%1$s).</string>
+    <string name="budget_reached">I reached your monthly budget for the model (%1$s): until next month I only do the basics and answer no one else. You can raise it in Settings.</string>
+    <string name="budget_reached_in_chat">I reached your monthly budget for the model (%1$s), so until next month I only do the basics: reminders, alarms, the weather, opening an app. You can raise it in Settings.</string>
+    <string name="connectors_input_price">Price, US$ per million input tokens</string>
+    <string name="connectors_output_price">Price, US$ per million output tokens</string>
+    <string name="screens_model_budget">Monthly budget for the model</string>
+    <string name="screens_model_budget_detail" formatted="false">Past it, only the basics until next month; I tell you at 80 %.</string>
+    <string name="screens_model_budget_no_price">The model has no price, so its cost is unknown: add it in Connectors › Services.</string>
 </resources>

@@ -84,6 +84,7 @@ class AssistantService : Service() {
             thread(name = "health", isDaemon = true) {
                 while (!stopping) {
                     runCatching { Health.check(this) }.onFailure { Log.w(TAG, "health check: ${it.message}") }
+                    runCatching { Budget.check(this) }.onFailure { Log.w(TAG, "budget check: ${it.message}") }
                     Thread.sleep(Health.EVERY_MS)
                 }
             }
@@ -604,10 +605,9 @@ class AssistantService : Service() {
 
         /** Returns the model's cost rates from `local.properties`, or an empty string; without them ZeroClaw counts tokens but not cost. */
         private fun rates(): String {
-            // The build's price belongs to the build's model; another model entered by the owner has no known price.
-            if (Keys[Keys.Key.MODEL] != BuildConfig.MODEL) return ""
-            val input = BuildConfig.MODEL_INPUT_PER_MTOK.toDoubleOrNull() ?: return ""
-            val output = BuildConfig.MODEL_OUTPUT_PER_MTOK.toDoubleOrNull() ?: return ""
+            // The owner's price, else the build's for the build's model ([Keys.Key.MODEL_INPUT_PER_MTOK]).
+            val input = Keys[Keys.Key.MODEL_INPUT_PER_MTOK].toDoubleOrNull() ?: return ""
+            val output = Keys[Keys.Key.MODEL_OUTPUT_PER_MTOK].toDoubleOrNull() ?: return ""
             return "[cost.rates.providers.models.${Keys[Keys.Key.MODEL_PROVIDER]}.\"${Keys[Keys.Key.MODEL]}\"]\n" +
                 "input_per_mtok = $input\noutput_per_mtok = $output\n\n"
         }

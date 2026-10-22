@@ -181,6 +181,7 @@ class PhoneMcp(private val context: Context, private val port: Int) {
         Preferences.Setting.UNDO_SECONDS -> (Regex("\\d+").find(value)?.value?.toIntOrNull() ?: 0) < Guard.undoSeconds
         // Raising or removing the ceiling increases spending.
         Preferences.Setting.VOICE_CEILING -> Preferences.ceiling(value)?.let { Guard.voiceCeiling > 0 && (it == 0.0 || it > Guard.voiceCeiling) } == true
+        Preferences.Setting.MODEL_BUDGET -> Preferences.ceiling(value)?.let { Guard.modelBudget > 0 && (it == 0.0 || it > Guard.modelBudget) } == true
         else -> false
     }
 
@@ -223,6 +224,18 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                 "Your voice is now ${Voices.name(voice)} (${Voices.label(voice).second})."
             } ?: ("Voices you can use: " + (if (CloudVoice.configured) "the natural one (from the internet, the most human), " else "") +
                 Voices.available.joinToString { "${Voices.name(it)} (${Voices.label(it).second})" } + ".")
+            Preferences.Setting.MODEL_BUDGET -> Preferences.ceiling(value)?.let {
+                Guard.modelBudget = it
+                Budget.forget()
+                kotlin.concurrent.thread { runCatching { Budget.spent(context); Budget.check(context) } }
+                when {
+                    it <= 0 -> "The model has no monthly budget now."
+                    !Budget.priced -> "Saved: up to ${Usage.usd(it)} a month. But the model has no price, so its cost is unknown and the budget " +
+                        "cannot apply yet: tell the owner to add the price per million tokens in Connectors › Services."
+                    else -> "The model may cost up to ${Usage.usd(it)} a month; past it you only do the basics (reminders, alarms, weather) " +
+                        "and answer no one else until the next month. The owner is told at 80 %."
+                }
+            }
             Preferences.Setting.VOICE_CEILING -> Preferences.ceiling(value)?.let {
                 Guard.voiceCeiling = it
                 if (it > 0) "Your natural voice may cost up to ${Usage.usd(it)} a month; then you speak with the phone's voice until the next month."
@@ -1432,7 +1445,7 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     "learning (on/off), read_mail (on/off), floating_mark (on/off), floating_place (left/right, top/middle/bottom), undo_seconds (a number), group_chats (on/off), widget_add or " +
                     "widget_remove (weather, alarm, agenda, messages, mail, reminders, battery, news), language (Spanish, English, or " +
                     "the phone's: \"speak to me in English\"), name (the owner's name), her_voice (which of your voices you speak with: one by its name, or its region, or \"natural\" for the natural one " +
-                    "from the internet; without a value you get the list), voice_ceiling (US$ a month the natural voice may cost, then the phone's; \"none\" for none), messaging_apps (\"add WhatsApp\", \"remove Telegram\"), offline (on/off: answer even without internet; on downloads a small model of " +
+                    "from the internet; without a value you get the list), voice_ceiling (US$ a month the natural voice may cost, then the phone's; \"none\" for none), model_budget (US$ a month the model may cost; past it only the basics until next month; \"none\" for no budget), messaging_apps (\"add WhatsApp\", \"remove Telegram\"), offline (on/off: answer even without internet; on downloads a small model of " +
                     "${Offline.size(Offline.BYTES)}: before turning it on, tell the owner in plain words that it downloads once on Wi-Fi, that " +
                     "answers without internet are simpler and slower and use more battery, and turn it on only after they agree).", listOf("setting", "value"),
                     "setting" to "string", "value" to "string"),
@@ -1545,6 +1558,7 @@ object Guard {
                 Offline.wanted = state.offline
                 Voices.chosen = state.voiceName
                 voiceCeiling = state.voiceCeiling
+                modelBudget = state.modelBudget
                 policy.restoreCounters(state.counters)
             }
         }
@@ -1587,6 +1601,9 @@ object Guard {
 
     /** Monthly spending ceiling in US$ for [CloudVoice]; once reached, the on-device voice is used until next month. 0 means no ceiling. */
     @Volatile var voiceCeiling = DEFAULT_VOICE_CEILING
+
+    /** Monthly budget in US$ for the cloud model ([Budget]); once reached, no cloud turn starts until next month. 0 means none. */
+    @Volatile var modelBudget = 0.0
     const val DEFAULT_VOICE_CEILING = 5.0
 
     /**
@@ -1618,7 +1635,7 @@ object Guard {
         val state = Saved.State(
             policy.rules, policy.stopped, undoSeconds, emptyList(), Inbox.apps, Inbox.groups,
             Policy.owner.takeIf { setUp }, Policy.groups, voice, bubble, "${if (Floating.right) "right" else "left"}:${Floating.height}", Ink.palette.key, Policy.address, warmth.name, Mailbox.reading, openMic, Widgets.encode(widgets), appMode,
-            policy.counters(), Language.chosen, Offline.wanted, Voices.chosen, voiceCeiling,
+            policy.counters(), Language.chosen, Offline.wanted, Voices.chosen, voiceCeiling, modelBudget,
         )
         runCatching { target.writeSealed(Saved.encode(state)) }
             .onFailure { Log.e(AssistantService.TAG, "policy not saved: ${it.message}") }

@@ -148,6 +148,18 @@ object OwnerChat {
             return true
         }
         localSince = 0L
+        // Past the owner's monthly budget no cloud turn starts: the basics handled in code still answer.
+        if (owners && Budget.reached()) {
+            asked = null
+            thread(name = "owner-chat-budget") {
+                val said = Offline.direct(text) ?: t(R.string.budget_reached_in_chat, Usage.usd(Guard.modelBudget))
+                Ui.thinking = false
+                Ui.add(Line(Line.Who.ASSISTANT, said))
+                onAnswer?.invoke(said)
+            }
+            return true
+        }
+        if (!owners && Budget.reached()) return false
         // Offline without the local model: answer with [Offline.limited] (what is unavailable and how to enable it) instead of failing.
         if (!Offline.online) {
             asked = null

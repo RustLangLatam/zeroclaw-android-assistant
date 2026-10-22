@@ -149,6 +149,7 @@ ZeroClaw enforces them at its tool-dispatch site:
 | `allowed_tools` | each agent gets only its own MCP endpoint's tools; the owner agent also gets a fixed list of native tools (web search and fetch, calculator, memory) and, while an email account is connected, ZeroClaw's `email_search` and `email_read`; shell, file and cron tools are never allowed |
 | `auto_approve` | equal to `allowed_tools`: the app's policy decides each MCP call, so ZeroClaw's own approval is off |
 | `max_actions_per_hour`, `max_cost_per_day_cents` | runaway guard per agent (owner 60 / 300, third party 20 / 50, scribe 30 / 100, offline 30 / no cost line) |
+| Monthly model budget (`Guard.modelBudget`, `Budget`) | set by the owner (`set_preference model_budget`, Settings › What I cost; none by default). Once this month's cost reaches it, no cloud turn starts until next month: the owner gets the basics handled in code, third parties no reply (journal "not started"), briefings their plain text. Read once a minute, so at most a minute of turns can pass it; needs a model price. Raising or removing it by voice is `CHANNEL` |
 | `delegation_policy` | `forbidden` for every agent |
 | `workspace_only` | `true`; the workspace is the app's private storage |
 | `memory_recall_limit` | `0` for the third-party, scribe and offline agents |

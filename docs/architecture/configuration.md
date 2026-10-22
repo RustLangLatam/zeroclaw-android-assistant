@@ -127,8 +127,9 @@ names, values, defaults and keys is in
 | Voice | the phone voice chosen (`Voice.kt`, stored as `voiceName`; the measured pitch of each probed voice in `shared_prefs/voices.xml`), or the natural voice when `voice.*` is configured; its monthly ceiling (`voiceCeiling`, default US$ 5; 0 means none) |
 | Offline | opt-in (`offline`, off); the download state in `shared_prefs/offline.xml` |
 | Memory | learning on or off (`memory.json`) |
+| Monthly model budget | US$ a month for the model (none by default); by voice (`model_budget`) or Settings › What I cost |
 | Rules | one autonomy per capability, principal and scope, editable up to the risk class's ceiling; changes need the device credential |
-| Services (Connectors) | model provider, model and key; web search provider and key; YouTube key; natural voice URL, model, key, voice and price. Encrypted on the phone (`Keys.kt`), over the build's defaults; replacing them needs the device credential ([ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)) |
+| Services (Connectors) | model provider, model, key and price per million tokens; web search provider and key; YouTube key; natural voice URL, model, key, voice and price. Encrypted on the phone (`Keys.kt`), over the build's defaults; replacing them needs the device credential ([ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)) |
 
 ## Minimal start-up
 
