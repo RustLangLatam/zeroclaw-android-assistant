@@ -454,6 +454,8 @@
     <string name="offline_you_have_no_alarm_pending">You have no alarm pending.</string>
     <string name="offline_you_have_no_reminders">You have no reminders.</string>
     <string name="offline_your_next_alarm_is_x_at">Your next alarm is %1$s at %%s:%%s.</string>
+    <string name="ownerchat_still_working">Still working on it…</string>
+    <string name="ownerchat_no_answer_try_again">I got no answer this time; ask me again.</string>
     <string name="ownerchat_something_failed">"Something failed: "</string>
     <string name="ownerchat_without_internet_i_couldn_t_answer">Without internet I couldn\'t answer this time; try saying it another way.</string>
     <string name="ownerchat_without_internet_i_couldn_t_think">Without internet I couldn\'t think: the small brain didn\'t start.</string>

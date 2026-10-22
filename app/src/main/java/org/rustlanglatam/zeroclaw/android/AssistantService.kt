@@ -17,6 +17,7 @@ import androidx.security.crypto.MasterKey
 import io.github.rustlanglatam.zeroclaw.Client
 import io.github.rustlanglatam.zeroclaw.ClientOptions
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -126,6 +127,7 @@ class AssistantService : Service() {
             if (up) {
                 failures = 0
                 if (first) { first = false; firstUp() }
+                daemon?.let { process -> thread(name = "zeroclaw-watch", isDaemon = true) { watch(process) } }
                 val code = daemon?.waitFor()
                 gatewayOurs = false
                 if (stopping) return
@@ -139,6 +141,28 @@ class AssistantService : Service() {
             }
             Thread.sleep(pause)
             pause = (pause * 2).coerceAtMost(60_000L)
+        }
+    }
+
+    /**
+     * Checks the gateway of a running [process] every [WATCH_MS]: a process that is alive but whose gateway misses two
+     * checks in a row is hung, so it is destroyed and [supervise] starts it again. The restart is recorded in Activity.
+     */
+    private fun watch(process: Process) {
+        var misses = 0
+        while (process.isAlive && !stopping) {
+            Thread.sleep(WATCH_MS)
+            if (!process.isAlive || stopping || Guard.policy.stopped) continue
+            val ok = runCatching { runBlocking { withTimeout(HEALTH_MS) { client().system.health().status == "ok" } } }.getOrDefault(false)
+            if (ok) { misses = 0; continue }
+            if (++misses < 2) continue
+            Log.e(TAG, "ZeroClaw's gateway stopped answering; restarting it")
+            Guard.journal.add(Principal.OWNER, "assistant engine", "restarted", "its gateway stopped answering")
+            // SIGKILL through [stopStale]: a hung or stopped process may never act on the SIGTERM of `destroy()`, and
+            // Android's `Process.destroyForcibly` sends the same signal.
+            process.destroy()
+            stopStale()
+            return
         }
     }
 
@@ -517,6 +541,12 @@ class AssistantService : Service() {
         const val TAG = "ZeroClaw"
 
         /** Version marker of the config this app writes; a config with another marker is replaced and paired again. */
+        /** Interval between gateway health checks while the daemon runs. */
+        private const val WATCH_MS = 60_000L
+
+        /** Time a health check may take before it counts as missed. */
+        private const val HEALTH_MS = 5_000L
+
         private const val CONFIG_MARK = "# ksandra-config 20"
 
         /** Returns the model's cost rates from `local.properties`, or an empty string; without them ZeroClaw counts tokens but not cost. */

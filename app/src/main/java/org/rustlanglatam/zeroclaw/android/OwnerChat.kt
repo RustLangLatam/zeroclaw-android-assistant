@@ -33,7 +33,43 @@ object OwnerChat {
     /** Connects once per process; the connection then reconnects by itself. */
     fun start(context: Context) {
         app = context.applicationContext
-        if (started.compareAndSet(false, true)) thread(name = "owner-chat") { connect(app, "owner") }
+        if (started.compareAndSet(false, true)) {
+            thread(name = "owner-chat") { connect(app, "owner") }
+            thread(name = "owner-chat-watch", isDaemon = true) { watch() }
+        }
+    }
+
+    /** Time the current cloud turn was sent; 0 when no cloud turn is in progress. */
+    @Volatile private var turnAt = 0L
+
+    /** Time of the last frame (or approval wait) in the current cloud turn. */
+    @Volatile private var lastFrame = 0L
+
+    /** Whether the current cloud turn has already said it is slow. */
+    @Volatile private var saidSlow = false
+
+    /**
+     * Keeps a cloud turn from staying silent: with no frame for [SLOW_MS] it says it is still working, and with none for
+     * [SILENT_MS] it gives up, says so, and drops the socket so the next turn starts on a new connection. Time spent
+     * waiting for the owner's approval does not count.
+     */
+    private fun watch() {
+        while (true) {
+            Thread.sleep(1_000)
+            if (turnAt == 0L) continue
+            val now = System.currentTimeMillis()
+            if (Ui.pending != null) { lastFrame = now; continue }
+            val idle = now - lastFrame
+            if (idle > SLOW_MS && !saidSlow) { saidSlow = true; Ui.add(Line(Line.Who.NOTE, t(R.string.ownerchat_still_working))) }
+            if (idle > SILENT_MS) {
+                Log.w(AssistantService.TAG, "chat: no answer in ${idle / 1000} s; turn dropped")
+                turnAt = 0L
+                Ui.thinking = false
+                Ui.add(Line(Line.Who.NOTE, t(R.string.ownerchat_no_answer_try_again)))
+                onError?.invoke()
+                socket?.let { runCatching { it.close() } }
+            }
+        }
     }
 
     /** Number of tool calls in the current turn. */
@@ -122,7 +158,7 @@ object OwnerChat {
         }
         val talk = if (owners) offlineTalk.toList() else emptyList()
         return (socket?.let { runCatching { it.send(withOffline(text, talk)) }.isSuccess } ?: false)
-            .also { if (it) offlineTalk.removeAll(talk.toSet()) }
+            .also { if (it) { offlineTalk.removeAll(talk.toSet()); lastFrame = System.currentTimeMillis(); saidSlow = false; turnAt = lastFrame } }
     }
 
     /** The owner's message of the current local-model turn, while a single retry is still available. */
@@ -185,6 +221,7 @@ object OwnerChat {
             // Only the owner socket reconnects automatically; the local model's socket is reopened on demand.
             if (main) { Thread.sleep(1000); connect(context, agent) }
         }) { chat, frame ->
+            if (main) { lastFrame = System.currentTimeMillis(); if (frame.type == FrameType.DONE || frame.type == FrameType.ERROR) turnAt = 0L }
             when (frame.type) {
                 FrameType.SESSION_START -> {
                     frame.sessionId.takeIf { it.isNotEmpty() }?.let { id ->
@@ -250,6 +287,12 @@ object OwnerChat {
     fun said(stored: String) = stored.replaceFirst(Regex("""^\s*\[CURRENT DATE & TIME:[^\]]*]\s*"""), "").trimStart().substringBefore(OFFLINE_MARK)
 
     private const val LOCAL_TURN_MS = 180_000L
+
+    /** A cloud turn with no frame for this long says it is still working. */
+    private const val SLOW_MS = 25_000L
+
+    /** A cloud turn with no frame for this long is given up. Long enough for a slow tool (a photo search labels images). */
+    private const val SILENT_MS = 90_000L
 
     /** Number of lines restored on start. */
     private const val HISTORY = 30

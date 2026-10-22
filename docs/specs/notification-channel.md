@@ -205,4 +205,5 @@ only in debug builds (`AssistantService.logged`). While paused, no turn starts.
 
 - Without a screen lock, work replies (strong approvals) are refused before asking (see
   [access-model.md › Open issues](access-model.md#open-issues)).
-- Turns wait on the gateway without a separate watchdog; a stalled gateway costs each turn its full timeout.
+- A stalled gateway costs a third-party turn up to its timeout (180 s) until the gateway watchdog restarts the daemon
+  (at most about 2 minutes; [assistant-service.md](assistant-service.md#failure-modes)).
