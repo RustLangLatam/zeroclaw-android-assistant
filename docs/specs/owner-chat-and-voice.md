@@ -247,6 +247,11 @@ turn), `apps`, `groups`, `stop`, `clean` (counters), `clearActivity`, `fresh` (n
   Kotlin client.
 - An answer claiming an action with no tool run is not shown as is.
 
+**Offers** (`Offers.kt`): on a morning (06:00–11:59) of the first week after setup (day 1 to 7; the setup day is the
+first time the app sees it, plain prefs `offers`), when the owner has no routine, the app shows once a card: *"Shall
+I tell you your day every morning at 8?"*. *Yes, at 8* creates a daily 08:00 routine in ZeroClaw's cron
+(`Routines.add`); *No, thanks* does nothing; it is never offered again. Debug: `--ez offerMorning true` shows the card.
+
 **Assist gesture** (`Assist.kt`): once the owner chooses the app as the digital assistant (system default apps; the
 role cannot be requested by an app, so Settings › Presence opens that screen and shows whether it is chosen), the
 system's assist gesture (long press on home, a bottom-corner swipe, `ACTION_ASSIST`; also `VOICE_COMMAND`) starts

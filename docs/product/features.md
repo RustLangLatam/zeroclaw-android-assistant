@@ -74,6 +74,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Birthdays | Contacts' birthdays from the phone: a notice the day before with a card to write something (proposed, never sent on its own) or be reminded; "who has a birthday soon?" | Implemented |
 | Before an appointment | "Time to leave" 30 minutes (by voice) before an event with an address, opening the maps app; a low-battery notice when an appointment is within the hour | Implemented |
 | Routines | "every Sunday at nine, tell me what's on my week": ZeroClaw cron jobs running owner turns | Implemented |
+| Morning briefing offered | In the first week, on a morning, the app offers once to tell the owner their day at 8; "yes" creates the routine | Implemented |
 
 ## Contacts, photos, files, apps, device
 
