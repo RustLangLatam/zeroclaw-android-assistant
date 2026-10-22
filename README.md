@@ -56,29 +56,30 @@ Keystore key.
 ## Contents
 
 1. [Overview](#overview)
-2. [Presence Mark](#presence-mark)
-3. [Interaction](#interaction)
-4. [Home and widgets](#home-and-widgets)
-5. [Voice and manner](#voice-and-manner)
-6. [Colors](#colors)
-7. [Messages under rules](#messages-under-rules)
-8. [Rules](#rules)
-9. [Email and connectors](#email-and-connectors)
-10. [Calendar](#calendar)
-11. [Reminders](#reminders)
-12. [Contacts, photos and files](#contacts-photos-and-files)
-13. [News and cards](#news-and-cards)
-14. [Memory](#memory)
-15. [Offline](#offline)
-16. [Cost](#cost)
-17. [Security and privacy](#security-and-privacy)
-18. [Architecture](#architecture)
-19. [Versatility](#versatility)
-20. [Roadmap](#roadmap)
-21. [Limitations](#limitations)
-22. [Build and run](#build-and-run)
-23. [Documentation](#documentation)
-24. [License](#license)
+2. [Who it is for](#who-it-is-for)
+3. [Presence Mark](#presence-mark)
+4. [Interaction](#interaction)
+5. [Home and widgets](#home-and-widgets)
+6. [Voice and manner](#voice-and-manner)
+7. [Colors](#colors)
+8. [Messages under rules](#messages-under-rules)
+9. [Rules](#rules)
+10. [Email and connectors](#email-and-connectors)
+11. [Calendar](#calendar)
+12. [Reminders](#reminders)
+13. [Contacts, photos and files](#contacts-photos-and-files)
+14. [News and cards](#news-and-cards)
+15. [Memory](#memory)
+16. [Offline](#offline)
+17. [Cost](#cost)
+18. [Security and privacy](#security-and-privacy)
+19. [Architecture](#architecture)
+20. [Versatility](#versatility)
+21. [Roadmap](#roadmap)
+22. [Limitations](#limitations)
+23. [Build and run](#build-and-run)
+24. [Documentation](#documentation)
+25. [License](#license)
 
 ---
 
@@ -94,6 +95,36 @@ Three principles shape the design ([vision](docs/product/vision.md)):
   turn cannot reach an owner tool ([ADR-0003](docs/adr/0003-permissions-enforced-in-code.md)).
 - **ZeroClaw first.** The app adds only what requires the phone and reaches ZeroClaw only through the official Kotlin
   client ([ADR-0009](docs/adr/0009-gateway-only-through-kotlin-client.md)).
+
+## Who it is for
+
+An ordinary phone owner, not a power user: nothing to install besides the app, no terminal, no scripts, no
+configuration files. Four everyday profiles guide what gets built; each line below works today unless it links to
+its issue.
+
+**A parent short on time**
+- "Tell Ana I'll be late" without opening the messaging app.
+- Family messages answered when the owner cannot, within the owner's rules, with an undo window.
+- Medicine reminders that insist until acknowledged. Every 8 hours or on set weekdays: [#13](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/13).
+- A photo of a school circular turned into a reminder: [#16](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/16). A shopping list by voice: [#15](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/15).
+
+**An older person**
+- Speaking without touching anything; answers read aloud.
+- Medicines that ring full screen, like a call, until acknowledged.
+- Basic answers without internet: reminders, alarms, today's calendar, weather, opening an app.
+- A warning when a message looks like a scam: [#17](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/17). "Call my daughter" opening the dialer: [#19](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/19). A
+  simple mode with large text: [#23](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/23).
+
+**A small-business owner**
+- Important email separated from the noise; a reply to a client drafted and sent only after the owner approves with
+  the screen lock.
+- A calendar that refuses clashes and finds free time.
+- "What do I still have to answer?": [#12](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/12). Bills and parcels from email: [#20](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/20).
+
+**A commuter**
+- Music and media by voice; the phone's controls by voice (volume, brightness, do-not-disturb).
+- "Driving, I'll write later" sent to family and work, never to strangers: [#11](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/11). A notice before an
+  appointment with the way there: [#21](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/21).
 
 ## Presence Mark
 
