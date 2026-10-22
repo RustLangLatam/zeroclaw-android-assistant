@@ -68,7 +68,10 @@ Notifications posted here (titles and channel names from string resources, [ADR-
 The single reference for every key is
 [architecture › configuration](../architecture/configuration.md). What this service reads: build
 time, from `local.properties` (never committed) through `app/build.gradle.kts` (`localString`, a
-missing key is `""`) into `BuildConfig`, read only here unless noted:
+missing key is `""`) into `BuildConfig`, as defaults under the values the owner enters in Connectors › Services
+(`Keys`, [ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)); release builds have no keys. The table
+lists the build defaults; `initialConfig()` reads each through `Keys[…]`. A save in the form bumps `keys.version`,
+and `run()` rewrites `config.toml` when it differs from `config.keys` in the prefs:
 
 | `local.properties` | `BuildConfig` | Used in | Required |
 |---|---|---|---|
@@ -121,10 +124,11 @@ it is extracted; downloaded for `v0.8.5` and checked by SHA-256 in `app/build.gr
 - `[web_fetch]` enabled, `allowed_domains` = `FETCH_DOMAINS` (news and reference sites) and their
   subdomains, `max_response_size = 500000`. `[http_request] enabled = false`.
 - Providers: `[providers.models.<MODEL_PROVIDER>.main]` (`temperature = 0.3`) and `.warm`
-  (`temperature = 0.75`, `max_tokens = 1500`), both `model = BuildConfig.MODEL`,
-  `api_key = BuildConfig.MODEL_API_KEY` (from `local.properties`).
+  (`temperature = 0.75`, `max_tokens = 1500`), both `model = Keys[MODEL]`, `api_key = Keys[MODEL_KEY]`
+  (the owner's, else the debug build's `local.properties`).
 - Optional `[cost.rates.providers.models.<provider>."<model>"]` with `input_per_mtok` /
-  `output_per_mtok` when `zeroclaw.inputPerMTok` and `zeroclaw.outputPerMTok` are set.
+  `output_per_mtok` when `zeroclaw.inputPerMTok` and `zeroclaw.outputPerMTok` are set and the model in use is
+  the build's.
 - Per principal (`name` = `owner` / `third_party`, `PhoneMcp.server`):
 
 | Section | owner | third_party |

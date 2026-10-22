@@ -941,6 +941,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Saves service settings and keys ([Keys]) and restarts the daemon with the rewritten config. Replacing settings
+     * already in use needs the owner's credential (it changes where their data goes); the first ones do not.
+     */
+    fun saveKeys(values: Map<Keys.Key, String>, done: (String?) -> Unit) {
+        if (!values.all { (k, v) -> Keys.valid(k, v) }) return done(t(R.string.mainactivity_that_value_can_t_be_used))
+        fun apply() {
+            Keys.save(values)
+            AssistantService.reload?.invoke()
+            Ui.connector = null
+            Ui.refresh()
+            remark(t(R.string.mainactivity_saved_i_use_it_from_now))
+            done(null)
+        }
+        val first = !Keys.modelReady && Keys.Key.entries.none { Keys.entered(it) }
+        if (first) apply() else confirmOwner(t(R.string.mainactivity_change_the_services_i_use)) { ok -> if (ok) apply() else done(null) }
+    }
+
     fun setMail(on: Boolean) {
         Mailbox.reading = on
         Guard.save()
@@ -1225,6 +1243,7 @@ class MainActivity : ComponentActivity() {
     /** Returns the missing permissions, most important first, each with a localized message (the home screen shows one at a time). */
     fun lacking(): List<Missing> = buildList {
         val unlock = t(R.string.mainactivity_first_in_ksandra_s_info_menu)
+        if (!Keys.modelReady) add(Missing(t(R.string.mainactivity_i_have_no_model_to_think)) { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES })
         if (Inbox.apps.isNotEmpty() && !listening()) add(Missing(
             t(R.string.mainactivity_i_can_t_read_your_messages) +
                 (if (restricted()) unlock else t(R.string.mainactivity_turn_it_on_for_ksandra)),

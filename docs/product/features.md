@@ -132,7 +132,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Private screens | `FLAG_SECURE` on Interactions, Activity, Settings, Rules, Memory, Connectors and approvals | Implemented |
 | "Permissions and privacy" | States what leaves the phone, to whom and when | Implemented |
 | Connection log | A log of every connection that leaves the phone (ADR-0028, proposed) | Planned |
-| Model keys out of the APK | | Planned |
+| Keys entered by the owner | Model, search, video and voice keys entered in Connectors › Services, encrypted on the phone; release APKs contain none ([ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)) | Implemented |
 
 ## First run
 

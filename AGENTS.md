@@ -27,7 +27,8 @@ references its issue (`Closes #N`) and updates the specs it changes.
 - User-facing text goes to `app/src/main/res/values/strings.xml` (English) and `values-es/strings.xml` (Spanish); input
   keywords go to `app/src/main/assets/lexicon.json`, read by `Lexicon.kt`
   ([ADR-0029](docs/adr/0029-ui-text-in-android-string-resources.md)).
-- No secrets in git: keys only in `local.properties` (ignored).
+- No secrets in git: keys only in `local.properties` (ignored), and they reach debug builds only; release builds
+  contain no keys, the owner enters theirs in Connectors › Services (`Keys.kt`, ADR-0030).
 - Never send anything to real people or real apps, and never place calls. Test outgoing paths with the `fakechat`
   module on the emulator.
 - Permissions are enforced in code (`Policy.kt`), never in prompts. Every new tool declares its `Capability`; a
@@ -65,7 +66,8 @@ references its issue (`Closes #N`) and updates the specs it changes.
 | `app/.../Memory.kt`, `PhoneMemory.kt` | owner memory (told, inferred, stored by the agent) in ZeroClaw through the client; a sealed copy on the phone |
 | `app/.../Mailbox.kt`, `MailNotice.kt`, `PhoneMail.kt` | email from notifications: importance, notices, drafts in the owner's email app |
 | `app/.../EmailAccounts.kt`, `PhoneEmail.kt` | connected email accounts (Gmail, Yahoo, iCloud, IMAP/SMTP) read through ZeroClaw's email channel as observers ([ADR-0026](docs/adr/0026-google-email-through-zeroclaws-email-channel.md)) |
-| `app/.../Connectors.kt` | Connectors screen: connected services by kind, each provider with its guide and form |
+| `app/.../Connectors.kt` | Connectors screen: services (model, search, videos, voice keys) and connected accounts by kind, each with its form |
+| `app/.../Keys.kt` | service settings and keys entered by the owner, encrypted on the phone; the build's values as fallback (ADR-0030) |
 | `app/.../Agenda.kt` | clashes and free time before any commitment |
 | `app/.../Photos.kt`, `PhoneGallery.kt` | photo search: dates from MediaStore, on-device labels and faces |
 | `app/.../Files.kt`, `PhoneFiles.kt` | file search: Downloads, Documents, WhatsApp, Telegram, plus emails and messages |

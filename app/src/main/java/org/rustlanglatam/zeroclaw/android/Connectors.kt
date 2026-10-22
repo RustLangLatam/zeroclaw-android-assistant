@@ -27,6 +27,21 @@ import androidx.compose.ui.unit.dp
 object Connectors {
     /** Value of [Ui.connector] that opens the email provider picker. */
     const val PICK = "pick"
+
+    /** Value of [Ui.connector] that opens the services form (model, search, videos, voice keys). */
+    const val SERVICES = "services"
+
+    /** The services form's groups: a title and its settings, each with its field label. */
+    val GROUPS = listOf(
+        R.string.connectors_model to listOf(Keys.Key.MODEL_PROVIDER to R.string.connectors_provider, Keys.Key.MODEL to R.string.connectors_model_name, Keys.Key.MODEL_KEY to R.string.connectors_api_key),
+        R.string.connectors_web_search to listOf(Keys.Key.SEARCH_PROVIDER to R.string.connectors_provider, Keys.Key.SEARCH_KEY to R.string.connectors_api_key_or_url),
+        R.string.connectors_videos to listOf(Keys.Key.YOUTUBE_KEY to R.string.connectors_api_key),
+        R.string.connectors_natural_voice to listOf(
+            Keys.Key.VOICE_URL to R.string.connectors_websocket_url, Keys.Key.VOICE_MODEL to R.string.connectors_model_name,
+            Keys.Key.VOICE_KEY to R.string.connectors_api_key, Keys.Key.VOICE_NAME to R.string.connectors_voice_name,
+            Keys.Key.VOICE_PER_MINUTE to R.string.connectors_usd_per_minute,
+        ),
+    )
 }
 
 @Composable
@@ -41,6 +56,16 @@ fun ConnectorsPlace(ui: MainActivity, onBack: () -> Unit) {
                 t(R.string.connectors_i_read_each_account_whole_and),
                 Modifier.padding(start = 4.dp), style = MaterialTheme.typography.bodyMedium, color = Ink.slate,
             )
+            SectionLabel(t(R.string.connectors_services))
+            // Computed here, not inside the panel's content, so a save (which bumps Ui.tick) redraws it.
+            val model = if (Keys.modelReady) "${Keys[Keys.Key.MODEL_PROVIDER]} · ${Keys[Keys.Key.MODEL]}" else t(R.string.connectors_not_set_i_can_t_think)
+            Panel {
+                Item(
+                    t(R.string.connectors_model),
+                    model,
+                    divider = false, onClick = { Ui.connector = Connectors.SERVICES },
+                ) { Chevron() }
+            }
             SectionLabel(t(R.string.connectors_email))
             Panel {
                 EmailAccounts.accounts.forEach { a ->
@@ -76,6 +101,7 @@ fun ConnectorSheet(ui: MainActivity, which: String) {
                 }
             }
         }
+        which == Connectors.SERVICES -> ServicesForm(ui)
         which.startsWith("account:") -> EmailAccounts.accounts.firstOrNull { it.alias == which.removePrefix("account:") }?.let { a ->
             Sheet(close) {
                 Text(a.provider.label, style = MaterialTheme.typography.displaySmall)
@@ -135,6 +161,39 @@ private fun EmailForm(ui: MainActivity, provider: EmailAccounts.Provider) {
         Spacer(Modifier.height(10.dp))
         GhostButton(t(R.string.connectors_see_the_guide), Modifier.fillMaxWidth()) {
             Cards.show(t(R.string.connectors_connect_x, provider.yours), EmailAccounts.guide(provider), emptyList())
+        }
+    }
+}
+
+/**
+ * Shows the services form: each group's settings, prefilled with the current value; a key is never shown back, and
+ * left empty it keeps the one saved. Saving applies only what changed ([MainActivity.saveKeys]).
+ */
+@Composable
+private fun ServicesForm(ui: MainActivity) {
+    val values = remember { androidx.compose.runtime.mutableStateMapOf<Keys.Key, String>() }
+    var busy by remember { mutableStateOf(false) }
+    var problem by remember { mutableStateOf<String?>(null) }
+    Sheet({ if (!busy) Ui.connector = null }) {
+        Text(t(R.string.connectors_services), style = MaterialTheme.typography.displaySmall)
+        Spacer(Modifier.height(8.dp))
+        Text(t(R.string.connectors_services_explained), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
+        Connectors.GROUPS.forEach { (title, fields) ->
+            SectionLabel(t(title))
+            fields.forEach { (key, label) ->
+                val shown = values[key] ?: if (key.secret) "" else Keys[key]
+                val hint = if (key.secret && Keys[key].isNotBlank()) t(R.string.connectors_x_saved_leave_empty, t(label)) else t(label)
+                Field(shown, hint, keyboard = if (key.secret) KeyboardType.Password else KeyboardType.Uri, hidden = key.secret) { values[key] = it; problem = null }
+                Spacer(Modifier.height(10.dp))
+            }
+        }
+        problem?.let { Spacer(Modifier.height(10.dp)); Text(it, style = MaterialTheme.typography.bodyMedium, color = Ink.alert) }
+        Spacer(Modifier.height(20.dp))
+        // An empty key field keeps the saved key; other fields left as shown are unchanged.
+        val changed = values.filter { (k, v) -> if (k.secret) v.isNotBlank() else v.trim() != Keys[k] }
+        GlowButton(t(R.string.connectors_save), Modifier.fillMaxWidth(), enabled = !busy && changed.isNotEmpty()) {
+            busy = true
+            ui.saveKeys(changed) { error -> busy = false; problem = error }
         }
     }
 }

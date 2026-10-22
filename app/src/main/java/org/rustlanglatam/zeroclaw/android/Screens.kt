@@ -1124,6 +1124,8 @@ private fun NameSheet(name: String, onDismiss: () -> Unit, onSave: (String) -> U
 @Composable
 fun Rules(ui: MainActivity, onBack: () -> Unit) {
     var open by remember { mutableStateOf<Int?>(null) }
+    // Read after Ui.tick, so a change confirmed with the credential (applied from the prompt's callback) is shown.
+    Ui.tick
     val rules = Guard.policy.rules
     Column(Modifier.fillMaxSize()) {
         Header(t(R.string.screens_what_i_can_do), onBack)
