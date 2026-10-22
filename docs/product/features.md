@@ -15,6 +15,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Every setting by voice | `set_preference`, `set_contact_group`, `set_rule`, `open_section`; changes that widen access require the device credential | Implemented |
 | Assistant mode and app mode | Assistant mode shows only the mark; app mode shows widgets and every screen one tap away | Implemented |
 | Floating mark | Overlay over other apps while the app is in the background; tap opens, long press listens; shows new messages, approvals and the undo countdown | Implemented |
+| Assist gesture | Once chosen as the digital assistant app, holding home (or the corner swipe) opens the assistant listening over any app; no wake word, no always-on microphone | Implemented |
 | Presence Mark states | Resting, listening, processing, speaking, paused, offline; the ring reflects how much of the owner's profile is known | Implemented |
 | Cards | Content better seen than heard (drafts, options, steps, links, videos) shown as a card with small Markdown and up to three buttons that answer the agent | Implemented |
 | Interaction log | Each line in Interactions shows how it came (spoken, typed, touched) and which tools ran | Implemented |

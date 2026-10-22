@@ -1004,4 +1004,7 @@
     <string name="homewidgets_what_is_on_my_list">¿Qué tengo en la lista?</string>
     <string name="labels_open_the_dialer">Abrir el marcador para llamar a alguien</string>
     <string name="act_open_the_dialer_for_x">Abrir el marcador para llamar a %1$s</string>
+    <string name="screens_assist_gesture">Ábreme con el gesto del asistente</string>
+    <string name="screens_assist_gesture_on">Activo: mantener pulsado inicio (o el gesto de la esquina) me abre escuchando</string>
+    <string name="screens_assist_gesture_off">Elígeme como app de asistente digital; así, mantener pulsado inicio me abre escuchando</string>
 </resources>

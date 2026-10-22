@@ -59,6 +59,7 @@ references its issue (`Closes #N`) and updates the specs it changes.
 | `app/.../App.kt`, `Screens.kt` | the interface (Compose): setup, Home, Interactions, Activity, Settings, approvals |
 | `app/.../Theme.kt`, `Labels.kt` | design tokens and the Presence Mark; the policy in plain words |
 | `app/.../Lexicon.kt` | input keywords per language, loaded from `assets/lexicon.json` |
+| `app/.../Assist.kt` | the system assist gesture (`ACTION_ASSIST`) opens the app listening |
 | `app/.../Commands.kt`, `Floating.kt` | interface commands handled in code; the floating mark over other apps |
 | `app/.../Cards.kt` | cards: small Markdown and buttons that answer the agent |
 | `app/.../Videos.kt` | video options for cards from the YouTube search API; without a key, a search link |
