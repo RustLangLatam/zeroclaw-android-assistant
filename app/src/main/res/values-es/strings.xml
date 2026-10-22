@@ -1007,4 +1007,16 @@
     <string name="screens_assist_gesture">Ábreme con el gesto del asistente</string>
     <string name="screens_assist_gesture_on">Activo: mantener pulsado inicio (o el gesto de la esquina) me abre escuchando</string>
     <string name="screens_assist_gesture_off">Elígeme como app de asistente digital; así, mantener pulsado inicio me abre escuchando</string>
+    <string name="share_bill">Factura</string>
+    <string name="share_appointment">Cita</string>
+    <string name="share_document">Lo que compartiste</string>
+    <string name="share_due_x">vence el %1$s</string>
+    <string name="share_remind_me_on_x">Recuérdamelo el %1$s</string>
+    <string name="share_pay_x">Pagar %1$s</string>
+    <string name="share_add_to_calendar">Ponlo en mi agenda</string>
+    <string name="share_read_it_to_me">Léemelo</string>
+    <string name="share_ask_ksandra">Pregúntale a Ksandra</string>
+    <string name="share_nothing_title">Nada que leer</string>
+    <string name="share_nothing">No encontré texto en lo que compartiste.</string>
+    <string name="share_ask_prompt">Te compartí un documento; este es su texto, leído en el teléfono. Dime en pocas palabras qué es y qué debo hacer; propón un recordatorio o una cita en la agenda solo para que yo lo confirme.</string>
 </resources>

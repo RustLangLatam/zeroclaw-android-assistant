@@ -277,6 +277,7 @@ class MainActivity : ComponentActivity() {
         intent.removeExtra(SEAL)
         approveIntent(intent)
         listenIntent(intent)
+        sharedIntent(intent)
         mailIntent(intent)
         placeIntent(intent)
     }
@@ -290,6 +291,17 @@ class MainActivity : ComponentActivity() {
     }
 
     /** Opens the email named by the `mail` extra, from an important-email notification. */
+    /** Shows what the owner shared ([ShareActivity]) as a card; the text leaves the phone only if the owner taps "ask". */
+    private fun sharedIntent(intent: Intent) {
+        if (!intent.getBooleanExtra("shared", false)) return
+        intent.removeExtra("shared")
+        val text = Shares.last ?: return
+        Shares.last = null
+        Shares.offer(text, speak = { runOnUiThread { speak(it) } }) { shared ->
+            runOnUiThread { send(t(R.string.share_ask_prompt) + "\n\n" + shared, byVoice = false) }
+        }
+    }
+
     private fun mailIntent(intent: Intent) {
         val id = intent.getIntExtra("mail", -1)
         if (id < 0) return

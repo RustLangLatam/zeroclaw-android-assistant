@@ -1007,4 +1007,16 @@
     <string name="screens_assist_gesture">Open me with the assistant gesture</string>
     <string name="screens_assist_gesture_on">On: holding home (or the corner swipe) opens me listening</string>
     <string name="screens_assist_gesture_off">Choose me as the digital assistant app; then holding home opens me listening</string>
+    <string name="share_bill">Bill</string>
+    <string name="share_appointment">Appointment</string>
+    <string name="share_document">What you shared</string>
+    <string name="share_due_x">due %1$s</string>
+    <string name="share_remind_me_on_x">Remind me on %1$s</string>
+    <string name="share_pay_x">Pay %1$s</string>
+    <string name="share_add_to_calendar">Add it to my calendar</string>
+    <string name="share_read_it_to_me">Read it to me</string>
+    <string name="share_ask_ksandra">Ask Ksandra about it</string>
+    <string name="share_nothing_title">Nothing to read</string>
+    <string name="share_nothing">I couldn\'t find any text in what you shared.</string>
+    <string name="share_ask_prompt">I shared a document with you; this is its text, read on the phone. Tell me in a few words what it is and what I should do; propose a reminder or a calendar entry only for me to confirm.</string>
 </resources>

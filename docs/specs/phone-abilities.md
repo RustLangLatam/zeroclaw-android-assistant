@@ -64,6 +64,29 @@ Runtime permissions are requested together in the setup's permissions step
 write, microphone, images). Usage access, all-files access, overlay and notification access are
 optional items there that open their system screens.
 
+## Sharing with the assistant
+
+"Share" from the gallery, a file manager or an email app lists the assistant (`ShareActivity`: `ACTION_SEND` for
+`image/*`, `application/pdf`, `text/plain`; its own task, no history). A picture is read with on-device text
+recognition (ML Kit, Latin script, bundled model); a PDF's first 3 pages are rendered with `PdfRenderer` at 1240 px
+wide and read the same way; plain text is taken as is. The picture never leaves the phone.
+
+`Shared.read` (pure, `SharedTest`) finds, in code: the kind (a bill when there is an amount and a bill or due word;
+an appointment when an appointment word and a time), the date that matters (the first after a due word, else the first
+upcoming; day first, month first only in English when needed; month names in both languages; a date without a year
+is its next occurrence), a time and the amount to pay. `Shares.offer` shows a card with what was found and up to
+three actions that run in code on the owner's tap (`Cards.show(…, handlers)`), never on their own:
+
+| Kind | Actions |
+|---|---|
+| Bill with a due date | *Remind me on <2 days before>* (`remind`, 09:00), *Read it to me*, *Ask Ksandra* |
+| Appointment with a date and time | *Add it to my calendar* (`add_event`), *Read it to me*, *Ask Ksandra* |
+| Anything with a date | *Remind me on <date>*, *Read it to me*, *Ask Ksandra* |
+
+The reminder and the event go through the owner's tools and `Guard` like any other. Only *Ask Ksandra* sends the text
+(at most 4 000 characters) to the model, as the owner's message, with an instruction to propose actions only for
+the owner to confirm.
+
 ## Calling someone
 
 `dial(contact)` (owner only, `Capability.DIAL`, `INTERNAL`, default `ACT`): finds the contact's number (an exact name
