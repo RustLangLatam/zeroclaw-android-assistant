@@ -12,11 +12,12 @@ class OfflineTest {
     }
 
     @Test fun toldBeforeAnythingDownloads() {
-        assertTrue(Offline.explanation.contains("1,1 GB"))
+        // The model's size comes from the build configuration (`offline.model.*`), absent in CI.
+        assertTrue(Offline.explanation.contains(Offline.size(Offline.BYTES)))
         assertTrue(Offline.explanation.contains("Wi-Fi"))
         Offline.progress = 0.42f
         try { assertEquals("Descargando · 42 %", Offline.status) } finally { Offline.progress = null }
-        assertEquals("Apagado", Offline.status)
+        assertEquals(if (Offline.configured) "Apagado" else t(R.string.offline_not_configured), Offline.status)
     }
 
     @Test fun theChoiceIsSaved() {
