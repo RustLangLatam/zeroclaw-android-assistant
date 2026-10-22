@@ -278,6 +278,12 @@ class MainActivity : ComponentActivity() {
         approveIntent(intent)
         listenIntent(intent)
         sharedIntent(intent)
+        intent.getIntExtra("mailOffer", -1).takeIf { it >= 0 }?.let { id ->
+            intent.removeExtra("mailOffer")
+            Shares.mails[id]?.let { mail ->
+                Shares.offer("${mail.subject}\n${mail.body}", speak = { runOnUiThread { speak(it) } }, ask = { shared -> runOnUiThread { send(t(R.string.share_ask_prompt) + "\n\n" + shared, byVoice = false) } }, from = mail.from)
+            }
+        }
         intent.getStringExtra("birthday")?.let { name ->
             intent.removeExtra("birthday")
             Birthdays.offer(name) { prompt -> runOnUiThread { send(prompt, byVoice = false) } }
@@ -301,9 +307,9 @@ class MainActivity : ComponentActivity() {
         intent.removeExtra("shared")
         val text = Shares.last ?: return
         Shares.last = null
-        Shares.offer(text, speak = { runOnUiThread { speak(it) } }) { shared ->
+        Shares.offer(text, speak = { runOnUiThread { speak(it) } }, ask = { shared ->
             runOnUiThread { send(t(R.string.share_ask_prompt) + "\n\n" + shared, byVoice = false) }
-        }
+        })
     }
 
     private fun mailIntent(intent: Intent) {

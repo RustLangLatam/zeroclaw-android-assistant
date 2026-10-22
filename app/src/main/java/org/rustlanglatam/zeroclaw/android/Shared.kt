@@ -10,7 +10,7 @@ import java.time.LocalTime
  * entry for the owner to confirm. Pure Kotlin, unit-tested on the JVM.
  */
 object Shared {
-    enum class Kind { BILL, APPOINTMENT, OTHER }
+    enum class Kind { BILL, APPOINTMENT, PARCEL, OTHER }
 
     /** What was found: the kind, the relevant date (the due date, or the appointment's), its time, and an amount as written. */
     data class Found(val kind: Kind, val date: LocalDate?, val time: LocalTime?, val amount: String?)
@@ -39,6 +39,16 @@ object Shared {
                 date(m.groupValues[2].toInt(), month, m.groupValues[3], today)?.let { found += position(text, norm, m.range.first) to it }
             }
         }
+        // "llega el jueves", "arrives on Thursday": the next such day (today included), only when no explicit date is
+        // given; next to one ("jueves 30 de octubre") the day name is decoration.
+        if (found.isNotEmpty()) return found.sortedBy { it.first }.distinctBy { it.second }
+        (0..6).forEach { i ->
+            Regex("\\b(" + Lexicon["routines.day.$i"] + ")\\b").findAll(norm).forEach { m ->
+                val dow = java.time.DayOfWeek.of(if (i == 0) 7 else i)
+                found += position(text, norm, m.range.first) to today.with(java.time.temporal.TemporalAdjusters.nextOrSame(dow))
+            }
+        }
+        if (Regex("\\b(" + Lexicon["reminders.day_tomorrow"] + ")\\b").containsMatchIn(norm)) found += position(text, norm, 0) to today.plusDays(1)
         return found.sortedBy { it.first }.distinctBy { it.second }
     }
 
@@ -73,7 +83,13 @@ object Shared {
         val dates = dates(text, today, english)
         val due = Regex("(" + Lexicon["shared.due"] + ")").find(norm)?.range?.first?.let { position(text, norm, it) }
         val date = (due?.let { d -> dates.firstOrNull { it.first >= d } } ?: dates.firstOrNull { !it.second.isBefore(today) } ?: dates.lastOrNull())?.second
-        val kind = when { bill && !(appointment && time != null) -> Kind.BILL; appointment -> Kind.APPOINTMENT; else -> Kind.OTHER }
+        val parcel = Regex("\\b(" + Lexicon["shared.parcel"] + ")").containsMatchIn(norm) && Regex("\\b(" + Lexicon["shared.arrives"] + ")").containsMatchIn(norm)
+        val kind = when {
+            parcel && !bill -> Kind.PARCEL
+            bill && !(appointment && time != null) -> Kind.BILL
+            appointment -> Kind.APPOINTMENT
+            else -> Kind.OTHER
+        }
         return Found(kind, date, time, amount)
     }
 }

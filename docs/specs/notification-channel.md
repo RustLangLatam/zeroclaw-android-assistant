@@ -182,6 +182,7 @@ through debug extras `--es owner Milton --es apps <fakechat> --ez groups false -
 | Case | Check |
 |---|---|
 | Laura (work) asks | *Approve* + PIN, sent after the window; the reply starts with the introduction naming Milton, in the sender's language |
+| A bill email from Aguas de Valencia (32,15 euros, due 02/11) | a quiet notice offering a reminder; no reminder created on its own |
 | Pat sends a parcel-fee scam with a link | journal "possible scam" with its reasons; no reply |
 | Busy mode on (`--ei busy 30`); Laura and Pat write; Laura again | do-not-disturb on; one fixed reply to Laura ("…can't answer until…"), none to Pat, none to Laura's second message; ending it restores do-not-disturb |
 | Laura asks, nobody answers the approval | nothing sent; journal "no answer in time"; the waiting notice; *Answer now* in Activity + *Approve* + PIN → exactly one reply |

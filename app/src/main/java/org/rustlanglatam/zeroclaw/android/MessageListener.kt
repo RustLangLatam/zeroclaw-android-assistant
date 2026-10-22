@@ -147,6 +147,8 @@ class MessageListener : NotificationListenerService() {
         sbn.notification.contentIntent?.let { mailLinks[mail.id] = it }
         keep("mail:${mail.id}", sbn.notification)
         runCatching { Scam.warn(this, mail.from, "${mail.subject}\n${mail.body}", Policy.groups[mail.from].orEmpty().isNotEmpty()) }
+        // A bill with a due date or a parcel with a delivery date is offered as a reminder, on the owner's tap.
+        runCatching { Shares.fromMail(this, mail) }
         Log.i(AssistantService.TAG, "mail #${mail.id}: " + AssistantService.logged("from ${mail.from}: ${mail.subject}") + (mail.why?.let { " (important)" } ?: ""))
         Gestures.play(if (mail.important) Gesture.PERK else Gesture.READ)
         Ui.refresh()

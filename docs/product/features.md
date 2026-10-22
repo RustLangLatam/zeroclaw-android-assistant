@@ -59,6 +59,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Email from notifications | Importance scored in code (family or work sender, urgent words, not bulk); quiet notice for important ones; drafts opened in the owner's email app | Implemented |
 | Connected accounts | Gmail, Yahoo, iCloud or any IMAP/SMTP server, each with a setup guide, read through ZeroClaw's email channel in observer mode | Implemented |
 | Acting on mail | Mark read, archive (notify), delete and send (approval with credential); the email is shown as a card before sending | Implemented |
+| Bills and parcels from email | A bill with a due date or a parcel with a delivery date is offered as a reminder (two days before a bill, on the parcel's day) with a quiet notice; nothing is created until the owner taps | Implemented |
 | Outlook | Requires OAuth | Planned |
 
 ## Calendar, reminders, routines

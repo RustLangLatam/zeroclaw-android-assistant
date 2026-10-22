@@ -169,6 +169,12 @@ sleep 10
 check "the scam is pointed out with its reasons" 'log | grep -q "possible scam"'
 check "no reply to the scam" '[ "$(replies | grep -c ^Pat)" = "$pb" ]'
 
+echo "a bill by email: offered as a reminder, nothing created on its own"
+adb shell am broadcast -n $FAKE/.Mail --es from "'Aguas de Valencia'" --es subject "'Recibo de agua'" --es text "'Importe: 32,15 euros. Vence el 02/11/2030.'" >/dev/null
+sleep 6
+check "the bill is offered with its amount and due date" 'adb shell dumpsys notification --noredact | grep -A20 "id=402" | grep -q "32,15"'
+check "no reminder created on its own" '! log | grep -q "Recibo de agua"'
+
 echo "kill switch: nothing goes out"
 adb shell am start -n $APP/.MainActivity --ez stop true >/dev/null; sleep 2
 before=$(replies | wc -l)
