@@ -98,7 +98,30 @@ class MessageListener : NotificationListenerService() {
                 Inbox.status(entry, Inbox.Status.PAUSED)
                 continue
             }
+            if (busy(message, sender, entry)) continue
             Turns.thirdParty(this, sender, message.text) { answer -> answer(message.conversation, sender, entry, answer) }
+        }
+    }
+
+    /**
+     * In busy mode ([Busy]): tells a family or work contact once, with the fixed reply in their language, and keeps their
+     * later messages for the owner without an agent turn. Returns `false` when busy mode is off or the policy refuses
+     * the reply (anyone else), so the usual turn runs.
+     */
+    private fun busy(message: Inbox.Message, sender: String, entry: Inbox.Entry): Boolean {
+        val period = Busy.now() ?: return false
+        val target = Policy.target(sender)
+        if (target.groups.isEmpty()) return false
+        if (!period.owes(sender)) { Inbox.status(entry, Inbox.Status.HELD_BACK); return true }
+        val until = java.time.Instant.ofEpochMilli(period.until).atZone(java.time.ZoneId.systemDefault()).toLocalTime().withSecond(0).withNano(0).toString()
+        val lang = if (Inbox.english(message.text)) Lang.EN else Lang.ES
+        val text = Inbox.withIntro(message.conversation, Busy.reply(lang, period.reason, Policy.owner, until))
+        val result = Guard.attempt(Principal.THIRD_PARTY, Capability.BUSY_REPLY, target, Act.busyReply(entry.id, sender, text)) {
+            if (reply(message.conversation, text)) "Told $sender the owner is busy." else "NOT sent: the notification has no reply action or is gone"
+        }
+        return when (result) {
+            is Guard.Outcome.Done -> { Busy.told(sender); Inbox.status(entry, if (result.text.startsWith("NOT")) Inbox.Status.COULD_NOT_ANSWER else Inbox.Status.ANSWERED); true }
+            else -> false
         }
     }
 

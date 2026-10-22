@@ -438,6 +438,8 @@ class MainActivity : ComponentActivity() {
         }
         // Scripted UI captures: palette, settings section, card shown or closed, and a line spoken verbatim.
         intent.getStringExtra("palette")?.let { setPalette(Palettes.of(it)) }
+        // Busy mode for N minutes (`--ei busy 30`); 0 ends it.
+        if (intent.hasExtra("busy")) intent.getIntExtra("busy", 0).let { if (it > 0) Busy.start(this, it.toLong(), Busy.Reason.BUSY) else Busy.end(this) }
         // Schedules a high-level reminder three seconds ahead to exercise the full-screen reminder call.
         intent.getStringExtra("call")?.let { PhoneReminders(this).add(it, System.currentTimeMillis() + 3_000, Reminders.Level.HIGH, false) }
         if (intent.hasExtra("appMode")) { Ui.place = Place.HOME; Guard.appMode = intent.getBooleanExtra("appMode", false); Guard.save() }

@@ -75,7 +75,7 @@ fixed `Risk`.
 |---|---|
 | internal, reversible (`INTERNAL`) | `ALARM_SET`, `MESSAGE_TAKE`, `APP_OPEN`, `MEDIA_CONTROL`, `MEMORY`, `EMAIL_DRAFT`, `CALENDAR_WRITE`, `REMINDERS`, `NEWS`, `INTERFACE`, `DEVICE`, `SETTINGS`, `ROUTINES`, `ITEMS_MANAGE`, `CONTACTS_WRITE` |
 | personal data read (`PERSONAL_READ`) | `CONTACTS_READ`, `CALENDAR_READ`, `APPS_READ`, `EMAIL_READ`, `PHOTOS_READ`, `FILES_READ`, `MESSAGES_READ` |
-| outward, reversible (`OUTWARD_REVERSIBLE`) | `AVAILABILITY_SHARE` |
+| outward, reversible (`OUTWARD_REVERSIBLE`) | `AVAILABILITY_SHARE`, `BUSY_REPLY` |
 | outward, irreversible (`OUTWARD_IRREVERSIBLE`) | `MESSAGE_SEND`, `NOTIFICATION_REPLY` |
 | commits the owner (`COMMITS_OWNER`) | `CALENDAR_ACCEPT`, `CONTACT_GROUPS`, `CHANNEL` (settings that widen what is read or shorten the undo window), `ITEMS_DELETE`, `RULES` |
 | forbidden (`FORBIDDEN`) | `CONTACTS_EXPORT`; by design also OTP and 2FA codes, passwords, banking apps, health data, forwarding private conversations (no tool exists for them) |
@@ -193,6 +193,8 @@ third_party:
   notification.reply:   { scope: group:work,   autonomy: ask }
   notification.reply:   { scope: group:family, autonomy: act_notify, limit: 5/day }
   notification.reply:   { scope: unknown,      autonomy: never }
+  busy.reply:           { scope: group:family, autonomy: act_notify, limit: 10/day }   # app-written, busy mode only
+  busy.reply:           { scope: group:work,   autonomy: act_notify, limit: 10/day }
 never: [otp, passwords, banking_apps, health, forward_private]
 ```
 
@@ -224,6 +226,11 @@ never: [otp, passwords, banking_apps, health, forward_private]
   work group only). The third-party agent's answers go out as `NOTIFICATION_REPLY` (see
   [Notification channel](#notification-channel)). Personal data is never readable by the
   third-party agent, whatever the rules say.
+- Busy mode (`set_busy`, owner only; `Busy.kt`): until its end, family and work contacts get one fixed reply each,
+  written in code in the sender's language ("Milton can't answer until 11:00…"), as `BUSY_REPLY`; it discloses only
+  that the owner cannot answer, like `availability`. No agent turn runs for them meanwhile; their later messages are
+  kept (`held_back`). Unknown senders: no rule, so `NEVER`, and the usual turn (take the message). Do-not-disturb is
+  turned on if the app has access, and restored at the end only if the app turned it on. At most 12 hours.
 - Third-party turns run one at a time, so each tool call is decided for the right sender (an MCP
   call does not say which turn it belongs to in ZeroClaw v0.8.5;
   [ADR-0007](../adr/0007-third-party-turns-one-at-a-time.md)). A third-party tool called when no

@@ -127,6 +127,11 @@ semaphore before calling `done`, so a reply waiting for the owner's approval doe
 turn. A 401 at open makes the app pair again (`AssistantService.pair(refused = token)`).
 `Turns.scribe` (unattended text) times out after 120 000 ms and does not take the semaphore.
 
+**Busy mode** (`MessageListener.busy`, before any turn; [access-model.md](access-model.md#as-built)): while
+`Busy.now()` is set, a family or work contact is answered once with `Busy.reply` (`BUSY_REPLY`, the sender's
+language, no undo window: it is reversible and says only that the owner cannot answer), their later messages are
+marked `held_back`, and anyone else takes the usual turn.
+
 **Reply** (`MessageListener.answer`):
 1. Blank or `null` answer → status `no_answer`. Else `waiting`.
 2. `Inbox.withIntro`: on the first reply in a conversation, prefix the introduction (`inbox_intro`:
@@ -164,6 +169,7 @@ through debug extras `--es owner Milton --es apps <fakechat> --ez groups false -
 | Case | Check |
 |---|---|
 | Laura (work) asks | *Approve* + PIN, sent after the window; the reply starts with the introduction naming Milton, in the sender's language |
+| Busy mode on (`--ei busy 30`); Laura and Pat write; Laura again | do-not-disturb on; one fixed reply to Laura ("…can't answer until…"), none to Pat, none to Laura's second message; ending it restores do-not-disturb |
 | Laura asks, nobody answers the approval | nothing sent; journal "no answer in time"; the waiting notice; *Answer now* in Activity + *Approve* + PIN → exactly one reply |
 | Ana writes while Wi-Fi and data are off | nothing sent offline; once the network is validated again, one reply after the undo window (`CatchUp` retries the unanswered entries; a turn still pending completes) |
 | Ana (family) | answered without asking, after the window |

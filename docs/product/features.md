@@ -39,6 +39,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 |---|---|---|
 | Notification channel | Reads notifications of the messaging apps the owner selects (none by default); group chats off by default | Implemented |
 | Rules by group | Family (Ana): answered automatically with an undo window, 5 a day. Work (Laura): reply shown for approval with the device credential. Unknown (Pat): never answered | Implemented |
+| Busy, meeting or driving mode | "I'm in a meeting until 11": do-not-disturb on, and family and work who write get one fixed reply each (written by the app, not the model); strangers never; ends on its own | Implemented |
 | Introduction | The first reply in a conversation introduces the assistant, in the sender's language | Implemented |
 | Messages as data | Third-party turns run in a separate agent with two tools only (`take_message`, `availability`) | Implemented |
 | Activity | Who wrote, what was done, undone or not approved | Implemented |

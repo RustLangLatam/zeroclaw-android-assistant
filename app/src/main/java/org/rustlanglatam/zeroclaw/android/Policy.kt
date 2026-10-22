@@ -32,6 +32,8 @@ enum class Capability(val risk: Risk) {
     CALENDAR_READ(Risk.PERSONAL_READ),
     MESSAGE_TAKE(Risk.INTERNAL),
     AVAILABILITY_SHARE(Risk.OUTWARD_REVERSIBLE),
+    /** The fixed busy-mode reply ([Busy]): says only that the owner cannot answer now, once per contact and period. */
+    BUSY_REPLY(Risk.OUTWARD_REVERSIBLE),
     MESSAGE_SEND(Risk.OUTWARD_IRREVERSIBLE),
     /** Replies to a messaging app's notification through its reply action. */
     NOTIFICATION_REPLY(Risk.OUTWARD_IRREVERSIBLE),
@@ -296,6 +298,8 @@ class Policy(rules: List<Rule>, private val today: () -> LocalDate = LocalDate::
             Rule(Principal.OWNER, Capability.MESSAGE_SEND, Scope.group("family"), Autonomy.ACT_NOTIFY, perDay = 5),
             Rule(Principal.THIRD_PARTY, Capability.MESSAGE_TAKE, Scope.ALL, Autonomy.ACT, perDay = 10),
             Rule(Principal.THIRD_PARTY, Capability.AVAILABILITY_SHARE, Scope.group("work"), Autonomy.ACT),
+            Rule(Principal.THIRD_PARTY, Capability.BUSY_REPLY, Scope.group("family"), Autonomy.ACT_NOTIFY, perDay = 10),
+            Rule(Principal.THIRD_PARTY, Capability.BUSY_REPLY, Scope.group("work"), Autonomy.ACT_NOTIFY, perDay = 10),
             Rule(Principal.THIRD_PARTY, Capability.NOTIFICATION_REPLY, Scope.group("work"), Autonomy.ASK),
             Rule(Principal.THIRD_PARTY, Capability.NOTIFICATION_REPLY, Scope.group("family"), Autonomy.ACT_NOTIFY, perDay = 5),
         )

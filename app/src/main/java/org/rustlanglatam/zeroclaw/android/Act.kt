@@ -76,6 +76,8 @@ data class Act(val log: String, val title: String, val detail: String? = null, v
         fun removeRoutine(id: String) = Act("remove routine #$id", t(R.string.act_remove_a_routine))
         fun searchContacts(query: String) = Act("search contacts \"$query\"", t(R.string.act_search_x_in_your_contacts, query))
         fun messageFrom(from: String, text: String) = Act("message from $from: $text", t(R.string.act_message_from_x, from), text)
+        fun busyReply(entry: Int, to: String, text: String) = Act("busy reply #$entry to $to: $text", t(R.string.act_tell_x_you_re_busy, to), text, ref = entry)
+        fun busy(minutes: Long) = Act("busy mode for $minutes min", t(R.string.act_busy_mode_for_x_min, minutes))
         fun availability(hour: Int, from: String) = Act("availability at $hour:00 for $from", t(R.string.act_tell_x_whether_you_re_free, from, hour))
     }
 }

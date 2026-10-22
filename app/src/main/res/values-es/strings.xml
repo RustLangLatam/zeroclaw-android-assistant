@@ -974,4 +974,11 @@
     <string name="screens_model_budget">Presupuesto mensual del modelo</string>
     <string name="screens_model_budget_detail" formatted="false">Pasado este, solo lo básico hasta el mes que viene; te aviso al 80 %.</string>
     <string name="screens_model_budget_no_price">El modelo no tiene precio, así que no sé lo que cuesta: añádelo en Conectores › Servicios.</string>
+    <string name="busy_reply_busy">%1$s no puede atender hasta las %2$s y te escribe después. Soy %3$s, su asistente.</string>
+    <string name="busy_reply_driving">%1$s va al volante y te escribe en cuanto pueda. Soy %2$s, su asistente.</string>
+    <string name="busy_ended">Terminó el modo ocupado.</string>
+    <string name="busy_ended_told">Terminó el modo ocupado. Avisé a %1$s de que no podías atender.</string>
+    <string name="labels_say_you_re_busy">Decir que no puedes atender (modo ocupado)</string>
+    <string name="act_tell_x_you_re_busy">Decirle a %1$s que no puedes atender</string>
+    <string name="act_busy_mode_for_x_min">Modo ocupado durante %1$d min</string>
 </resources>
