@@ -988,7 +988,13 @@ class MainActivity : ComponentActivity() {
      * before reaching this point in that case (`Guard.secure`).
      */
     fun confirmOwner(what: String, done: (Boolean) -> Unit) {
-        if (!secure()) return done(true)
+        // Without a screen lock there is nothing to confirm with, and a tap could come from anyone holding the phone:
+        // refused (fail closed), with the reason and the way to set a lock.
+        if (!secure()) {
+            toast(t(R.string.mainactivity_set_a_screen_lock_first))
+            openSecurity()
+            return done(false)
+        }
         // Combining BIOMETRIC_STRONG with DEVICE_CREDENTIAL fails when no biometric is enrolled; DEVICE_CREDENTIAL
         // alone is supported from API 30, the minimum SDK.
         val authenticators = if (fingerprint()) Authenticators.BIOMETRIC_STRONG or Authenticators.DEVICE_CREDENTIAL
@@ -1018,6 +1024,13 @@ class MainActivity : ComponentActivity() {
     /** Changes rule [index] to [autonomy], with the owner's confirmation. */
     fun editRule(index: Int, autonomy: Autonomy) {
         val (title, _) = Labels.rule(Guard.policy.rules[index])
+        // Narrowing a rule never needs the credential, so it works without a screen lock too.
+        if (autonomy <= Guard.policy.rules[index].autonomy) {
+            Guard.policy.edit(index, autonomy)
+            Guard.save()
+            Ui.refresh()
+            return
+        }
         confirmOwner("$title → ${Labels.autonomy(autonomy)}") { ok ->
             if (!ok) return@confirmOwner
             Guard.policy.edit(index, autonomy)
@@ -1115,8 +1128,13 @@ class MainActivity : ComponentActivity() {
             Ui.refresh()
             if (first) introduce()
         }
-        if (!secure()) apply() else confirmOwner(what) { ok -> if (ok) apply() }
+        // The first setup has nothing to protect yet; later, a change that widens what the assistant does (more
+        // apps, group chats, people moved into a group) needs the credential, and without a screen lock is refused.
+        if (!Guard.setUp || !widens(d)) apply() else confirmOwner(what) { ok -> if (ok) apply() }
     }
+
+    private fun widens(d: Draft) =
+        Policy.widens(Inbox.apps, d.apps, Inbox.groups, d.groupChats, Policy.groups, Policy.groupsOf(d.family, d.work))
 
     /**
      * Adds the introduction (the assistant's name and permissions, from the rules in force) to the chat; then,

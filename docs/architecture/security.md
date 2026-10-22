@@ -185,8 +185,9 @@ answer, an exception or a cancelled prompt is a **no** (fail closed).
   for, so `Guard.attempt` refuses strong approvals before asking (`Guard.secure`). From the
   notification, Approve opens the app, which asks for the credential; Decline is a broadcast.
 
-Also behind `confirmOwner`: editing a rule, resuming after a pause, and saving the setup or changing
-who is family or work. Not behind it: voice, palette, warmth and the floating mark. Changes that
+Also behind `confirmOwner`: widening a rule, resuming after a pause, and a setup change that widens
+what is read or answered (new apps, group chats, a person given a group). Without a screen lock these are refused
+(fail closed); narrowing (pausing, lowering a rule, removing people or apps) never needs the credential. Not behind it: voice, palette, warmth and the floating mark. Changes that
 widen what is read or shorten the undo window go through `CHANNEL` (strong approval) when requested
 by voice.
 
@@ -284,5 +285,4 @@ Every port is bound to `127.0.0.1`, which every app on the phone can reach.
 | ZeroClaw's `/admin/paircode/new` trusts loopback alone: another app can revoke the app's pairing (detected and reported to the owner; the fix is upstream) | [zeroclaw.md](zeroclaw.md) |
 | ZeroClaw's memory database, sessions and `config.toml` are not sealed to the phone (the app's own files are) | [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md) |
 | The model key is compiled into the APK; secrets, including connected email app passwords, are plain text in `config.toml` (app-private, excluded from backups) | [ADR-0004](../adr/0004-secrets-encryption-off.md) |
-| On a phone without a screen lock, rule edits and resuming after a pause are confirmed by a tap (there is no credential); strong approvals are refused | `MainActivity.confirmOwner`, `Guard.attempt` |
 | No log of connections leaving the phone yet (proposed) | ADR-0028 |

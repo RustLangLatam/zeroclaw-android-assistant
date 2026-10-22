@@ -182,4 +182,18 @@ class PolicyTest {
         assertEquals("busy", Disclosure.availability(true))
         assertEquals("free", Disclosure.availability(false))
     }
+
+    @Test
+    fun onlyAWiderSetupNeedsTheCredential() {
+        val apps = setOf("com.whatsapp")
+        val groups = mapOf("Ana" to setOf("family"), "Laura" to setOf("work"))
+        fun widens(newApps: Set<String> = apps, chats: Boolean = false, newGroups: Map<String, Set<String>> = groups) =
+            Policy.widens(apps, newApps, false, chats, groups, newGroups)
+        assertFalse(widens())
+        assertFalse(widens(newApps = emptySet(), newGroups = mapOf("Ana" to setOf("family"))))
+        assertTrue(widens(newApps = apps + "org.telegram.messenger"))
+        assertTrue(widens(chats = true))
+        assertTrue(widens(newGroups = groups + ("Pat" to setOf("family"))))
+        assertTrue(widens(newGroups = mapOf("Ana" to setOf("family", "work"), "Laura" to setOf("work"))))
+    }
 }

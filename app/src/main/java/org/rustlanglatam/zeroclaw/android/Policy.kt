@@ -241,6 +241,16 @@ class Policy(rules: List<Rule>, private val today: () -> LocalDate = LocalDate::
         fun groupsOf(family: Collection<String>, work: Collection<String>): Map<String, Set<String>> =
             (family + work).associateWith { setOfNotNull("family".takeIf { _ -> it in family }, "work".takeIf { _ -> it in work }) }
 
+        /**
+         * Whether a setup change widens what the assistant reads or answers: new messaging apps, group chats turned on,
+         * or a person given a group they did not have. Removals and unchanged values do not widen.
+         */
+        fun widens(
+            apps: Set<String>, newApps: Set<String>, groupChats: Boolean, newGroupChats: Boolean,
+            groups: Map<String, Set<String>>, newGroups: Map<String, Set<String>>,
+        ): Boolean = (newApps - apps).isNotEmpty() || (newGroupChats && !groupChats) ||
+            newGroups.any { (name, now) -> !groups[name].orEmpty().containsAll(now) }
+
         val OWNER_TARGET = Target("owner")
 
         /** The owner's name as the assistant uses it; set during setup. */

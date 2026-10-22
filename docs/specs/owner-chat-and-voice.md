@@ -215,8 +215,8 @@ In the background a floating notice appears and the card waits for the app. The 
 
 **Owner credential** (`confirmOwner`). `BiometricPrompt` with `BIOMETRIC_STRONG | DEVICE_CREDENTIAL`
 when a strong biometric is enrolled, `DEVICE_CREDENTIAL` alone otherwise (the combination fails
-without an enrolled biometric); success → `true`; error or cancel → `false` with a toast. Without a
-secure screen lock it returns `true` immediately.
+without an enrolled biometric); success → `true`; error or cancel → `false` with a toast. Without a secure screen lock it returns `false` at once (fail closed), with a toast saying a screen lock is needed, and
+opens the security settings.
 
 **Lifecycle.** `onStart`: sets `prompt` (approval sheet, gesture EXPECT, spoken line when answers are
 read aloud), `note`, `MailNotice.onImportant`, `PhoneReminders.onDue`, `PhoneNews.onBriefing`,
@@ -272,4 +272,3 @@ turn), `apps`, `groups`, `stop`, `clean` (counters), `clearActivity`, `fresh` (n
 
 ## Open issues
 
-- `confirmOwner` returns `true` without a screen lock ([policy-engine.md](policy-engine.md)).

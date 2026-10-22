@@ -296,7 +296,8 @@ settings.
 
 ## Open issues
 
-- Without a screen lock (`KeyguardManager.isDeviceSecure` false) there is no credential: strong
-  approvals are refused by `Guard.attempt` before asking, while rule changes, resuming after a
-  pause and saving the setup pass without confirmation (`confirmOwner` returns `true` at once).
-  The introduction after the setup lists the missing screen lock.
+- Without a screen lock (`KeyguardManager.isDeviceSecure` false) there is no credential, so nothing that widens what
+  the assistant may do changes: strong approvals are refused by `Guard.attempt` before asking; resuming after a
+  pause, widening a rule and a setup change that widens (`Policy.widens`: new apps, group chats, a person given a
+  group) are refused by `confirmOwner`, which opens the security settings. Narrowing stays free: pausing, lowering a
+  rule, removing people or apps. The first setup needs no credential. The introduction lists the missing screen lock.

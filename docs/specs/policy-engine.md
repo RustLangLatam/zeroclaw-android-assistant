@@ -183,9 +183,10 @@ aloud); otherwise the notification. The prompt text always comes from the pendin
 
 **Owner credential** (`MainActivity.confirmOwner`): `BiometricPrompt` with
 `BIOMETRIC_STRONG | DEVICE_CREDENTIAL` when a strong biometric is enrolled, `DEVICE_CREDENTIAL`
-alone otherwise; success → `true`, error or cancel → `false`. Without a secure screen lock it returns
-`true` at once (see Open issues). Used for approving strong requests, resuming, editing a rule and
-saving the setup.
+alone otherwise; success → `true`, error or cancel → `false`. Without a secure screen lock it returns `false` at once (fail closed), with a toast saying a screen lock is needed, and
+opens the security settings. Used for approving strong
+requests, resuming, widening a rule (`editRule`; lowering one applies directly) and saving a setup change that
+widens (`Policy.widens`; the first setup and narrowing changes apply directly).
 
 **Outbox**: one `ScheduledExecutorService` thread; delay `undoSeconds * 1000` read at queue time;
 `undo` and the timer race on one `ConcurrentHashMap.remove`, so an undone item is never sent.

@@ -942,4 +942,5 @@
         <item quantity="one">%1$d message waits for your decision</item>
         <item quantity="other">%1$d messages wait for your decision</item>
     </plurals>
+    <string name="mainactivity_set_a_screen_lock_first">Set a screen lock first: without it I can\'t confirm it\'s you, so I don\'t widen what I\'m allowed to do.</string>
 </resources>
