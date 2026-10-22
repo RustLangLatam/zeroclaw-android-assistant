@@ -70,6 +70,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Commitments | A commitment the owner makes in a message or email is added to the calendar | Implemented |
 | Alarms | Set, cancel, next alarm | Implemented |
 | Reminders with levels | Low: quiet notice. Normal: sounding notification. High: full-screen call screen over the lock screen, through do-not-disturb, every 5 minutes up to 6 times, until "done" or "snooze 10 minutes". Not a telephony call. Health reminders are always high, decided in code | Implemented |
+| Birthdays | Contacts' birthdays from the phone: a notice the day before with a card to write something (proposed, never sent on its own) or be reminded; "who has a birthday soon?" | Implemented |
 | Routines | "every Sunday at nine, tell me what's on my week": ZeroClaw cron jobs running owner turns | Implemented |
 
 ## Contacts, photos, files, apps, device

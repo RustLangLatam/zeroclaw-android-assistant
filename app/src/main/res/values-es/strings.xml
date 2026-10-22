@@ -1019,4 +1019,12 @@
     <string name="share_nothing_title">Nada que leer</string>
     <string name="share_nothing">No encontré texto en lo que compartiste.</string>
     <string name="share_ask_prompt">Te compartí un documento; este es su texto, leído en el teléfono. Dime en pocas palabras qué es y qué debo hacer; propón un recordatorio o una cita en la agenda solo para que yo lo confirme.</string>
+    <string name="birthdays_channel">Cumpleaños</string>
+    <string name="birthdays_title">Cumpleaños mañana</string>
+    <string name="birthdays_tomorrow">Mañana es el cumpleaños de %1$s.</string>
+    <string name="birthdays_write_something">Escríbele algo</string>
+    <string name="birthdays_remind_me_tomorrow">Recuérdamelo mañana</string>
+    <string name="birthdays_reminder_text">Felicitar a %1$s</string>
+    <string name="birthdays_ask">Mañana es el cumpleaños de %1$s. Propón un mensaje corto para felicitarle, con mi estilo, y muéstramelo en una tarjeta; no lo envíes hasta que te diga.</string>
+    <string name="act_see_upcoming_birthdays">Ver los próximos cumpleaños</string>
 </resources>
