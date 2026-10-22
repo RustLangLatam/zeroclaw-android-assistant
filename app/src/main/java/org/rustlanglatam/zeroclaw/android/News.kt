@@ -36,10 +36,16 @@ object News {
     /** Maximum number of headline links remembered per topic to detect new ones. */
     private const val SEEN = 60
 
-    /** Returns the Google News language and country for [country] (ISO 3166 alpha-2, any case): `es` for Spain, `es-419` otherwise; defaults to US. */
-    fun edition(country: String): Pair<String, String> {
+        /**
+     * Returns the feed edition (language, country) for [country] in the assistant's [language]: English editions for
+     * English; for Spanish, Spain's edition in Spain and the Latin American one elsewhere.
+     */
+    fun edition(country: String, language: Lang = Language.current): Pair<String, String> {
         val c = country.uppercase().takeIf { it.length == 2 } ?: "US"
-        return (if (c == "ES") "es" else "es-419") to c
+        return when (language) {
+            Lang.EN -> "en" to c
+            Lang.ES -> (if (c == "ES") "es" else "es-419") to c
+        }
     }
 
     /** Returns the Google News RSS search URL for [query], limited to the last two days. */

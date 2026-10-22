@@ -481,6 +481,8 @@ class MainActivity : ComponentActivity() {
         }
         // `--ei news <id>`: runs a followed topic's check now instead of at its scheduled time.
         intent.getIntExtra("news", -1).takeIf { it >= 0 }?.let { PhoneNews(this).check(it) }
+        // `--ei newsAgain <id>`: forgets the topic's seen headlines and checks it now (a briefing for screenshots).
+        intent.getIntExtra("newsAgain", -1).takeIf { it >= 0 }?.let { PhoneNews(this).run { unsee(it); check(it) } }
         intent.getIntExtra("watch", -1).takeIf { it >= 0 }?.let { PhoneNews(this).watch(it) }
         intent.getStringExtra("incoming")?.let { text ->
             if (text.isNotBlank()) Turns.thirdParty(this, intent.getStringExtra("from").orEmpty().trim().ifEmpty { "unknown" }, text)

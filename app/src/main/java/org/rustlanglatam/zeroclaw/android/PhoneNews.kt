@@ -84,6 +84,9 @@ class PhoneNews(context: Context) {
         return http.newCall(request).execute().use { r -> if (!r.isSuccessful) emptyList() else News.parse(r.body!!.string()) }
     }
 
+    /** Debug builds only: forgets the headlines already seen for topic [id], so the next [check] briefs them all. */
+    @Synchronized fun unsee(id: Int) = saveTopics(topics().map { if (it.id == id) it.copy(seen = emptyList()) else it })
+
     /**
      * Runs the scheduled check of topic [id] on a background thread: reschedules it and, unless the assistant is
      * paused, turns new headlines into a briefing. Does nothing when there is nothing new.

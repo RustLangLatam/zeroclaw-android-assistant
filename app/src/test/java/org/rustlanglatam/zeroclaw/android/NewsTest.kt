@@ -39,6 +39,8 @@ class NewsTest {
         org.junit.Assert.assertEquals("es" to "ES", News.edition("es"))
         org.junit.Assert.assertEquals("es-419" to "MX", News.edition("mx"))
         org.junit.Assert.assertEquals("es-419" to "US", News.edition(""))
+        // In English the feed is in English, whatever the country.
+        org.junit.Assert.assertEquals("en" to "ES", News.edition("es", Lang.EN))
         val ask = News.ask("Milton", "inflación", News.parse(rss))
         assertTrue(ask, "- La inflación baja al 3% en septiembre (Diario Ejemplo" in ask)
         assertTrue(ask, "Do not call any tool." in ask)
