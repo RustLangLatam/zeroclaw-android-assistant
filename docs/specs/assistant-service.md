@@ -34,7 +34,7 @@ the chat ([owner-chat-and-voice.md](owner-chat-and-voice.md); `Turns` in `Messag
 
 | Interface | Kind | Who uses it |
 |---|---|---|
-| `onStartCommand` | `startForegroundService(Intent(…, AssistantService::class.java))` | `MainActivity`, `MessageListener` (on connect) |
+| `onStartCommand` | `startForegroundService(Intent(…, AssistantService::class.java))` | `MainActivity`, `MessageListener` (on connect), `BootReceiver` (after `BOOT_COMPLETED` or `MY_PACKAGE_REPLACED`, once setup is done) |
 | `AssistantService.client(token: String? = null)` | `io.github.rustlanglatam.zeroclaw.Client` on `BASE = http://127.0.0.1:42617`, `retry = null`, shared `http` (OkHttp, no read timeout) | `Turns.open`, `OwnerChat`, `PhoneMemory`, `Routines`, `Usage`, this service |
 | `AssistantService.token(context)` | gateway token, or `null` while `gatewayOurs` is false | the same callers |
 | `AssistantService.pair(context, refused: String? = null)` | `@Synchronized`; pairs and stores the token | `run()`; `Turns.open` on a 401 with `refused = token` |
@@ -249,6 +249,7 @@ thread and `OutOfMemoryError` keep Android's handler.
 | No pairing code / pairing throws | caught in `supervise`; tried again |
 | 401 on chat | `pairingTaken` (owner told once), then `pair(refused = token)` once per refused token |
 | App process killed | Android kills the daemon with it; `stopStale` kills one that outlived it; `START_STICKY` restarts the service |
+| Phone restarted or app updated | `BootReceiver` starts the service once the user unlocks (credential-encrypted storage), with or without notification access; nothing starts before setup. A force-stopped app receives no broadcasts until it is opened again (Android) |
 | Service recreated in the same process | `started` is per instance: setup runs again (the MCP server and daemon stopped with the previous instance); once-per-process work (`CatchUp.start`, `OwnerChat.start`) guards itself |
 | Missing runtime or overlay permissions | handled by the tools and `Floating`; not checked here |
 

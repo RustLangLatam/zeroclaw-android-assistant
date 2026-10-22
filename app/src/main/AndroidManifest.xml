@@ -95,12 +95,14 @@
             android:name=".ReminderReceiver"
             android:exported="false" />
 
-        <!-- The phone restarted: alarms are gone, so reminders and news checks are set again (only the system sends it). -->
+        <!-- The phone restarted or the app was updated: alarms are gone, so reminders and news checks are set again, and
+             the assistant starts (only the system sends these). -->
         <receiver
             android:name=".BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 
