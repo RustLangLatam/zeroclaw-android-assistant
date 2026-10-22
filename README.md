@@ -1,7 +1,37 @@
-# Ksandra
+<p align="center">
+  <img src="docs/images/banner.jpg" alt="Ksandra: the Presence Mark, an on-device personal assistant for Android">
+</p>
 
-**An on-device personal assistant for Android. It runs the ZeroClaw agent daemon inside the app, acts on the phone
-through tools served on loopback, and enforces every permission in code.**
+<p align="center">
+  <strong>An on-device personal assistant for Android. It runs the ZeroClaw agent daemon inside the app, acts on the
+  phone through tools served on loopback, and enforces every permission in code.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/RustLangLatam/zeroclaw-android-assistant/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/RustLangLatam/zeroclaw-android-assistant/ci.yml?branch=main&label=build" alt="Build Status" /></a>
+  <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache%202.0-blue.svg" alt="License" /></a>
+  <img src="https://img.shields.io/badge/Android-API%2030%2B-3ddc84?logo=android&logoColor=white" alt="Android API 30+" />
+  <img src="https://img.shields.io/badge/Kotlin-2.2-7f52ff?logo=kotlin&logoColor=white" alt="Kotlin 2.2" />
+  <img src="https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285f4?logo=jetpackcompose&logoColor=white" alt="Jetpack Compose, Material 3" />
+  <a href="https://github.com/zeroclaw-labs/zeroclaw"><img src="https://img.shields.io/badge/ZeroClaw-0.8.5-black" alt="ZeroClaw 0.8.5" /></a>
+  <a href="https://github.com/RustLangLatam/zeroclaw-api-client-kotlin"><img src="https://img.shields.io/badge/zeroclaw--api--client-0.1.2-e76f00" alt="zeroclaw-api-client 0.1.2" /></a>
+  <img src="https://img.shields.io/badge/MCP-loopback-555" alt="MCP on loopback" />
+  <a href="https://github.com/ggml-org/llama.cpp"><img src="https://img.shields.io/badge/llama.cpp-b11381-555" alt="llama.cpp b11381" /></a>
+  <img src="https://img.shields.io/badge/ML%20Kit-on--device-4285f4" alt="ML Kit on-device" />
+  <img src="https://img.shields.io/badge/JDK-21-e76f00?logo=openjdk&logoColor=white" alt="JDK 21" />
+</p>
+
+<p align="center">
+  <a href="docs/README.md">Docs</a> ·
+  <a href="docs/specs/access-model.md">Access model</a> ·
+  <a href="docs/architecture/README.md">Architecture</a> ·
+  <a href="docs/specs/README.md">Specs</a> ·
+  <a href="docs/adr/README.md">ADRs</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="SECURITY.md">Security</a>
+</p>
+
+---
 
 <p align="center">
   <img src="docs/images/splash.jpg" width="200" alt="Splash screen: the Presence Mark on a dark background">
@@ -229,7 +259,7 @@ loan budget document?" — two files found in Downloads, each opens in its app.<
 ## News and cards
 
 <p align="center">
-  <img src="docs/images/news.jpg" width="230" alt="News: followed topics">
+  <img src="docs/images/news.jpg" width="230" alt="News: Formula 1 and architecture followed, the day's architecture briefing with its sources">
   <img src="docs/images/card.jpg" width="230" alt="A card with options">
 </p>
 
@@ -239,14 +269,24 @@ The owner follows topics; a tool-less agent writes daily briefings or updates as
 ([Cards.kt](app/src/main/java/org/rustlanglatam/zeroclaw/android/Cards.kt)). Video options come from the YouTube
 search API when `youtube.apiKey` is set, otherwise a search link.
 
+The capture shows the owner following *Formula 1* and *architecture news*: each topic has its own schedule, and the
+briefing is written from that day's headlines in the assistant's language, with links to its sources.
+
 ## Memory
 
-<p align="center"><img src="docs/images/memory.jpg" width="230" alt="Memory: what the assistant knows, by area"></p>
+<p align="center">
+  <img src="docs/images/memory.jpg" width="230" alt="Memory: how well the assistant knows the owner, area by area">
+  <img src="docs/images/memory-list.jpg" width="230" alt="Memory: entries by area, each marked as told by the owner">
+</p>
 
 Facts the owner states and facts the assistant infers are kept apart (inferences are never presented as facts) and
 grouped by area: about the owner, people, work, health, tastes, routine, interests, plans, places. The owner can
 correct or delete any entry or pause learning. Memory is stored in ZeroClaw's owner memory, with a sealed copy on the
 phone ([docs/specs/memory.md](docs/specs/memory.md)).
+
+The captures show a few days of use with the example owner, Milton: an architect in Valencia with his own studio, a
+sister (Ana) and her children, a project partner (Laura), a penicillin allergy, a morning run, Monday meetings. Each
+area shows how much the assistant knows; each entry names its area and whether it was told or inferred.
 
 ## Offline
 
