@@ -15,9 +15,12 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      - uses: android-actions/setup-android@v3
+      # The runner image ships the Android SDK; only the exact packages the build pins are added.
       - name: Install SDK packages
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;29.0.14206865"
+        run: |
+          SDKMANAGER=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)
+          yes | "$SDKMANAGER" --licenses > /dev/null
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "ndk;29.0.14206865"
       - name: Install patchelf
         run: sudo apt-get update && sudo apt-get install -y patchelf
       - uses: gradle/actions/setup-gradle@v4
