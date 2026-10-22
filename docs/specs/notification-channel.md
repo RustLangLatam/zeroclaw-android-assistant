@@ -131,6 +131,13 @@ turn. A 401 at open makes the app pair again (`AssistantService.pair(refused = t
 `Busy.now()` is set, a family or work contact is answered once with `Busy.reply` (`BUSY_REPLY`, the sender's
 language, no undo window: it is reversible and says only that the owner cannot answer), their later messages are
 marked `held_back`, and anyone else takes the usual turn.
+**Possible scams** (`Scam.kt`, before any turn; also for emails in `mail()`): `Scam.signs` reads the text for
+urgency, a link, a phone number, money and requests for codes or details (words in `lexicon.json`, `scam.*`) and
+notes an unknown or unverified sender. `Scam.looks`: a link or phone, plus codes or details, or money with urgency;
+a plain promotion does not count. A match is journaled ("possible scam", with the reasons) and the owner is told
+(channel `scam`, high, ids from 401 000); the assistant never answers the sender, opens the link or acts, and the
+usual rules decide any reply (strangers get none).
+
 **Still unanswered** (`Unanswered.kt`): once a minute the service checks, for each family or work sender, whether
 their last message is unsettled (not `answered` or `queued`), older than `Guard.unansweredHours` (default 4, by voice
 `set_preference unanswered_hours`, `off` = 0) and still on screen (`MessageListener.shownConversations()`: a chat the
@@ -175,6 +182,7 @@ through debug extras `--es owner Milton --es apps <fakechat> --ez groups false -
 | Case | Check |
 |---|---|
 | Laura (work) asks | *Approve* + PIN, sent after the window; the reply starts with the introduction naming Milton, in the sender's language |
+| Pat sends a parcel-fee scam with a link | journal "possible scam" with its reasons; no reply |
 | Busy mode on (`--ei busy 30`); Laura and Pat write; Laura again | do-not-disturb on; one fixed reply to Laura ("…can't answer until…"), none to Pat, none to Laura's second message; ending it restores do-not-disturb |
 | Laura asks, nobody answers the approval | nothing sent; journal "no answer in time"; the waiting notice; *Answer now* in Activity + *Approve* + PIN → exactly one reply |
 | Ana writes while Wi-Fi and data are off | nothing sent offline; once the network is validated again, one reply after the undo window (`CatchUp` retries the unanswered entries; a turn still pending completes) |

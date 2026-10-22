@@ -162,6 +162,13 @@ check "Laura not told twice" '[ "$(replies | grep -c ^Laura)" = $((lb + 1)) ]'
 adb shell am start -n $APP/.MainActivity --ei busy 0 >/dev/null; sleep 2
 check "do-not-disturb restored" '[ "$(adb shell settings get global zen_mode | tr -d "\r")" = 0 ]'
 
+echo "possible scam: pointed out to the owner, never answered"
+pb=$(replies | grep -c ^Pat)
+post Pat "Tu paquete esta retenido en aduana. Paga la tasa de 1,99 euros aqui: https://correos-envio.xyz/pago"
+sleep 10
+check "the scam is pointed out with its reasons" 'log | grep -q "possible scam"'
+check "no reply to the scam" '[ "$(replies | grep -c ^Pat)" = "$pb" ]'
+
 echo "kill switch: nothing goes out"
 adb shell am start -n $APP/.MainActivity --ez stop true >/dev/null; sleep 2
 before=$(replies | wc -l)

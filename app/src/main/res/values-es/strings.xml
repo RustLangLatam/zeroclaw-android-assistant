@@ -987,4 +987,13 @@
     <string name="unanswered_one">%1$s sigue esperando tu respuesta (más de %2$d h).</string>
     <string name="unanswered_many">%1$s siguen esperando tu respuesta (más de %2$d h).</string>
     <string name="act_see_what_is_unanswered">Ver lo que sigue sin responder</string>
+    <string name="scam_channel">Posibles engaños</string>
+    <string name="scam_title">Esto parece un engaño</string>
+    <string name="scam_notice">Ojo: el mensaje de %1$s parece un engaño (%2$s). No abras el enlace, no llames ni pagues nada; yo no le respondo.</string>
+    <string name="scam_unknown_sender">alguien que no conoces</string>
+    <string name="scam_urgency">prisa</string>
+    <string name="scam_link">un enlace</string>
+    <string name="scam_phone">un teléfono</string>
+    <string name="scam_money">dinero</string>
+    <string name="scam_credentials">tus claves o datos</string>
 </resources>

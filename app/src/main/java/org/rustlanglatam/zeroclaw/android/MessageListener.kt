@@ -100,6 +100,8 @@ class MessageListener : NotificationListenerService() {
                 Inbox.status(entry, Inbox.Status.PAUSED)
                 continue
             }
+            // A possible scam is pointed out to the owner; the usual rules still decide any reply (strangers get none).
+            runCatching { Scam.warn(this, sender, message.text, Policy.groups[sender].orEmpty().isNotEmpty() && !Identity.unverified(sender)) }
             if (busy(message, sender, entry)) continue
             Turns.thirdParty(this, sender, message.text) { answer -> answer(message.conversation, sender, entry, answer) }
         }
@@ -144,6 +146,7 @@ class MessageListener : NotificationListenerService() {
         // The email app's content intent for this email, kept in memory for the process lifetime so the email can be opened later.
         sbn.notification.contentIntent?.let { mailLinks[mail.id] = it }
         keep("mail:${mail.id}", sbn.notification)
+        runCatching { Scam.warn(this, mail.from, "${mail.subject}\n${mail.body}", Policy.groups[mail.from].orEmpty().isNotEmpty()) }
         Log.i(AssistantService.TAG, "mail #${mail.id}: " + AssistantService.logged("from ${mail.from}: ${mail.subject}") + (mail.why?.let { " (important)" } ?: ""))
         Gestures.play(if (mail.important) Gesture.PERK else Gesture.READ)
         Ui.refresh()

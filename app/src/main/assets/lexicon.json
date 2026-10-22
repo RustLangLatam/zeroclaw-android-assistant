@@ -161,5 +161,8 @@
   "routines.weekdays": "weekdays|entre semana|laborables|dias laborables",
   "routines.weekends": "weekends|fines de semana|fin de semana",
   "preferences.setting.model_budget": "modelbudget|budget|presupuesto|gastomaximo|gastodelmodelo",
-  "preferences.setting.unanswered_hours": "unanswered|sinresponder|sincontestar|pendientes"
+  "preferences.setting.unanswered_hours": "unanswered|sinresponder|sincontestar|pendientes",
+  "scam.urgency": "urgent|urgente|inmediat|immediately|ahora mismo|right now|ultimo aviso|last notice|final notice|hoy mismo|within 24|en 24 horas|en 48 horas|suspend|bloquead|blocked|locked|expira|expires|caduca|retenid|on hold|held at|cancelad|cancelled|deactivat|desactivad|claim|reclam",
+  "scam.money": "pag|pay|payment|transfer|bizum|tarjeta|card|bank|banco|euros|dolares|dollars|usd|eur|premio|prize|ganaste|you won|reembolso|refund|fee|tasa|aduana|customs|gift card|crypto|bitcoin|deuda|debt|multa|fine",
+  "scam.credentials": "contrasena|password|pin|codigo|code|verifica|verify|confirm your|confirma tus datos|datos bancarios|bank details|login|log in|inicia sesion|clave|otp|dni|ssn"
 }

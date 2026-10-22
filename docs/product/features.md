@@ -46,6 +46,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Sending to a contact | `send_message`: replied through the conversation's notification when the contact wrote recently; otherwise written in WhatsApp for the owner to send | Implemented |
 | Reading messages | `list_messages` reads recent messages to the owner | Implemented |
 | What is still unanswered | "What do I still have to answer?": family and work messages nobody answered whose chat the owner has not opened, and important emails not opened; a quiet notice after 4 h (by voice), once a day per person | Implemented |
+| Possible-scam warnings | A message or email asking for codes or details, or money with urgency, plus a link or phone number, is pointed out in seconds with its reasons ("looks like"); never answered or acted on | Implemented |
 | Notification actions | `act_on`: mark as read, archive, delete through the notification's own buttons | Implemented |
 | Telegram and a dedicated WhatsApp account as connectors | | Planned |
 
