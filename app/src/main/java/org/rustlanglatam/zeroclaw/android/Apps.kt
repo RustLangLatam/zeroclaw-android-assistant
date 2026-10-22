@@ -88,7 +88,7 @@ object Apps {
         val what = kind?.let { "${it.word} apps" } ?: "apps"
         if (chosen.isEmpty()) return "No $what installed."
         val order = if (usageKnown) "most used first (last 30 days)" else
-            "usage access is off, so the phone's default comes first, then by name; the owner can allow it in Ajustes"
+            "usage access is off, so the phone's default comes first, then by name; the owner can allow it in Settings"
         return "The owner's $what, $order:\n" + chosen.take(15).mapIndexed { i, a ->
             listOfNotNull(
                 "${i + 1}. ${a.label} (${a.pkg})",

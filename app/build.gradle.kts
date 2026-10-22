@@ -100,7 +100,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    // The owner's Google email: IMAP and SMTP with an app password (Gmail.kt, PhoneGmail.kt).
+    // The owner's email accounts (Gmail, Yahoo, iCloud, any IMAP/SMTP): IMAP and SMTP with an app password (EmailAccounts.kt, PhoneEmail.kt).
     implementation("com.sun.mail:android-mail:1.6.7")
     implementation("com.sun.mail:android-activation:1.6.7")
     // The gateway's HTTP and chat API (pairing, health, /ws/chat).
