@@ -3,7 +3,7 @@ package org.rustlanglatam.zeroclaw.android
 import java.text.Normalizer
 
 /** Interface actions the owner can trigger by voice or text instead of a menu. */
-enum class Command { MENU, CLOSE, HOME, TALK, ACTIVITY, CONTROL, RULES, MEMORY, PHOTOS, FILES, PAUSE, RESUME, WIDGETS, NEWS, APP_MODE, ASSISTANT_MODE }
+enum class Command { MENU, CLOSE, HOME, TALK, ACTIVITY, CONTROL, RULES, MEMORY, PHOTOS, FILES, PAUSE, RESUME, WIDGETS, NEWS, APP_MODE, ASSISTANT_MODE, SIMPLE_MODE, NORMAL_MODE }
 
 /**
  * Recognizes short spoken or written commands that the app handles itself (show the menu, open
@@ -42,6 +42,10 @@ object Commands {
     private val appModeEn = Regex("^$SWITCH_EN" + Lexicon["commands.mode_app_en"] + "$")
     private val assistantModeEn = Regex("^$SWITCH_EN" + Lexicon["commands.mode_assistant_en"] + "$")
     private val widgets = Regex(Lexicon["commands.widgets"])
+    private val simpleMode = Regex("^$SWITCH" + Lexicon["commands.mode_simple"] + "$")
+    private val simpleModeEn = Regex("^$SWITCH_EN" + Lexicon["commands.mode_simple_en"] + "$")
+    private val normalMode = Regex("^$SWITCH" + Lexicon["commands.mode_normal"] + "$")
+    private val normalModeEn = Regex("^$SWITCH_EN" + Lexicon["commands.mode_normal_en"] + "$")
 
     fun of(text: String): Command? {
         val t = normalize(text)
@@ -50,6 +54,8 @@ object Commands {
             close.matches(t) -> Command.CLOSE
             pause.matches(t) -> Command.PAUSE
             widgets.matches(t) -> Command.WIDGETS
+            simpleMode.matches(t) || simpleModeEn.matches(t) -> Command.SIMPLE_MODE
+            normalMode.matches(t) || normalModeEn.matches(t) -> Command.NORMAL_MODE
             appMode.matches(t) || appModeEn.matches(t) -> Command.APP_MODE
             assistantMode.matches(t) || assistantModeEn.matches(t) -> Command.ASSISTANT_MODE
             resume.matches(t) -> Command.RESUME

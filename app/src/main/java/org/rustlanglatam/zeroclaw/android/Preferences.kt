@@ -29,6 +29,7 @@ object Preferences {
         MODEL_BUDGET(R.string.setting_model_budget),
         UNANSWERED_HOURS(R.string.setting_unanswered_hours),
         LEAVE_MINUTES(R.string.setting_leave_minutes),
+        SIMPLE_MODE(R.string.setting_simple_mode),
         MESSAGING_APPS(R.string.setting_messaging_apps),
         ;
 
@@ -45,6 +46,7 @@ object Preferences {
                     Lexicon.words("preferences.setting.model_budget").any(n::startsWith) -> MODEL_BUDGET
                     Lexicon.words("preferences.setting.unanswered_hours").any(n::startsWith) -> UNANSWERED_HOURS
                     Lexicon.words("preferences.setting.leave_minutes").any(n::startsWith) -> LEAVE_MINUTES
+                    Lexicon.words("preferences.setting.simple_mode").any(n::startsWith) -> SIMPLE_MODE
                     Lexicon.words("preferences.setting.voice_ceiling").any(n::startsWith) -> VOICE_CEILING
                     Lexicon.words("preferences.setting.voice").any(n::startsWith) -> VOICE
                     Lexicon.words("preferences.setting.open_mic").any(n::startsWith) -> OPEN_MIC

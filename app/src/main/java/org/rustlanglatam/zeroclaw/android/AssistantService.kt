@@ -898,7 +898,7 @@ class AssistantService : Service() {
                     "IDENTITY.md" to "# Identity\nName: $name\nRole: $owner's personal assistant, on $owner's Android phone.",
                     "SOUL.md" to "# Who you are\nYou are $name, $owner's assistant. That is your name; always introduce yourself as $name. " +
                         "In Spanish you speak of yourself in the feminine grammatical gender.\n" + (if (principal == Principal.OWNER)
-                            "You speak ${Language.current.english} with $owner, whatever language the app's notes to you are in.\n" else "") + if (principal == Principal.OWNER) SOUL_OWNER + Phrases.persona(Guard.warmth) + Empathy.Style.describe()
+                            "You speak ${Language.current.english} with $owner, whatever language the app's notes to you are in.\n" else "") + if (principal == Principal.OWNER) SOUL_OWNER + Phrases.persona(Guard.warmth) + Empathy.Style.describe() + (if (Guard.simple) "\n" + Simple.PERSONA else "")
                         else "Courteous, warm and brief with the people who write to $owner; serene and direct. " +
                             "Say plainly when you do not know something; never claim to have done what a tool did not confirm.",
                     "USER.md" to "# Who you help\n$owner, the owner of this phone." +

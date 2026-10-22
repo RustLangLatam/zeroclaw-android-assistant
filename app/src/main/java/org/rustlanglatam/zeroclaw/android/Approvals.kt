@@ -187,6 +187,8 @@ object Saved {
         val unansweredHours: Int = Guard.DEFAULT_UNANSWERED_HOURS,
         /** Minutes before an appointment to say it is time to leave ([Guard.leaveMinutes]); 0 means off. */
         val leaveMinutes: Int = Appointments.DEFAULT_LEAVE_MINUTES,
+        /** Simple mode ([Guard.simple]). */
+        val simple: Boolean = false,
     )
 
     /** File format version: 1 embedded the log; 2 moves it to `activity.jsonl` and adds the counters. */
@@ -220,6 +222,7 @@ object Saved {
         .put("modelBudget", state.modelBudget)
         .put("unansweredHours", state.unansweredHours)
         .put("leaveMinutes", state.leaveMinutes)
+        .put("simple", state.simple)
         .put("counters", JSONObject().apply { state.counters.forEach { (k, v) -> put(k, v) } })
         .put("version", VERSION)
         .toString()
@@ -265,6 +268,7 @@ object Saved {
             modelBudget = json.optDouble("modelBudget", 0.0),
             unansweredHours = json.optInt("unansweredHours", Guard.DEFAULT_UNANSWERED_HOURS),
             leaveMinutes = json.optInt("leaveMinutes", Appointments.DEFAULT_LEAVE_MINUTES),
+            simple = json.optBoolean("simple", false),
             // Format version 1 stored the log here; it is read once and migrated to its own file.
             log = json.optJSONArray("log")?.map {
                 Journal.Entry(it.getString("at"), Principal.valueOf(it.getString("principal")), it.getString("action"),

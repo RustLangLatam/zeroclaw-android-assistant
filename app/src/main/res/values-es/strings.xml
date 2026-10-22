@@ -1045,4 +1045,7 @@
     <string name="offers_morning_no">No, gracias</string>
     <string name="offers_morning_what">Cuéntame mi día: citas, recordatorios, el tiempo y lo que me espera</string>
     <string name="offers_morning_done">Hecho: cada mañana a las 8 te cuento tu día.</string>
+    <string name="setting_simple_mode">modo sencillo</string>
+    <string name="simple_on">Modo sencillo activado: letra más grande, te lo digo todo en voz alta, despacio y breve. Di «modo normal» para volver.</string>
+    <string name="simple_off">De vuelta al modo normal.</string>
 </resources>
