@@ -55,6 +55,7 @@ object Labels {
         Inbox.Status.COULD_NOT_ANSWER -> t(R.string.labels_could_not_answer)
         Inbox.Status.UNDONE -> t(R.string.labels_undone)
         Inbox.Status.NOT_APPROVED -> t(R.string.labels_not_approved)
+        Inbox.Status.EXPIRED -> t(R.string.labels_waiting_for_your_decision)
         Inbox.Status.HELD_BACK -> t(R.string.labels_held_back_paused)
         else -> status
     }

@@ -155,7 +155,11 @@ class MessageListener : NotificationListenerService() {
             if (sent) "Replied to $sender." else "cannot reply: the notification has no reply action or is gone".also { Guard.onNotify(t(R.string.messagelistener_i_couldn_t_answer_x, sender)) }
         }
         when (result) {
-            is Guard.Outcome.Refused -> Inbox.status(entry, if (result.notApproved) Inbox.Status.NOT_APPROVED else Inbox.Status.NO_ANSWER)
+            is Guard.Outcome.Refused -> Inbox.status(entry, when {
+                result.expired -> Inbox.Status.EXPIRED
+                result.notApproved -> Inbox.Status.NOT_APPROVED
+                else -> Inbox.Status.NO_ANSWER
+            })
             is Guard.Outcome.Queued -> Inbox.status(entry, Inbox.Status.QUEUED)
             is Guard.Outcome.Done -> Unit
         }

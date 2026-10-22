@@ -934,4 +934,12 @@
     <string name="health_full_screen">I can\'t ring you full screen for urgent reminders.</string>
     <string name="assistantservice_x_cannot_start">%1$s can\'t start</string>
     <string name="assistantservice_still_trying_to_start">I keep trying; nothing is answered meanwhile.</string>
+    <string name="labels_waiting_for_your_decision">waiting for your decision</string>
+    <string name="screens_answer_now">Answer now</string>
+    <string name="assistantservice_waiting_channel">Waiting for you</string>
+    <string name="assistantservice_waiting_text">You did not answer in time; nothing was sent. Tap to decide now.</string>
+    <plurals name="waiting_for_your_decision">
+        <item quantity="one">%1$d message waits for your decision</item>
+        <item quantity="other">%1$d messages wait for your decision</item>
+    </plurals>
 </resources>

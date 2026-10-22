@@ -15,6 +15,24 @@ class GuardTest {
         Guard.outbox.waiting().forEach { Guard.outbox.undo(it.id) }
         Policy.groups = emptyMap()
         Guard.secure = { true }
+        Guard.approvals.timeoutMs = 60_000
+    }
+
+    @Test
+    fun anApprovalNotAnsweredInTimeIsRefusedAndKeptForLater() {
+        Guard.approvals.timeoutMs = 50
+        var ran = false
+        val outcome = Guard.attempt(Principal.OWNER, Capability.CONTACT_GROUPS, Policy.OWNER_TARGET, Act.group("Ana", "family")) { ran = true; "done" }
+        assertTrue(outcome is Guard.Outcome.Refused && outcome.notApproved && outcome.expired)
+        assertFalse(ran)
+        assertEquals("no answer in time", Guard.journal.entries.last().outcome)
+    }
+
+    @Test
+    fun aDeclineIsNotAnExpiry() {
+        Guard.approvals.onRequest = { Guard.approvals.answer(it.id, false) }
+        val outcome = Guard.attempt(Principal.OWNER, Capability.CONTACT_GROUPS, Policy.OWNER_TARGET, Act.group("Ana", "family")) { "done" }
+        assertTrue(outcome is Guard.Outcome.Refused && !outcome.expired)
     }
 
     @Test

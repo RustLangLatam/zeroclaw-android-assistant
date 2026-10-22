@@ -24,6 +24,8 @@ object Panorama {
         val offline: Boolean = false,
         val arranging: Boolean = false,
         val attention: Boolean = false,
+        /** Approvals that expired without an answer and still wait for the owner. */
+        val waiting: Int = 0,
         val back: String? = null,
         val unread: List<Pair<String, String>> = emptyList(),
         /** Sender, subject, and the prompt to send to the agent about it. */
@@ -42,6 +44,7 @@ object Panorama {
             n.offline -> add(Item(Kind.STATE, t(R.string.panorama_no_internet_i_read_what_comes)))
             n.attention -> add(Item(Kind.STATE, t(R.string.panorama_there_s_something_i_want_to)))
         }
+        if (n.waiting > 0) add(Item(Kind.STATE, tn(R.plurals.waiting_for_your_decision, n.waiting, n.waiting), Place.ACTIVITY))
         n.back?.let { add(Item(Kind.BACK, it)) }
         n.importantMail?.let { (from, subject, ask) -> add(Item(Kind.MAIL, t(R.string.panorama_x_wrote_something_important_x, from, subject), ask = ask)) }
         when (n.unread.size) {

@@ -107,17 +107,17 @@ class PolicyTest {
     }
 
     @Test
-    fun anUnansweredRequestIsANo() {
-        assertFalse(Approvals(timeoutMs = 50).request(Act("send", "Enviar")))
+    fun anUnansweredRequestExpires() {
+        assertEquals(Approvals.Answer.EXPIRED, Approvals(timeoutMs = 50).request(Act("send", "Enviar")))
     }
 
     @Test
     fun anAnsweredRequestReturnsTheAnswer() {
         val approvals = Approvals(timeoutMs = 5_000)
         approvals.onRequest = { pending -> thread { approvals.answer(pending.id, true) } }
-        assertTrue(approvals.request(Act("send", "Enviar")))
+        assertEquals(Approvals.Answer.APPROVED, approvals.request(Act("send", "Enviar")))
         approvals.onRequest = { pending -> thread { approvals.answer(pending.id, false) } }
-        assertFalse(approvals.request(Act("send", "Enviar")))
+        assertEquals(Approvals.Answer.DECLINED, approvals.request(Act("send", "Enviar")))
     }
 
     @Test

@@ -934,4 +934,12 @@
     <string name="health_full_screen">No puedo llamarte a pantalla completa para los recordatorios urgentes.</string>
     <string name="assistantservice_x_cannot_start">%1$s no puede arrancar</string>
     <string name="assistantservice_still_trying_to_start">Sigo intentándolo; mientras tanto no respondo nada.</string>
+    <string name="labels_waiting_for_your_decision">esperando tu decisión</string>
+    <string name="screens_answer_now">Responder ahora</string>
+    <string name="assistantservice_waiting_channel">Esperando por ti</string>
+    <string name="assistantservice_waiting_text">No respondiste a tiempo; no se envió nada. Toca para decidir ahora.</string>
+    <plurals name="waiting_for_your_decision">
+        <item quantity="one">%1$d mensaje espera tu decisión</item>
+        <item quantity="other">%1$d mensajes esperan tu decisión</item>
+    </plurals>
 </resources>

@@ -62,7 +62,8 @@ answered Laura 1; sleep 2
 tap Aprobar; sleep 2; adb shell input text $PIN; adb shell input keyevent 66
 sleep 35
 check "reply to Laura sent" '[ "$(replies | grep -c ^Laura)" = 1 ]'
-check "introduced as the assistant" 'replies | grep -q "^Laura.Hola, soy Ksandra, la asistente de Milton"'
+# The introduction follows the sender's language (Laura writes in English).
+check "introduced as the assistant" 'replies | grep -qE "^Laura.(Hola, soy Ksandra, la asistente de Milton|Hi, I.m Ksandra, Milton.s assistant)"'
 
 echo "Ana (family): answered on her own, after the undo window"
 post Ana "Are we still on for dinner tonight?"
@@ -110,6 +111,20 @@ log | grep -q "undone" || { adb exec-out screencap -p > "${TMPDIR:-/tmp}/e2e-und
 sleep 33
 check "undone reply never sent" '[ "$(replies | grep -c "^Ana")" = "$before" ]'
 check "logged as undone" 'log | grep -q "undone"'
+
+echo "Laura (work): an approval not answered in time waits for the owner, then is answered with the PIN"
+before=$(replies | grep -c ^Laura)
+post Laura "Can we move the meeting tomorrow to 12?"
+answered Laura 2; sleep 70
+check "nothing sent without an answer" '[ "$(replies | grep -c ^Laura)" = "$before" ]'
+check "logged as no answer in time" 'log | grep -q "no answer in time"'
+check "a notice says it waits for the owner" 'adb shell dumpsys notification --noredact | grep -q "id=400001"'
+adb shell am start -n $APP/.MainActivity --es section activity >/dev/null; sleep 3
+tap "Responder ahora"
+answered Laura 3; sleep 2
+tap Aprobar; sleep 2; adb shell input text $PIN; adb shell input keyevent 66
+sleep 35
+check "answered once after the owner decided" '[ "$(replies | grep -c ^Laura)" = $((before + 1)) ]'
 
 echo "restart: a message already seen is not answered twice"
 adb shell am force-stop $APP

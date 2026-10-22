@@ -26,6 +26,9 @@ object Inbox {
         const val COULD_NOT_ANSWER = "could_not_answer"
         const val UNDONE = "undone"
         const val NOT_APPROVED = "not_approved"
+
+        /** The owner did not answer the approval in time: kept for them to decide ([waiting]). */
+        const val EXPIRED = "expired"
         const val HELD_BACK = "held_back"
 
         /** Status values written by earlier versions, mapped to the current ones when a saved digest is loaded. */
@@ -221,6 +224,10 @@ object Inbox {
         digest.firstOrNull { it.id == id }?.let { status(it, status) }
     }
 
+    /** Entries whose approval expired in the last day, newest first: what waits for the owner's decision. */
+    fun waiting(now: Long = System.currentTimeMillis()): List<Entry> =
+        digest.filter { it.status == Status.EXPIRED && now - it.time < WAITING_MS }.sortedByDescending { it.time }
+
     fun status(entry: Entry, status: String) {
         entry.status = status
         saveDigest()
@@ -230,4 +237,7 @@ object Inbox {
     private const val MAX_SEEN = 2000
     private const val SINCE = "since "
     private const val MAX_DIGEST = 200
+
+    /** How long an expired approval stays offered to the owner. */
+    private const val WAITING_MS = 24 * 3600_000L
 }

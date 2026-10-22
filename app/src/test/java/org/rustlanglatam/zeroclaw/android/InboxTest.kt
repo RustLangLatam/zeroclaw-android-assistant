@@ -180,4 +180,19 @@ class InboxTest {
         assertTrue("Familia (Ana): nunca" in introduction("Milton", lowered, groups, listOf("WhatsApp"), 30))
         assertTrue("Aún no leo ninguna app de mensajería." in introduction("Milton", Policy.DEFAULT_RULES, groups, emptyList(), 30))
     }
+
+    @Test
+    fun onlyRecentlyExpiredApprovalsWaitForTheOwner() {
+        val now = 100 * 3600_000L
+        fun entry(id: Int, status: String, hoursAgo: Long) =
+            Inbox.Entry(id, "10:00", "Laura", "Can we move the meeting?", status, whatsapp, now - hoursAgo * 3600_000L, "c$id")
+        Inbox.digest.clear()
+        Inbox.digest += listOf(
+            entry(1, Inbox.Status.EXPIRED, 2),
+            entry(2, Inbox.Status.EXPIRED, 30),
+            entry(3, Inbox.Status.NOT_APPROVED, 1),
+            entry(4, Inbox.Status.EXPIRED, 1),
+        )
+        assertEquals(listOf(4, 1), Inbox.waiting(now).map { it.id })
+    }
 }
