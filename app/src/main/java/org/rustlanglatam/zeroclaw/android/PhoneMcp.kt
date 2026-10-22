@@ -790,7 +790,7 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                             (if (people) " and someone in them (faces; it cannot tell who)" else "") +
                             "; looked at ${found.looked} of ${found.total} from that time" +
                             (if (found.looked < found.total) " (more on the next search: each photo is looked at once)" else "") +
-                            (if (Floating.appVisible) ". They are on the owner's screen now." else ". They are on the Fotos screen when the owner opens the app.")
+                            (if (Floating.appVisible) ". They are on the owner's screen now." else ". They are on the Photos screen when the owner opens the app.")
                     }
                 } }
             }

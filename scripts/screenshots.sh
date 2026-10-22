@@ -89,7 +89,12 @@ open home
 go --es card "'$(t "To Laura" "Para Laura")'" --es cardBody "'**$(t To Para):** laura@$(t work trabajo).com\n**$(t Subject Asunto):** $(t "Meeting tomorrow" "Reunión de mañana")\n\n$(t "Hi Laura, four tomorrow works perfectly for me. See you then." "Hola Laura, mañana a las cuatro me viene perfecto. Nos vemos.")'"
 sleep 2; shot email-card
 go --ez closeCard true; sleep 1
+# Photo and file searches run through the agent: they need sample images (with a dog) and documents (a loan budget)
+# on the emulator, and all-files access granted to the app; otherwise the screens show their empty state.
+go --ez fresh true; sleep 6
+go --es say "'$(t "Find the photos of my dog" "Busca las fotos de mi perro")'"; sleep 25
 open photos; shot photos
+go --es say "'$(t "Where is the loan budget document?" "¿Dónde está el documento del presupuesto del préstamo?")'"; sleep 25
 open files; shot files
 open news; shot news
 open memory; shot memory

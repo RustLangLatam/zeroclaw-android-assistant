@@ -45,7 +45,7 @@ object Files {
     fun describe(hits: List<Hit>, terms: List<String>, filesKnown: Boolean): String {
         val note = if (filesKnown) "" else "\n(Files of other apps such as WhatsApp are not searched: the owner has not allowed access to all files; Ajustes › Permisos.)"
         if (hits.isEmpty()) return "Nothing found for ${terms.joinToString(" ")}.$note"
-        return "Found, best first (shown on the Archivos screen):\n" +
+        return "Found, best first (shown on the Files screen):\n" +
             hits.take(10).joinToString("\n") { "- ${it.title} — ${it.where}" } + note
     }
 }

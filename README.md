@@ -209,16 +209,20 @@ summarize my week", run as ZeroClaw cron jobs) are also set by voice.
 ## Contacts, photos and files
 
 <p align="center">
-  <img src="docs/images/photos.jpg" width="230" alt="Photo search">
-  <img src="docs/images/files.jpg" width="230" alt="File search">
+  <img src="docs/images/photos.jpg" width="230" alt="Photos screen: results of a search for photos with a dog">
+  <img src="docs/images/files.jpg" width="230" alt="Files screen: two documents found for a loan budget request">
 </p>
+<p align="center"><sub>Left: "Find the photos of my dog" — 4 of 6 photos matched by on-device image labels. Right: "Where is the
+loan budget document?" — two files found in Downloads, each opens in its app.</sub></p>
 
 - **Contacts.** Search, add, edit, delete (delete requires approval); family and work groups set by voice with the
   credential. Contacts are matched by stable identity, never by display name.
-- **Photos.** "Photos from last December with my dog": a date range from MediaStore, then on-device labels and face
-  detection. Images do not leave the phone.
-- **Files.** "Where is the loan quote?": file names in Downloads, Documents, WhatsApp and Telegram, plus emails and
-  messages that mention it.
+- **Photos.** A request such as "photos from last December with my dog" becomes a date range over MediaStore, then
+  on-device image labels (and face detection for people) select the matching photos. Results appear as a grid on the
+  Photos screen; a tap opens the photo in the gallery. Images are analyzed on the device and never uploaded.
+- **Files.** A request such as "where is the loan budget document?" searches file names in Downloads, Documents and
+  the WhatsApp and Telegram folders (all-files access), plus emails and messages that mention it. Results are listed
+  best first with their location; a tap opens the file in its app.
 - **Apps and device.** Open apps, play a search in a media app, media keys; brightness, volume, flashlight,
   do-not-disturb, rotation, and system panels for the rest ([phone abilities](docs/specs/phone-abilities.md)).
 
