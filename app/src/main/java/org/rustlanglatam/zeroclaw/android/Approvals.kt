@@ -14,9 +14,12 @@ import org.json.JSONObject
 
 /**
  * Holds pending `ASK` decisions. A tool call blocks in [request] until the owner answers through [answer]
- * (notification or in-app prompt); no answer before [timeoutMs] counts as a denial (fail closed).
+ * (notification or in-app prompt); no answer before [timeoutMs] is [Answer.EXPIRED], which runs nothing (fail closed)
+ * but, unlike a decline, lets the caller keep the request for the owner to decide later.
  */
-class Approvals(private val timeoutMs: Long = 60_000) {
+class Approvals(@Volatile var timeoutMs: Long = 60_000) {
+
+    enum class Answer { APPROVED, DECLINED, EXPIRED }
 
     /** A pending approval; when [strong], approving requires biometrics or the device credential, not just a tap. */
     data class Pending(val id: Int, val act: Act, val strong: Boolean = false) {
@@ -31,16 +34,18 @@ class Approvals(private val timeoutMs: Long = 60_000) {
     /** Called with each new request so it can be shown to the owner. */
     @Volatile var onRequest: (Pending) -> Unit = {}
 
-    fun request(act: Act, strong: Boolean = false): Boolean {
+    fun request(act: Act, strong: Boolean = false): Answer {
         val pending = Pending(ids.incrementAndGet(), act, strong)
         val answer = CompletableFuture<Boolean>()
         waiting[pending.id] = answer
         asked[pending.id] = pending
         return try {
             onRequest(pending)
-            answer.get(timeoutMs, TimeUnit.MILLISECONDS)
+            if (answer.get(timeoutMs, TimeUnit.MILLISECONDS)) Answer.APPROVED else Answer.DECLINED
+        } catch (e: java.util.concurrent.TimeoutException) {
+            Answer.EXPIRED
         } catch (e: Exception) {
-            false
+            Answer.DECLINED
         } finally {
             waiting.remove(pending.id)
             asked.remove(pending.id)

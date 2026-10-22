@@ -225,6 +225,7 @@ private fun panorama(ui: MainActivity, stopped: Boolean, attention: Boolean): Li
             offline = CatchUp.offline(ui),
             arranging = Ui.arranging,
             attention = attention,
+            waiting = Inbox.waiting().size,
             back = CatchUp.last?.takeIf { now - it.second < 6 * 3600_000L }?.first,
             unread = Inbox.unread().map { it.sender to it.text },
             importantMail = mail?.let { Triple(it.from.substringBefore(' '), it.subject, MailNotice.OPEN + it.id) },
@@ -668,7 +669,7 @@ private fun Incoming(entry: Inbox.Entry, divider: Boolean) {
     val group = Policy.groups[entry.sender].orEmpty().joinToString { Labels.group(it) }.ifEmpty { t(R.string.screens_unknown) }
     val color = when (entry.status) {
         Inbox.Status.ANSWERED -> Ink.ok
-        Inbox.Status.WAITING, Inbox.Status.QUEUED, Inbox.Status.RECEIVED -> Ink.wait
+        Inbox.Status.WAITING, Inbox.Status.QUEUED, Inbox.Status.RECEIVED, Inbox.Status.EXPIRED -> Ink.wait
         Inbox.Status.COULD_NOT_ANSWER -> Ink.alert
         else -> Ink.slate
     }
@@ -693,6 +694,13 @@ private fun Incoming(entry: Inbox.Entry, divider: Boolean) {
                     Light(color, 6.dp)
                     Spacer(Modifier.size(8.dp))
                     Text(Labels.status(entry.status).replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium, color = color)
+                }
+                // An approval that expired is offered again: the answer is written anew and goes through the policy and
+                // the owner's approval (credential included) like the first time; nothing approved earlier is reused.
+                if (entry.status == Inbox.Status.EXPIRED && entry in Inbox.waiting()) MessageListener.retry?.let { retry ->
+                    androidx.compose.material3.TextButton(onClick = { kotlin.concurrent.thread { retry(entry) } }) {
+                        Text(t(R.string.screens_answer_now), color = Ink.wait)
+                    }
                 }
             }
         }

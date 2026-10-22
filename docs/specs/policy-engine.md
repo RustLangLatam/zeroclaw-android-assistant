@@ -21,7 +21,7 @@ the tools themselves ([phone-abilities.md](phone-abilities.md)).
   ceilings, the kill-switch flag, contact groups, owner name and form of address.
 - `Guard`: the process-wide instance; `gated()`/`attempt()` around every phone tool and every
   notification reply; the outbox and undo; the activity log; persistence of rules and settings.
-- `Approvals`: pending `ASK` requests; fail closed after 60 s.
+- `Approvals`: pending `ASK` requests; fail closed after 60 s, with an expired request told apart from a decline.
 - `Outbox`: the undo window for outward irreversible actions.
 - `Act`: each action's log text, owner-facing title and detail; `Labels`: the policy in the
   owner's words; `introduction()`: what the assistant states it may do, derived from the rules.
@@ -41,7 +41,7 @@ the tools themselves ([phone-abilities.md](phone-abilities.md)).
 | `Guard.undo(id)` | `Boolean`; refunds the daily use, logs `undone` | Home and floating-mark undo, `ApprovalReceiver` (`undo` extra) |
 | `Guard.setStopped(stopped)` | kill switch; saves synchronously; `onStopped` | `MainActivity.setStopped`, debug `stop` extra |
 | `Guard.load(dir)` / `save()` / `saveNow()` | `files/policy.json`, `files/activity.jsonl` | `AssistantService`, `MainActivity.onCreate`, `CallActivity` (`PhoneReminders.kt`), `MessageListener`; every setting change |
-| `Approvals.request(act, strong)` / `answer(id, approved)` / `find(id)` / `count()` | blocks the caller up to 60 s → `Boolean` | `Guard.attempt`; `MainActivity.answer`, `approveIntent`, `ApprovalReceiver` |
+| `Approvals.request(act, strong)` / `answer(id, approved)` / `find(id)` / `count()` | blocks the caller up to 60 s → `Answer` (`APPROVED`, `DECLINED`, `EXPIRED`) | `Guard.attempt`; `MainActivity.answer`, `approveIntent`, `ApprovalReceiver` |
 | Hooks `approvals.onRequest`, `Guard.onNotify`, `onQueued`, `onSaved`, `onStopped`, `secure`, `missing` | set in `AssistantService.onStartCommand` (`askOwner`, `tell`, `offerUndo`, identity rewrite debounced 1.5 s, daemon stop/start, keyguard check) and `MainActivity` (`missing`) | |
 | `Labels.capability/group/status/scope/autonomy/rule/tool` | owner-facing strings (`t(R.string.…)`, [ADR-0029](../adr/0029-ui-text-in-android-string-resources.md)) | screens, notifications, approval prompts |
 | `introduction(owner, rules, groups, apps, undoSeconds, groupChats, missing)` | self-introduction text built from string resources | `MainActivity.introduce`; `AssistantService` (`TOOLS.md`) |
@@ -63,7 +63,7 @@ Notifications (posted by `AssistantService`):
 | Kill switch | — | Settings or Home *Pause* / *Resume* (resume: credential); menu | commands "pause" / "resume" ([owner-chat-and-voice.md](owner-chat-and-voice.md)) | off |
 | Undo window | — | Settings › Messages › Time to undo (10 / 30 / 60 / 120 s) | `set_preference undo_seconds` (CHANNEL when shorter) | 30 s; floor `PhoneMcp.MIN_UNDO_SECONDS` = 10, cap 120 |
 | Contact groups | — | setup and Settings › People (credential) | `set_contact_group` (CONTACT_GROUPS, credential) | none |
-| Approval timeout, log size, counters | constants: `Approvals(timeoutMs = 60_000)`, `Journal.MAX = 500` | — | — | — |
+| Approval timeout, log size, counters | constants: `Approvals(timeoutMs = 60_000)` (a `var`, shortened only in tests), `Journal.MAX = 500` | — | — | — |
 
 Debug builds only: `--ez stop`, `--ez clean` (counters), `--es contacts` on `MainActivity`.
 
@@ -174,7 +174,9 @@ caller's catalog is logged `refused`, reason `not a <principal> tool`. `at` is `
 builds also write each entry to logcat (tag `KsandraJournal`), since the file is sealed.
 
 **Approvals**: ids from an `AtomicInteger`; `request` blocks on a `CompletableFuture` for 60 000 ms;
-timeout or exception → `false`. `askOwner`: with the app open (`MainActivity.prompt`) the request is
+timeout → `EXPIRED`, any other exception → `DECLINED`. `Guard.attempt` turns `EXPIRED` into
+`Refused(notApproved = true, expired = true)` and journals "no answer in time"; a decline journals "not approved".
+Nothing runs in either case; only an expired request may be offered to the owner again. `askOwner`: with the app open (`MainActivity.prompt`) the request is
 shown in-app (`Ui.pending`, the approval sheet, gesture EXPECT, a spoken line when answers are read
 aloud); otherwise the notification. The prompt text always comes from the pending request
 (`Approvals.find`), never from an intent extra.

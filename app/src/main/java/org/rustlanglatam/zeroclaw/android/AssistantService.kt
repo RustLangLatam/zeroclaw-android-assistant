@@ -519,8 +519,29 @@ class AssistantService : Service() {
      */
     private fun digest() {
         getSystemService(NotificationManager::class.java).cancel(4000)
+        waiting()
         Floating.update(this)
         Ui.refresh()
+    }
+
+    /**
+     * Keeps a quiet notification with the number of approvals that expired without an answer ([Inbox.waiting]); it opens
+     * Activity, where each one can be answered now. Cancelled when none is left.
+     */
+    private fun waiting() {
+        val manager = getSystemService(NotificationManager::class.java)
+        val count = Inbox.waiting().size
+        if (count == 0) return manager.cancel(WAITING_ID)
+        val open = PendingIntent.getActivity(
+            this, WAITING_ID, MainActivity.sealed(Intent(this, MainActivity::class.java).putExtra("place", Place.ACTIVITY)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        manager.notify(
+            WAITING_ID,
+            Notification.Builder(this, channel("waiting", t(R.string.assistantservice_waiting_channel), NotificationManager.IMPORTANCE_LOW))
+                .setSmallIcon(R.drawable.ic_mark).setContentTitle(tn(R.plurals.waiting_for_your_decision, count, count))
+                .setContentText(t(R.string.assistantservice_waiting_text)).setContentIntent(open).setOnlyAlertOnce(true).build(),
+        )
     }
 
     /** Notifies the owner of a completed `ACT_NOTIFY` action or a service event through [notice]. */
@@ -568,6 +589,9 @@ class AssistantService : Service() {
         @Volatile var reload: (() -> Unit)? = null
 
         const val TAG = "ZeroClaw"
+
+        /** The notification of approvals waiting for the owner, in a range no other notification uses. */
+        private const val WAITING_ID = 400_001
 
         /** Interval between gateway health checks while the daemon runs. */
         private const val WATCH_MS = 60_000L

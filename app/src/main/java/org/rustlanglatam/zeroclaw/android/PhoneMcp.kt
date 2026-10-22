@@ -1676,7 +1676,8 @@ object Guard {
         val text: String
         data class Done(override val text: String) : Outcome
         data class Queued(override val text: String) : Outcome
-        data class Refused(override val text: String, val notApproved: Boolean) : Outcome
+        /** [expired]: the owner did not answer in time; the request may be offered again, a decline never is. */
+        data class Refused(override val text: String, val notApproved: Boolean, val expired: Boolean = false) : Outcome
     }
 
     /** Returns user-facing descriptions of missing Android permissions; provided by the running UI, empty otherwise. */
@@ -1692,15 +1693,21 @@ object Guard {
     fun attempt(principal: Principal, capability: Capability, target: Target, act: Act, action: () -> String): Outcome {
         val decision = policy.decide(principal, capability, target)
         val run = if (capability.undoable) queued(principal, act, decision.reason, decision.spends, action) else action
+        var expired = false
         val outcome = when (decision.autonomy) {
             Autonomy.NEVER -> null
             // Without a screen lock there is no credential to confirm a strong approval: refused without asking.
             Autonomy.ASK -> if (capability.strongApproval && !secure()) null
-                else if (approvals.request(act, capability.strongApproval)) run() else null
+                else when (approvals.request(act, capability.strongApproval)) {
+                    Approvals.Answer.APPROVED -> run()
+                    Approvals.Answer.EXPIRED -> { expired = true; null }
+                    Approvals.Answer.DECLINED -> null
+                }
             Autonomy.ACT_NOTIFY -> run().also { if (!capability.undoable && !failed(it)) onNotify(t(R.string.guard_done_x, act.title)) }
             Autonomy.ACT -> run()
         }
         val label = when {
+            outcome == null && expired -> "no answer in time"
             outcome == null && decision.autonomy == Autonomy.ASK -> "not approved"
             outcome == null -> "refused"
             else -> decision.autonomy.name.lowercase()
@@ -1715,6 +1722,9 @@ object Guard {
             outcome == null && label == "not approved" && capability.strongApproval && !secure() -> Outcome.Refused(
                 "Not done: it needs the owner's fingerprint or PIN, and this phone has no screen lock, so such approvals are declined. " +
                     "Tell the owner plainly; they can set a screen lock in the phone's settings (Settings › Phone permissions shows it).", notApproved = true)
+            expired -> Outcome.Refused(
+                "Not done: the owner did not answer in time; it is kept for them to decide later. Tell them so plainly; do not retry unless they ask.",
+                notApproved = true, expired = true)
             outcome == null && label == "not approved" -> Outcome.Refused(
                 "Not done: the owner did not approve it (they declined, or did not answer in time). Tell them so plainly; do not retry unless they ask.", notApproved = true)
             outcome == null -> Outcome.Refused("Not allowed ($label). Tell the person it cannot be done now; do not retry.", notApproved = false)

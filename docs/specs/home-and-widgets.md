@@ -161,7 +161,8 @@ reading is persisted for offline answers. A failure resets the timer, so the nex
 
 **Panorama** (`Panorama.items`). First a STATE line when it matters — arranging (then only that),
 paused, offline, or "something to show below" (an approval, an outgoing item or missing
-permissions) — then: BACK (catch-up of the last 6 h), important MAIL (12 h; a touch opens it),
+permissions) — then a STATE line with the number of approvals that expired and wait for the owner
+(`Now.waiting`; opens Activity), then: BACK (catch-up of the last 6 h), important MAIL (12 h; a touch opens it),
 MESSAGE (one: sender and text; several: count and senders; opens Activity), REMINDER (next 12 h),
 AGENDA (next event; a touch asks about the day), NEWS (briefing of the last 24 h; opens News),
 unread MAIL count, CURIOUS (first memory area at NONE, never HEALTH). Nothing: an all-calm line. One

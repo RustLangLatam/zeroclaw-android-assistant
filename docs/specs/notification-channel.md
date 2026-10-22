@@ -76,7 +76,7 @@ No `local.properties` key affects this channel. Debug builds: `--es apps`, `--ez
 | `Guard.thirdPartySender` | memory | no |
 
 `Entry.status` holds an `Inbox.Status` constant: `received`, `answered`, `waiting`, `queued`,
-`paused`, `retrying`, `no_answer`, `could_not_answer`, `undone`, `not_approved`, `held_back`.
+`paused`, `retrying`, `no_answer`, `could_not_answer`, `undone`, `not_approved`, `expired`, `held_back`.
 Values saved by earlier versions in Spanish are mapped to these on load (`Inbox.Status.migrate`).
 
 `Inbox.DEFAULT_APPS` (offered in the setup): `com.whatsapp`, `com.whatsapp.w4b`,
@@ -144,7 +144,11 @@ turn. A 401 at open makes the app pair again (`AssistantService.pair(refused = t
    `SOURCE_FREE_FORM_INPUT`, sends the `PendingIntent`, records `answered[key]`, and sets
    `answered` or `could_not_answer` (with `Guard.onNotify`). Undo → journal `undone`, status
    `undone`, the daily use refunded. Kill switch at send time → status `held_back`.
-5. Refused → `not_approved` (an `ASK` not approved) or `no_answer`.
+5. Refused → `expired` (an `ASK` the owner did not answer in 60 s), `not_approved` (declined) or `no_answer`.
+6. Expired entries of the last 24 h (`Inbox.waiting`) wait for the owner: a quiet notification (channel `waiting`,
+   id 400 001) counts them and opens Activity; Home's line says so; each entry shows *Answer now*, which runs
+   `MessageListener.retry`: the answer is written again and passes the policy and the approval (credential included)
+   like the first time. A declined entry is never offered again.
 
 The reply goes to the conversation the message came from; the model never chooses the recipient.
 
@@ -159,7 +163,8 @@ through debug extras `--es owner Milton --es apps <fakechat> --ez groups false -
 
 | Case | Check |
 |---|---|
-| Laura (work) asks | *Approve* + PIN, sent after the window; the reply starts with the introduction naming Milton |
+| Laura (work) asks | *Approve* + PIN, sent after the window; the reply starts with the introduction naming Milton, in the sender's language |
+| Laura asks, nobody answers the approval | nothing sent; journal "no answer in time"; the waiting notice; *Answer now* in Activity + *Approve* + PIN → exactly one reply |
 | Ana (family) | answered without asking, after the window |
 | Pat (unknown) | no reply |
 | A stranger named "Ana" without a number | no reply; logged as unverified (the display name is not an identity) |
