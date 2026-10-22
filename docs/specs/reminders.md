@@ -65,6 +65,16 @@ Android:
   `CatchUp.start` (reminders due while away, [away-and-catch-up.md](away-and-catch-up.md)). There is
   no reminders screen.
 
+## Before an appointment
+
+`Appointments.kt`: once a minute the service reads the calendar's next 3 hours. An event with an address whose time
+to leave has come (`Guard.leaveMinutes` before it, default 30, by voice `set_preference leave_minutes`, 5–180 or off)
+gets a notice (channel `appointments`, high, ids from 403 000): *"Time to leave for Calle Colón 12 (Dentist at
+10:00). Tap to open the map."*; the tap opens the maps app with `geo:0,0?q=<address>`; the assistant does not
+navigate, and no address leaves the phone (real travel time would need a routing service: Phase C). With the battery
+at 20 % or less and not charging, an event within the hour gets *"Your battery is at 15 % and you have … at …: charge
+it before you leave."*. Each notice once per event (plain prefs `appointments`).
+
 ## Contacts' birthdays
 
 `Birthdays.kt`: birthdays are read from the phone's contacts (`ContactsContract` events of type birthday; with or

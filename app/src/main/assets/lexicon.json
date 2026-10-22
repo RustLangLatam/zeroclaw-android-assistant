@@ -182,5 +182,6 @@
   "shared.bill": "factura|recibo|invoice|bill|importe|total a pagar|amount due|total due",
   "shared.appointment": "cita|consulta|appointment|visita|revision|reunion|meeting|reserva|booking",
   "shared.parcel": "pedido|envio|paquete|entrega|repartidor|order|shipment|shipped|parcel|package|delivery|delivered|tracking|seguimiento",
-  "shared.arrives": "llega|llegara|entrega|entregaremos|arrives|arriving|delivered|out for delivery|estimated delivery|entrega estimada"
+  "shared.arrives": "llega|llegara|entrega|entregaremos|arrives|arriving|delivered|out for delivery|estimated delivery|entrega estimada",
+  "preferences.setting.leave_minutes": "leave|salir|avisodecita|appointment"
 }

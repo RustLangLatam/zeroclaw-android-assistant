@@ -233,6 +233,10 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                 "Your voice is now ${Voices.name(voice)} (${Voices.label(voice).second})."
             } ?: ("Voices you can use: " + (if (CloudVoice.configured) "the natural one (from the internet, the most human), " else "") +
                 Voices.available.joinToString { "${Voices.name(it)} (${Voices.label(it).second})" } + ".")
+            Preferences.Setting.LEAVE_MINUTES -> (if (Device.onOff(value) == false) 0 else Regex("\\d+").find(value)?.value?.toIntOrNull()?.coerceIn(5, 180))?.let {
+                Guard.leaveMinutes = it
+                if (it == 0) "You no longer tell the owner when to leave for appointments." else "You tell the owner $it minutes before an appointment with an address that it is time to leave."
+            }
             Preferences.Setting.UNANSWERED_HOURS -> (if (Device.onOff(value) == false) 0 else Regex("\\d+").find(value)?.value?.toIntOrNull()?.coerceIn(1, 48))?.let {
                 Guard.unansweredHours = it
                 if (it == 0) "You no longer point out unanswered messages." else "You point out family and work messages still unanswered after $it h, once a day per person."
@@ -1554,7 +1558,7 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     "learning (on/off), read_mail (on/off), floating_mark (on/off), floating_place (left/right, top/middle/bottom), undo_seconds (a number), group_chats (on/off), widget_add or " +
                     "widget_remove (weather, alarm, agenda, messages, mail, reminders, battery, news), language (Spanish, English, or " +
                     "the phone's: \"speak to me in English\"), name (the owner's name), her_voice (which of your voices you speak with: one by its name, or its region, or \"natural\" for the natural one " +
-                    "from the internet; without a value you get the list), voice_ceiling (US$ a month the natural voice may cost, then the phone's; \"none\" for none), unanswered_hours (after how many hours to point out unanswered family and work messages; \"off\"), model_budget (US$ a month the model may cost; past it only the basics until next month; \"none\" for no budget), messaging_apps (\"add WhatsApp\", \"remove Telegram\"), offline (on/off: answer even without internet; on downloads a small model of " +
+                    "from the internet; without a value you get the list), voice_ceiling (US$ a month the natural voice may cost, then the phone's; \"none\" for none), leave_minutes (how many minutes before an appointment with an address to say it is time to leave; \"off\"), unanswered_hours (after how many hours to point out unanswered family and work messages; \"off\"), model_budget (US$ a month the model may cost; past it only the basics until next month; \"none\" for no budget), messaging_apps (\"add WhatsApp\", \"remove Telegram\"), offline (on/off: answer even without internet; on downloads a small model of " +
                     "${Offline.size(Offline.BYTES)}: before turning it on, tell the owner in plain words that it downloads once on Wi-Fi, that " +
                     "answers without internet are simpler and slower and use more battery, and turn it on only after they agree).", listOf("setting", "value"),
                     "setting" to "string", "value" to "string"),
@@ -1688,6 +1692,7 @@ object Guard {
                 voiceCeiling = state.voiceCeiling
                 modelBudget = state.modelBudget
                 unansweredHours = state.unansweredHours
+                leaveMinutes = state.leaveMinutes
                 policy.restoreCounters(state.counters)
             }
         }
@@ -1737,6 +1742,9 @@ object Guard {
 
     /** Hours after which an unanswered family or work message is pointed out ([Unanswered]); 0 turns it off. */
     @Volatile var unansweredHours = DEFAULT_UNANSWERED_HOURS
+
+    /** Minutes before an appointment with an address to tell the owner it is time to leave ([Appointments]); 0 turns it off. */
+    @Volatile var leaveMinutes = Appointments.DEFAULT_LEAVE_MINUTES
     const val DEFAULT_UNANSWERED_HOURS = 4
     const val DEFAULT_VOICE_CEILING = 5.0
 
@@ -1769,7 +1777,7 @@ object Guard {
         val state = Saved.State(
             policy.rules, policy.stopped, undoSeconds, emptyList(), Inbox.apps, Inbox.groups,
             Policy.owner.takeIf { setUp }, Policy.groups, voice, bubble, "${if (Floating.right) "right" else "left"}:${Floating.height}", Ink.palette.key, Policy.address, warmth.name, Mailbox.reading, openMic, Widgets.encode(widgets), appMode,
-            policy.counters(), Language.chosen, Offline.wanted, Voices.chosen, voiceCeiling, modelBudget, unansweredHours,
+            policy.counters(), Language.chosen, Offline.wanted, Voices.chosen, voiceCeiling, modelBudget, unansweredHours, leaveMinutes,
         )
         runCatching { target.writeSealed(Saved.encode(state)) }
             .onFailure { Log.e(AssistantService.TAG, "policy not saved: ${it.message}") }

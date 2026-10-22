@@ -1033,4 +1033,10 @@
     <string name="share_mail_title">Algo para recordar</string>
     <string name="share_mail_bill">%1$s: una factura de %2$s que vence el %3$s. ¿Te lo recuerdo?</string>
     <string name="share_mail_parcel">%1$s: tu paquete llega el %2$s. ¿Te lo recuerdo?</string>
+    <string name="setting_leave_minutes">aviso antes de las citas</string>
+    <string name="appointments_channel">Antes de tus citas</string>
+    <string name="appointments_leave_title">Hora de salir</string>
+    <string name="appointments_leave">Es hora de salir hacia %1$s (%2$s a las %3$s). Toca para abrir el mapa.</string>
+    <string name="appointments_battery_title">Batería baja</string>
+    <string name="appointments_battery">Tienes la batería al %1$d %% y %2$s a las %3$s: cárgala antes de salir.</string>
 </resources>
