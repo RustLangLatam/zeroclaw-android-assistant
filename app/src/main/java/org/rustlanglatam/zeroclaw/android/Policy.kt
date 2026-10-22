@@ -43,6 +43,8 @@ enum class Capability(val risk: Risk) {
     APPS_READ(Risk.PERSONAL_READ),
     /** Opens one of the owner's apps, optionally playing a search in it. */
     APP_OPEN(Risk.INTERNAL),
+    /** Opens the phone's dialer with a contact's number; the owner presses call. The app never places a call. */
+    DIAL(Risk.INTERNAL),
     /** Sends play, pause, next and previous to the active media session. */
     MEDIA_CONTROL(Risk.INTERNAL),
     /** Stores and forgets facts about the owner ([Memory]). */
@@ -274,6 +276,7 @@ class Policy(rules: List<Rule>, private val today: () -> LocalDate = LocalDate::
             Rule(Principal.OWNER, Capability.CALENDAR_READ, Scope.ALL, Autonomy.ACT),
             Rule(Principal.OWNER, Capability.APPS_READ, Scope.ALL, Autonomy.ACT),
             Rule(Principal.OWNER, Capability.APP_OPEN, Scope.ALL, Autonomy.ACT),
+            Rule(Principal.OWNER, Capability.DIAL, Scope.ALL, Autonomy.ACT),
             Rule(Principal.OWNER, Capability.MEDIA_CONTROL, Scope.ALL, Autonomy.ACT),
             Rule(Principal.OWNER, Capability.MEMORY, Scope.ALL, Autonomy.ACT),
             Rule(Principal.OWNER, Capability.EMAIL_READ, Scope.ALL, Autonomy.ACT),

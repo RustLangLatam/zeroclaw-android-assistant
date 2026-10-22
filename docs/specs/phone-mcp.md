@@ -92,6 +92,7 @@ Behaviour of each group is specified where noted.
 | Messages | `send_message` (target `Policy.target(contactName(to))`) / `list_messages` / `act_on` | MESSAGE_SEND / MESSAGES_READ / ITEMS_MANAGE or ITEMS_DELETE | [phone-abilities.md](phone-abilities.md), [notification-channel.md](notification-channel.md) |
 | Apps and media | `list_apps` / `open_app`, `play_media` / `media_control` | APPS_READ / APP_OPEN / MEDIA_CONTROL | [phone-abilities.md](phone-abilities.md) |
 | Device | `device_setting`, `device_status`, `weather` | DEVICE | [phone-abilities.md](phone-abilities.md), [home-and-widgets.md](home-and-widgets.md) |
+| Calls | `dial` (opens the dialer with the contact's number; never places a call) | DIAL | [phone-abilities.md](phone-abilities.md) |
 | Photos and files | `find_photos` / `find_files` | PHOTOS_READ / FILES_READ | [phone-abilities.md](phone-abilities.md) |
 | Reminders | `remind`, `list_reminders`, `cancel_reminder`, `move_reminder` | REMINDERS | [reminders.md](reminders.md) |
 | News and videos | `follow_topic`, `unfollow_topic`, `list_topics`, `news`, `find_videos` | NEWS | [news.md](news.md) |

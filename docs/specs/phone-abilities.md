@@ -64,6 +64,14 @@ Runtime permissions are requested together in the setup's permissions step
 write, microphone, images). Usage access, all-files access, overlay and notification access are
 optional items there that open their system screens.
 
+## Calling someone
+
+`dial(contact)` (owner only, `Capability.DIAL`, `INTERNAL`, default `ACT`): finds the contact's number (an exact name
+first, else the only contact whose name contains it; two or more are ambiguous and the agent asks) and starts
+`Intent.ACTION_DIAL` with `tel:<number>`. The dialer opens with the number filled in and the owner presses call.
+The app never places a call: it does not request `CALL_PHONE` and never uses `ACTION_CALL` (`NoCallsTest` checks the
+manifest and every source file).
+
 ## Configuration
 
 | What | Where | Default |

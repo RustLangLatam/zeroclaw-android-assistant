@@ -76,6 +76,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Feature | Description | Status |
 |---|---|---|
 | Contacts | Search, add, edit, delete (delete requires approval); family and work groups by voice with the credential | Implemented |
+| "Call Ana" | Opens the dialer with the contact's number; the owner presses call. The app never places a call (no `CALL_PHONE`) | Implemented |
 | Photos | "photos from last December with my dog": date range from MediaStore, then on-device labels and face detection; nothing leaves the phone | Implemented |
 | Files | "where is the loan quote?": Downloads, Documents, WhatsApp and Telegram files by name, plus emails and messages that mention it | Implemented |
 | Apps and media | Most used apps first, open an app, play a search in a music, podcast or video app, media keys | Implemented |
