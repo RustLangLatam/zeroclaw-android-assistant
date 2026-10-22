@@ -106,13 +106,13 @@ its issue.
 - "Tell Ana I'll be late" without opening the messaging app.
 - Family messages answered when the owner cannot, within the owner's rules, with an undo window.
 - Medicine reminders that insist until acknowledged. Every 8 hours or on set weekdays: [#13](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/13).
-- A photo of a school circular turned into a reminder: [#16](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/16). A shopping list by voice: [#15](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/15).
+- A photo of a school circular turned into a reminder: [#15](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/15). A shopping list by voice: [#14](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/14).
 
 **An older person**
 - Speaking without touching anything; answers read aloud.
 - Medicines that ring full screen, like a call, until acknowledged.
 - Basic answers without internet: reminders, alarms, today's calendar, weather, opening an app.
-- A warning when a message looks like a scam: [#17](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/17). "Call my daughter" opening the dialer: [#19](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/19). A
+- A warning when a message looks like a scam: [#16](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/16). "Call my daughter" opening the dialer: [#18](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/18). A
   simple mode with large text: [#23](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/23).
 
 **A small-business owner**
