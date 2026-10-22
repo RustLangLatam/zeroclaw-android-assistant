@@ -6,7 +6,7 @@
 | Code | `app/.../Reminders.kt` (model, levels, time parsing, `asked`), `app/.../PhoneReminders.kt` (`PhoneReminders`, `BootReceiver`, `ReminderReceiver`, `CallActivity`); tools in `PhoneMcp.kt` (`remind`, `list_reminders`, `cancel_reminder`, `move_reminder`); rescheduling in `AssistantService.onStartCommand` |
 | Tests | `app/src/test/.../RemindersTest.kt` (health rule, repeated calls, daily next occurrence, encoding and description); `scripts/e2e.sh`: none |
 | Decisions | [ADR-0014](../adr/0014-reminders-in-the-app.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md), [ADR-0027](../adr/0027-assistant-voice-from-a-cloud-speech-model.md) |
-| Last checked against code | 2026-10-22, commit `37f416d` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -54,7 +54,8 @@ Android:
 - Notification channels: `reminders-low` (low importance), `reminders-k` (high, the app's chime,
   `Chime.channel`), `reminders-call` (high, no sound, `setBypassDnd(true)`).
 - Notification id `100000 + id`; PendingIntent request codes: call `200000 + id`, open app
-  `300000 + id`, fire `400000 + id` (the legacy `9900 + id` alarm is cancelled on reschedule).
+  `300000 + id`, fire `400000 + id`, missed call `9700 + id` (the legacy `9900 + id` alarm is
+  cancelled on reschedule).
 - Permissions: `USE_EXACT_ALARM`, `SCHEDULE_EXACT_ALARM` (maxSdk 32), `USE_FULL_SCREEN_INTENT`,
   `VIBRATE`, `RECEIVE_BOOT_COMPLETED`; `MainActivity.canCall()`/`openFullScreen()` for the Android 14
   full-screen permission.
@@ -63,6 +64,16 @@ Android:
 - Readers: Home widget `REMINDERS` and the panorama ([home-and-widgets.md](home-and-widgets.md)),
   `CatchUp.start` (reminders due while away, [away-and-catch-up.md](away-and-catch-up.md)). There is
   no reminders screen.
+
+## Configuration
+
+| What | Where | Default |
+|---|---|---|
+| Reminders | by voice only (`remind`, `move_reminder`, `cancel_reminder`); no Settings entry, no `set_preference` key, no `local.properties` key | level `NORMAL`; `minutes` 1–1440 |
+| Level words, health pattern, spoken-time grammar | `assets/lexicon.json`: `reminders.level_*`, `reminders.health`, `reminders.time*`, `reminders.*` (ADR-0029) | — |
+| Call retries | constants `Reminders.CALLS = 6`, `AGAIN_MS = 5 min`, `CallActivity.RING_MS = 45 s`; up to five spoken rounds, 6 s apart | — |
+| Voice of the call | the natural voice when usable (`CloudVoice.say`), else the platform voice chosen in Settings › Voice | — |
+| Android permissions | `USE_EXACT_ALARM`, `SCHEDULE_EXACT_ALARM` (maxSdk 32), `USE_FULL_SCREEN_INTENT`, `VIBRATE`, `RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS` (API 33+); the full-screen permission (Android 14) and the overlay permission are offered in the setup and on Home | — |
 
 ## State and data
 
@@ -145,7 +156,5 @@ saved); past and one-time → `due(id)` at once.
 
 ## Open issues
 
-- The call notification's title is a literal string in `PhoneReminders.due`, not a string resource,
-  so it is not localized.
 - Reminders stay in the app rather than in ZeroClaw ([ADR-0014](../adr/0014-reminders-in-the-app.md)):
   the full-screen call needs Android.

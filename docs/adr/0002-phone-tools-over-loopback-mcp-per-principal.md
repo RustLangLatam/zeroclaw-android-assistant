@@ -32,3 +32,7 @@ claim another one; each endpoint lists only its principal's tools.
 - Bad: loopback is reachable by every app on the phone (addressed by
   [ADR-0016](0016-mcp-key-per-endpoint.md) and [ADR-0020](0020-fail-closed-daemon-start.md)); an
   MCP call does not identify the turn it belongs to ([ADR-0007](0007-third-party-turns-one-at-a-time.md)).
+
+Note: since [ADR-0025](0025-an-offline-agent-on-a-local-model.md) a third endpoint, `/mcp/offline`,
+serves the offline agent with the owner's key and principal and lists only the subset of owner
+tools in `Offline.TOOLS`.

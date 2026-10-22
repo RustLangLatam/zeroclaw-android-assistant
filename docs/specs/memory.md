@@ -6,7 +6,7 @@
 | Code | `app/.../Memory.kt`, `app/.../PhoneMemory.kt`, `app/.../Bond.kt`, `app/.../Empathy.kt`; wiring in `PhoneMcp.kt` (tools), `AssistantService.kt` (`writeIdentity`, config), `Screens.kt` (`MemoryPlace`, `Knowing`), `Theme.kt` (the ring) |
 | Tests | `app/src/test/.../MemoryTest.kt`, `PhoneMemoryTest.kt`, `BondTest.kt`, `EmpathyTest.kt`; `scripts/e2e.sh`: none |
 | Decisions | [ADR-0013](../adr/0013-memory-in-zeroclaw-with-phone-copy.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0009](../adr/0009-gateway-only-through-kotlin-client.md), [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md), [ADR-0018](../adr/0018-tool-less-agent-for-unattended-turns.md), [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md) |
-| Last checked against code | 2026-10-22, commit `01f6f19` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -35,6 +35,7 @@ MCP tools, owner endpoint only (`/mcp/owner`), all through `Guard.gated(…, Cap
 | `forget` | `text` | `Memory.forget(text)` | `Forgot N memories.` or, when too vague, a request to be more exact |
 | `recall` | — | `Memory.describe()` | profile by area, facts and inferences apart |
 | `how_well_i_know_you` | — | `Memory.profile()` | per area: depth, told/inferred counts, the gaps (never health), how to say it |
+| `set_address` | `form` (masculine, feminine, neutral) | `Policy.address = form`, `Guard.save()`, `writeIdentity` | `Saved. From now on address <owner> …`; unknown form → the three options |
 
 Other entry points:
 
@@ -47,6 +48,18 @@ Other entry points:
   `client.memory.search(MemorySearch(agent = "owner"))`; `AssistantService.token` / `client`.
 - Hooks set by `AssistantService.onStartCommand`: `Memory.onChange` (refresh UI, `writeIdentity`),
   `Memory.onPut` / `onDrop` (`PhoneMemory.attach`, which also hooks `Notes`).
+
+## Configuration
+
+| What | Where | Default |
+|---|---|---|
+| Learning on/off | by voice `set_preference learning on|off`; Memory screen toggle ("Learn about you"); `my_settings` lists it | on (`memory.json` `learning`) |
+| Form of address | by voice `set_address`; asked by the agent at the first greeting; `policy.json` `address` | none until asked |
+| Area and date of a memory | `remember` arguments `area`, `date`; area keywords in `assets/lexicon.json` `memory.area.*`, `memory.area_name.mood` | area guessed from the text |
+| Style cues | `assets/lexicon.json` `empathy.cue.*`; threshold `Empathy.Style.SEEN = 3` | — |
+| Limits | constants `Memory.MAX = 200`, `MIN_FORGET = 4`, `MAX_FORGET = 3`, `FADE_DAYS = 180`, `MOOD_DAYS = 14`; reflection weekly, moments every 6 h | — |
+| ZeroClaw memory | written by the app into `zeroclaw.toml` (above); not a `local.properties` key | — |
+| Android permissions | none | — |
 
 ## State and data
 
@@ -75,7 +88,8 @@ English) over `Commands.normalize(text)`; most hits wins, ties to the earlier ar
 `PERSONAL`): `PERSONAL` About you, `PEOPLE` Your people, `WORK` Your work, `HEALTH` Your health,
 `TASTES` Your tastes, `ROUTINES` Your day, `INTERESTS` What interests you, `GOALS` Your plans,
 `PLACES` Your places, and `MOOD` Your mood (transient, not counted in depth; `Area.KNOWN` excludes it).
-An explicit `area` argument wins over the guess. Labels come from string resources.
+An explicit `area` argument wins over the guess (`Area.named`: an enum name in any case, or the
+lexicon's words for mood). Labels come from string resources.
 
 **Depth** (`Memory.depth`): score = 2 per told + 1 per inferred item in the area (conversation items
 count as inferred). `0` NONE, `< 5` LITTLE, `< 12` SOME, else WELL.
@@ -137,8 +151,9 @@ conversation", "I inferred it"), age and a forget button.
 
 ## Invariants
 
-- Only the owner principal reaches `remember`, `forget`, `recall`, `how_well_i_know_you`; third-party
-  turns get no memory tools, no recall (`memory_recall_limit = 0`) and no profile in `USER.md`.
+- Only the owner principal reaches `remember`, `forget`, `recall`, `how_well_i_know_you` and
+  `set_address`; third-party turns get no memory tools, no recall (`memory_recall_limit = 0`) and no
+  profile in `USER.md`.
 - Unattended turns run on `scribe`, which cannot call `remember` or `forget`.
 - With learning paused, `remember` saves nothing; what is known stays until deleted.
 - Told and inferred stay apart everywhere: category suffix, `USER.md` sections, the Memory screen label.
@@ -153,7 +168,7 @@ conversation", "I inferred it"), age and a forget button.
 - A write in flight while `sync` reads may be missed; the next sync picks it up (known limitation in `PhoneMemory.sync`).
 - Corrupt `memory.json`: `load` stops at the error; items read so far stay.
 - `memory.search` returns what ZeroClaw returns for the agent; no paging in the app.
-- Kill switch on: the four tools are refused (`Policy.decide` returns `NEVER`) and the daemon is
+- Kill switch on: the memory tools are refused (`Policy.decide` returns `NEVER`) and the daemon is
   stopped, so ZeroClaw's native memory tools are unavailable too.
 
 ## Security

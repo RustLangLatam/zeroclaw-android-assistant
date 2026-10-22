@@ -6,7 +6,7 @@
 | Code | `app/.../Preferences.kt`, `app/.../PhoneMcp.kt` (`set_preference`, `my_settings`, `set_contact_group`, `set_mode`, `set_address`, `open_section`, `list_rules`, `set_rule`, `usage`; `prefer`, `widens`, `settings`; `Guard.load`/`save`), `app/.../Approvals.kt` (`Saved`), `app/.../MainActivity.kt` (`Draft`, `saveSetup`, setters, `lacking`), `app/.../App.kt` (`Sections`, `Place`, `Setup`, `SetupName`, `SetupNeeds`, `SetupPeople`, `DraftPicker`), `app/.../Screens.kt` (`Control`, `Rules`, `NameSheet`), `app/.../Connectors.kt`, `app/.../Voice.kt`, `app/.../Language.kt`, `app/.../Usage.kt`, `app/.../Offline.kt`, `app/.../Lexicon.kt` |
 | Tests | `app/src/test/.../PreferencesTest.kt` (setting names, values in words, floating place), `LanguageTest.kt`, `VoiceTest.kt`, `WidgetsTest.kt`, `PrivateScreensTest.kt`, `PolicyTest.kt`; `scripts/e2e.sh` sets owner, apps, groups, stop and contacts through debug extras |
 | Decisions | [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0008](../adr/0008-app-writes-persona-files.md), [ADR-0006](../adr/0006-kill-switch-in-the-app.md), [ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md), [ADR-0027](../adr/0027-assistant-voice-from-a-cloud-speech-model.md), [ADR-0029](../adr/0029-ui-text-in-android-string-resources.md) |
-| Last checked against code | 2026-10-22, commit `37f416d` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -62,6 +62,55 @@ App side (`MainActivity`): `saveSetup(d, what)`, `setLanguage`, `setVoice`, `cho
 `setVoiceCeiling`, `setOpenMic`, `setWarmth`, `setPalette`, `setMail`, `setBubble`, `setUndoSeconds`,
 `setOffline`, `setStopped`, `setAppMode`, `editRule`, `setLearning`; `Floating.place(context, right, height)`.
 
+## Configuration
+
+### Build time (`local.properties` → `BuildConfig`)
+
+Every key, its `BuildConfig` field, the class that reads it and the build requirements are in
+[architecture › configuration](../architecture/configuration.md), the single reference. In short:
+required to run are `sdk.dir` (or `ANDROID_HOME`) and the model (`zeroclaw.provider`,
+`zeroclaw.model`, `zeroclaw.apiKey`); everything else is optional and its absence removes or
+degrades one feature: the natural voice and the offline option do not appear in Settings
+(`CloudVoice.configured`, `Offline.configured`), `usage` counts tokens instead of dollars,
+`find_videos` answers with a search link, web search uses DuckDuckGo without a key.
+
+### Minimal start-up path
+
+1. Build and install (`./gradlew assembleDebug`, `adb install -r -g …`; `-g` grants the runtime
+   permissions, so on a device the setup asks for them instead).
+2. First launch: `MainActivity.onCreate` finds `Guard.setUp` false and opens the setup
+   (`Ui.draft = Draft.fresh()`); `AssistantService` starts in the background and brings up the
+   daemon meanwhile (the mark shows *Connecting* until `/ws/chat` is open).
+3. Step 0: pick the language, say or type the owner's name. Required: a non-blank name.
+4. Step 1: permissions, each optional to continue (below).
+5. Step 2: the messaging apps read (none by default), group chats (off), family and work (nobody),
+   Speak aloud (off); *Start* saves (credential on a phone with a screen lock). Nothing is read
+   and nobody is answered until this save.
+6. The introduction appears in the chat, listing what is still missing; Home then shows one missing
+   permission at a time with a *Fix* action (`lacking()`).
+
+What each permission is for (step 1 and `lacking()`):
+
+| Need | Mechanism | Why |
+|---|---|---|
+| Notifications, contacts, calendar, microphone, photos | runtime permissions (`PERMISSIONS`): `POST_NOTIFICATIONS` (33+), `READ_CONTACTS`, `WRITE_CONTACTS`, `READ_CALENDAR`, `WRITE_CALENDAR`, `RECORD_AUDIO`, `READ_MEDIA_IMAGES` (33+) or `READ_EXTERNAL_STORAGE` | approvals and notices; who is who, groups; agenda and events; voice in; photo search |
+| Fingerprint (optional) | security settings | a strong biometric for approvals; a screen lock (PIN, pattern, password) is enough, and without any the strong approvals are refused ([access-model.md](access-model.md#open-issues)) |
+| Stay active | `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Android would stop the service and the daemon |
+| Autostart, lock-screen call (Xiaomi, Redmi, POCO only) | the vendor's permission screens | the vendor kills background apps and blocks full-screen activities |
+| Call you when something matters | `USE_FULL_SCREEN_INTENT` (user-granted from Android 14) | a high reminder rings full screen (`CallActivity`) |
+| Search your files (optional) | `MANAGE_EXTERNAL_STORAGE` | `find_files` beyond the app's own view |
+| Know which apps you use most (optional) | `PACKAGE_USAGE_STATS` | `list_apps` ranks by use; `play_media` picks the most used app |
+| Always at hand (optional) | `SYSTEM_ALERT_WINDOW` | the floating mark, undo countdown and notices over other apps; also lets tools start activities from the background |
+| Read your notifications (optional) | notification-listener access (`MessageListener`) | the notification channel and email from notifications; nothing is read without it |
+
+From Android 13 a sideloaded app cannot be granted notification access or overlay until the owner
+allows restricted settings in the app's info page (`restricted()`, the *Fix* action opens it).
+
+### In the app and by voice
+
+The table under State and data gives, per setting, the `set_preference` key, the Settings screen
+location, the `policy.json` key and the default.
+
 ## State and data
 
 Every setting lives in `files/policy.json` (`Saved.State`, written by `Guard.save`, sealed), except
@@ -85,7 +134,7 @@ learning (`files/memory.json`).
 | `floating_place` | left / right and/or top (0.18) / middle (0.45) / bottom (0.72) | `right:0.62` | `bubblePlace` | chips under Always at hand; dragging the mark (height clamped 0.08–0.9) |
 | `undo_seconds` | first number, clamped 10–120 (`MIN_UNDO_SECONDS`) | 30 | `undoSeconds` | Settings › Messages › Time to undo: 10 / 30 / 60 / 120 s |
 | `group_chats` | on / off | off | `groups` | Settings › Messages › Apps I read (and their groups) |
-| `widget_add` / `widget_remove` | weather, alarm, agenda, messages, mail, reminders, battery, news | `Widgets.DEFAULT` | `widgets` | Home arranging ("arrange the widgets") |
+| `widget_add` / `widget_remove` | weather, alarm, agenda, messages, mail, reminders, battery, news (`Preferences.widget` matches any `Widget` by the first four letters of its name or label, so the greeting, panorama and the assistant's card too) | `Widgets.DEFAULT`: greeting, panorama, weather, alarm, agenda above the mark; messages, mail, reminders below | `widgets` | Home arranging ("arrange the widgets") |
 
 Other saved fields: `owner` (absent until set up; `Guard.setUp = owner != null`), `contacts`
 (name → groups), `address`, `appMode` (default false), `stopped`, `rules`, `counters`. Read once
@@ -97,7 +146,9 @@ by `Guard.load(filesDir)`; a missing or unreadable file means defaults.
 lexicon words in either language (`voice_ceiling` is tested before `voice`, `floating_place` before
 `floating_mark`). `prefer` applies the change, then `Guard.save()` and `Ui.refresh()`. Side effects:
 `warmth`, `language` and `name` rewrite the persona files (`AssistantService.writeIdentity`);
-`floating_mark` calls `Floating.update`; every save triggers `Guard.onSaved`, which rewrites the
+`language` and `her_voice` call `Language.onChange` (speech output and recognition retune);
+`floating_mark` calls `Floating.update`; `offline` on calls `Offline.turnOn` (download) and off
+`Offline.turnOff` (deletes the model); every save triggers `Guard.onSaved`, which rewrites the
 persona files 1.5 s after the last change. `widget_add` refuses a widget already present or with no
 room. In the app, `setWarmth` also retunes speech output and speaks a confirmation.
 
@@ -113,7 +164,7 @@ name, no apps, no groups, voice off). `App` shows `Setup` while `Ui.draft != nul
 | Step | Screen | What happens |
 |---|---|---|
 | 0 | `SetupName` | a spoken greeting; language chips (Spanish · English); the name typed or heard (`listenFor` + `Commands.nameFrom`, which strips lead-ins such as "my name is" in either language and capitalizes) |
-| 1 | `SetupNeeds` | each need with a button: runtime permissions (`POST_NOTIFICATIONS` on 33+, contacts read/write, calendar read/write, `RECORD_AUDIO`, `READ_MEDIA_IMAGES` or `READ_EXTERNAL_STORAGE`); fingerprint (optional, opens security settings); battery unrestricted; on Xiaomi devices autostart and the lock-screen permission; full-screen intent (34+); optional: all files, usage access, overlay, notification access. Nothing is required to continue |
+| 1 | `SetupNeeds` | each need with a button (the table under Configuration): runtime permissions; fingerprint (optional); battery unrestricted; on Xiaomi devices autostart and the lock-screen permission; full-screen intent; optional: all files, usage access, overlay, notification access. *Continue* is always enabled |
 | 2 | `SetupPeople` | apps read (`messagingApps`: installed `Inbox.DEFAULT_APPS` plus picked, plus `fakechat` in debug builds) and group chats; family and work from contacts with a phone number (`DraftPicker`); anyone else (never answered); Speak aloud; Start (first time) or Save |
 
 `saveSetup(d, what)`: blank name → toast; on a secured phone `confirmOwner(what)` first (cancel →
@@ -169,3 +220,5 @@ can lift it for automated captures (`allowCapture` extra).
 - Adding and removing rules in the app is not built; only autonomy changes.
 - On a phone without a screen lock the credential steps pass without confirmation
   ([policy-engine.md](policy-engine.md)).
+- The model key ships inside the APK (`BuildConfig.MODEL_API_KEY`) and in `config.toml`; a settings
+  screen that stores it in the Keystore is not built (noted in `app/build.gradle.kts`).

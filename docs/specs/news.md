@@ -3,17 +3,18 @@
 | | |
 |---|---|
 | Status | Stable |
-| Code | `app/.../News.kt`, `app/.../PhoneNews.kt` (`PhoneNews`, `NewsReceiver`); tools in `PhoneMcp.kt`; `Turns.scribe` in `MessageListener.kt`; `NewsPlace` in `Screens.kt`; widget in `HomeWidgets.kt`; missed checks in `CatchUp.kt` |
-| Tests | `app/src/test/.../NewsTest.kt`, `BackOnlineTest.kt` (`News.missed`); `scripts/e2e.sh`: none (debug: `--ei news <id>` runs a check now, `--ei watch <id>` a watch) |
+| Code | `app/.../News.kt`, `app/.../PhoneNews.kt` (`PhoneNews`, `NewsReceiver`); `app/.../Videos.kt` (`find_videos`); tools in `PhoneMcp.kt`; `Turns.scribe` in `MessageListener.kt`; `NewsPlace` in `Screens.kt`; widget in `HomeWidgets.kt`; missed checks in `CatchUp.kt`; reboot in `PhoneReminders.kt` (`BootReceiver`) |
+| Tests | `app/src/test/.../NewsTest.kt`, `BackOnlineTest.kt` (`News.missed`), `VideosTest.kt`; `scripts/e2e.sh`: none (debug: `--ei news <id>` runs a check now, `--ei watch <id>` a watch) |
 | Decisions | [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md), [ADR-0018](../adr/0018-tool-less-agent-for-unattended-turns.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0022](../adr/0022-what-stays-in-the-app.md), [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md) |
-| Last checked against code | 2026-10-22, commit `01f6f19` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
 Keep the owner up to date on topics the owner asked to follow ("keep me posted on…"), and give the
 owner agent current headlines to talk about anything. Headlines come from the Google News RSS search
-feed (no account, no key; only the topic leaves the phone). Briefings are written by the `scribe`
-agent in the owner's language, with a plain fallback. It is not a news reader or a web search.
+feed (no account, no key; only the topic leaves the phone) in the assistant's language. Briefings are
+written by the `scribe` agent in the owner's language, with a plain fallback. The same capability
+covers video options for cards (`find_videos`). It is not a news reader or a web search.
 
 ## Responsibilities
 
@@ -33,7 +34,8 @@ MCP tools, owner endpoint only, through `Guard.gated(…, Capability.NEWS, Polic
 | `follow_topic` | `topic` (required), `time` HH:MM (default `08:00`), `every_hours` 1–24 (wins over `time`) | `PhoneNews.follow`; `Following "q" (#id): a briefing every day at HH:MM when there is news.` or `checked every N h, told when there is something new.` |
 | `unfollow_topic` | `topic` (words or `#id`) | `PhoneNews.unfollow`: both alarms cancelled, topic removed |
 | `list_topics` | — | `News.describe`: `#id "query" every day at HH:MM` / `as it happens (checked every N h)` |
-| `news` | `topic` | `News.headlines(topic, fetch(topic))`: up to 10, framed as data from a news feed; on error `The news could not be read now (no connection?).` Marks the turn as having read third-party content |
+| `news` | `topic` | `News.headlines(topic, fetch(topic))`: up to 10, framed as data from a news feed; on error `The news could not be read now (no connection?).` Marks the turn as having read third-party content (`PhoneMcp.OTHERS_WORDS`) |
+| `find_videos` | `query` (required), `count` 1–8 (default 5) | With a YouTube API key: `Videos.search` (moderate SafeSearch, region = the locale's country, `relevanceLanguage` = the assistant's language) plus `Videos.details` for durations; `Videos.describe` returns card lines for `show`. Without a key or on any failure: `Videos.fallback`, a link to the YouTube search page |
 
 Other:
 - `NewsReceiver` (not exported): alarm broadcast with extra `topic` → `PhoneNews.check(id)`; with `watch = true` → `PhoneNews.watch(id)`.
@@ -44,6 +46,16 @@ Other:
 - `CatchUp.missed` → `News.missed(topics, since, now)` → `check(id)` for each topic whose time passed while offline.
 - Readers: the News screen (`NewsPlace`; menu option, tile, `NEWS` command), the Home widget `NEWS`
   (last briefing), the panorama (last briefing under 24 h).
+
+## Configuration
+
+| What | Where | Default |
+|---|---|---|
+| Topics, schedule | by voice only: `follow_topic` (`time`, `every_hours`), `unfollow_topic`; no Settings entry | daily at `08:00` |
+| Feed edition | not configurable: the assistant's language (`set_preference language`) and the phone's country | — |
+| Video search key | `local.properties` `youtube.apiKey` → `BuildConfig.YOUTUBE_KEY` → `find_videos` | empty: search link only |
+| Watch interval, window, limits | constants: `News.WATCH_HOURS = 3`, `SEEN = 60`, 30 briefings, 8 headlines per briefing | — |
+| Android permissions | `INTERNET`; `POST_NOTIFICATIONS` (API 33+) for briefings outside the app; no exact-alarm permission (window alarms) | — |
 
 ## State and data
 
@@ -60,8 +72,9 @@ remembered as an owner interest in [Memory](memory.md) (area `INTERESTS`).
 
 **Feed** (`News.feed`): `https://news.google.com/rss/search?q=<query> when:2d&hl=<language>&gl=<country>&ceid=<country>:<language>`.
 The country is where the phone is: its network, else its SIM, else the locale's country, else `US`.
-The language is `News.edition`: `es` for Spain, `es-419` elsewhere. HTTP through
-`AssistantService.http` with `callTimeout(15 s)`; a non-2xx response → no headlines.
+The language is `News.edition(country, Language.current)`: `en` for English; for Spanish, `es` in
+Spain and `es-419` elsewhere. HTTP through `AssistantService.http` with `callTimeout(15 s)`; a
+non-2xx response → no headlines.
 
 **Parse** (`News.parse`): regex over `<item>…</item>`; `title`, `source`, `link`, `pubDate`; CDATA
 and common entities unescaped, tags stripped; the " - Source" suffix removed from the title; blank
@@ -117,7 +130,10 @@ briefing will come and how to stop following a topic; then briefings newest firs
   reconnecting, topics whose time passed are checked (`News.missed`).
 - Gateway down or unpaired: `Turns.open` waits for a token; after 120 s the plain fallback is delivered.
 - Feed format change: the regex parse yields nothing; topics stay silent.
-- Process killed: alarms survive; reboot: lost until the service starts.
+- Process killed: alarms survive. Reboot: alarms are lost; `BootReceiver` (`BOOT_COMPLETED`) and the
+  next service start call `rescheduleAll()`.
+- `find_videos`: a missing key, a non-2xx response or a parse error all yield the search link; the
+  agent is told nothing failed.
 
 ## Security
 
@@ -126,9 +142,10 @@ briefing will come and how to stop following a topic; then briefings newest firs
   agent; through the `news` tool they reach the owner agent marked as data, and the turn's claims
   about what the owner said are no longer trusted (`Guard.heardOthers`).
 - A briefing turn is checked against the kill switch only before it starts; each opens a new `scribe` session.
+- What leaves the phone: the topic query (news feed); with a key, the video query, the locale's
+  country and the assistant's language (YouTube Data API). Video titles and channels are untrusted
+  text; `Videos.describe` escapes `[` and `]` so a title cannot forge a card link.
 
 ## Open issues
 
-- The feed edition is always a Spanish one (`es` or `es-419`), whatever the assistant's language;
-  briefings are written in the assistant's language from those headlines.
 - Briefings stay scheduled by the app, not by ZeroClaw's cron ([ADR-0022](../adr/0022-what-stays-in-the-app.md)).

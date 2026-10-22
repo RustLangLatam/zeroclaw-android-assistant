@@ -6,7 +6,7 @@
 | Code | `app/.../Mailbox.kt`, `app/.../MailNotice.kt`, `app/.../PhoneMail.kt`, `app/.../EmailAccounts.kt`, `app/.../PhoneEmail.kt`, `app/.../Connectors.kt`; intake in `MessageListener.kt` (`isEmail`, `mail`); tools in `PhoneMcp.kt`; opening in `MainActivity.kt` (`mailIntent`, `openMail`, `connectEmail`, `setMail`); Home in `Screens.kt`, `HomeWidgets.kt` |
 | Tests | `app/src/test/.../MailboxTest.kt`, `EmailAccountsTest.kt`; `scripts/e2e.sh`: none (manual with `fakechat`'s `Mail` receiver and draft activity) |
 | Decisions | [ADR-0026](../adr/0026-google-email-through-zeroclaws-email-channel.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0018](../adr/0018-tool-less-agent-for-unattended-turns.md), [ADR-0019](../adr/0019-contacts-by-stable-identity.md), [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md) |
-| Last checked against code | 2026-10-22, commit `01f6f19` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -45,7 +45,7 @@ address; blank resolves to the only account when there is one, else the agent is
 | Tool | Args | Policy | Does / returns |
 |---|---|---|---|
 | `email_search`, `email_read` | ZeroClaw's own (`channel` = the account's alias) | ZeroClaw's tools, in the owner agent's `allowed_tools` only while an account exists | an inbox by sender, subject, dates, unread; one email by UID; observer mode never sets a flag |
-| `connect_email` | `provider` (`gmail`, `yahoo`, `icloud`, the generic provider's key, or none) | `SETTINGS` | opens Connectors: that provider's guide as a card, then its form; without one, the list of providers. The password is typed by the owner, never given to the agent |
+| `connect_email` | `provider` (`gmail`, `yahoo`, `icloud`, `correo` (the generic provider), or none) | `SETTINGS` | opens Connectors: that provider's guide as a card, then its form; without one, the list of providers. The password is typed by the owner, never given to the agent |
 | `email_mark_read` | `uids`*, `read`, `account` | `ITEMS_MANAGE` (`ACT_NOTIFY`) | `PhoneEmail.markRead` |
 | `email_archive` | `uids`*, `account` | `ITEMS_MANAGE` | Gmail: flag deleted in the inbox (Gmail removes the inbox label); others: moved to the `\Archive` folder (RFC 6154), "NOT done" without one |
 | `email_delete` | `uids`*, `account` | `ITEMS_DELETE` (asks, credential) | moved to the folder marked `\Trash` |
@@ -59,16 +59,19 @@ app-specific password, grouped with dashes) need only the address and the passwo
 provider (`OTHER`) asks for its IMAP and SMTP servers too (IMAP 993; SMTP 465, or 587 with STARTTLS).
 Each has its own guide (`EmailAccounts.guide`), shown as a card before its form. An account's alias
 is the provider's key, numbered after the first (`gmail`, `gmail2`); ZeroClaw has one
-`[channels.email.<alias>]` per account (`observer_mode = true`, `imap_folder = "INBOX"`). No POP:
-ZeroClaw's channel is IMAP only.
+`[channels.email.<alias>]` per account (`enabled`, `observer_mode = true`, `imap_host`,
+`imap_port`, `imap_folder = "INBOX"`, `smtp_host`, `smtp_port`, `smtp_tls` = the SMTP port is 465,
+`username`, `password`, `from_address`). No POP: ZeroClaw's channel is IMAP only. The app's own
+IMAP and SMTP calls use 15 s to connect and 20 s per operation.
 
 Other interfaces:
 
 - In: `MessageListener.onNotificationPosted` → `mail(sbn)` when `isEmail`: not this app, not a group
   summary, and `CATEGORY_EMAIL` or a package in `Mailbox.EMAIL_APPS` (Gmail, Outlook, Proton Mail,
   Yahoo Mail, Samsung Email, BlueMail, K-9).
-- Notice: channel `important` (default importance, `Chime.channel`), id and request code
-  `7000 + mail.id`; tap → `MainActivity` with a sealed extra `mail = id`.
+- Notice: channel `important-k` (`Chime.channel("important", …)`, default importance, the chime
+  as sound), id and request code `7000 + mail.id`; tap → `MainActivity` with a sealed extra
+  `mail = id`.
 - `MailNotice.onImportant`: set by `MainActivity` to remark aloud (`Phrases.mail`).
 - `MessageListener.mailLinks`: each email's notification content intent, kept in memory.
 - Settings: `Mailbox.reading` via the Settings toggle (`MainActivity.setMail`) or
@@ -78,6 +81,19 @@ Other interfaces:
 - Readers: Home's important-email moment and panorama line (latest important unopened under 12 h),
   the `MAIL` widget (unopened count; warm when any is important; tap asks which emails are unread),
   the mark's `BUSY` load, `CatchUp` (emails while away).
+
+## Configuration
+
+| What | Build time | In the app | By voice | Default |
+|---|---|---|---|---|
+| Email from notifications (`Mailbox.reading`) | — | Settings › Messages › Read your email (`setMail`) | `set_preference read_mail` (CHANNEL when turned on) | on |
+| Which notifications count as email | constant `Mailbox.EMAIL_APPS` plus `CATEGORY_EMAIL`; needs notification access ([notification-channel.md](notification-channel.md)) | — | — | — |
+| Connected accounts | — | Settings › Connectors › Email (`Connectors.kt`, `connectEmail`); the password is typed there | `connect_email` opens that screen | none |
+| Importance keywords | `assets/lexicon.json` (`mail.bulk`, `mail.urgent`) | — | — | — |
+| Limits | constants: 100 mails kept, 1000 seen keys, 15 min merge window, 2000-character bodies over IMAP, 50 UIDs per call, IDLE socket 25 min, backoff 5 s–5 min | | | |
+
+No `local.properties` key is involved: ZeroClaw's email channels are written from the saved
+accounts by [AssistantService](assistant-service.md).
 
 ## State and data
 

@@ -150,7 +150,7 @@ class AssistantService : Service() {
         // The app owns the config: an outdated one (different agents or tools) is replaced and its pairing dropped.
         // ZeroClaw rewrites the file when it saves (e.g. pairing) and drops comments, so the written version is kept
         // in the app's prefs and the content is checked as well.
-        val tools = Principal.entries.flatMap { PhoneMcp.toolNames(it) }
+        val tools = Principal.entries.flatMap { PhoneMcp.toolNames(it) } + Offline.TOOLS.map { "${Offline.AGENT}__$it" }
         if (!config.exists() || prefs(this).getString("config", null) != CONFIG_MARK ||
             config.readText().let { text -> !EmailAccounts.inConfig(text) || "[agents.third_party]" !in text || "[agents.$SCRIBE]" !in text || "[agents.${Offline.AGENT}]" !in text || tools.any { it !in text } }
         ) {
@@ -225,10 +225,10 @@ class AssistantService : Service() {
 
 
     /**
-     * Builds ZeroClaw's `config.toml`. Two agents have separate risk profiles (docs/specs/access-model.md): `owner`
-     * for the owner in the app and `third_party` for turns caused by other people. Each sees only its own MCP
-     * endpoint's tools; ZeroClaw's shell and file tools are excluded. The app's policy decides each call, so these
-     * tools are auto-approved in ZeroClaw. Also adds the [SCRIBE] agent, the offline agent and the email channels.
+     * Builds ZeroClaw's `config.toml` with four agents, each with its own risk profile (docs/specs/access-model.md):
+     * `owner` for the owner in the app, `third_party` for turns caused by other people, the tool-less [SCRIBE] and the
+     * offline agent. Each sees only its own MCP endpoint's tools; ZeroClaw's shell and file tools are excluded. The
+     * app's policy decides each call, so these tools are auto-approved in ZeroClaw. Also writes the email channels.
      */
     private fun initialConfig(): String {
         fun list(items: List<String>) = items.joinToString(", ", "[", "]") { "\"$it\"" }

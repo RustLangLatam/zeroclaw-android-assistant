@@ -6,7 +6,7 @@
 | Code | `app/.../MessageListener.kt` (`MessageListener`, `sender`, `saved`, `contactName`, `Turns`), `app/.../Inbox.kt`, `app/.../Identity.kt`; uses `Guard.attempt` (`PhoneMcp.kt`), `Outbox` (`Approvals.kt`), `AssistantService.digest`; debug extras in `MainActivity.debugIntent`; `fakechat/` |
 | Tests | `app/src/test/.../InboxTest.kt` (`onlyNewMessagesFromOthersAreTaken`, `otherAppsAndGroupChatsAreIgnoredByDefault`, `theFirstReplyInAConversationIntroducesTheAssistant`, `anUndoneReplyIsMarkedInTheDigest`, `repliesFollowTheContactsRules`, `seenMessagesSurviveARestart`, `theHistoryOnThePhoneBeforeTheFirstStartIsNotAnswered`, `theIntroductionNamesTheOwner`), `IdentityTest.kt`, `BackOnlineTest.kt`; `scripts/e2e.sh` (all of it) |
 | Decisions | [ADR-0011](../adr/0011-notification-channel-for-messages.md), [ADR-0007](../adr/0007-third-party-turns-one-at-a-time.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0009](../adr/0009-gateway-only-through-kotlin-client.md), [ADR-0019](../adr/0019-contacts-by-stable-identity.md), [ADR-0021](../adr/0021-process-state-with-funneled-writes.md), [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md) |
-| Last checked against code | 2026-10-22, commit `01f6f19` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -48,6 +48,20 @@ It does not start new conversations (the owner's `send_message` is described in
 | `MessageListener.buttonsOf(key)`, `press(context, key, what)` | a notification's plain buttons (e.g. archive, mark as read) | owner tools |
 | Third-party MCP tools | `take_message` (`MESSAGE_TAKE`), `availability` (`AVAILABILITY_SHARE`), target `Policy.target(Guard.thirdPartySender)` | `third_party` agent |
 | `Inbox.onChange` | → `AssistantService.digest()`: cancels the old digest notification (id 4000), `Floating.update`, `Ui.refresh` | |
+
+## Configuration
+
+| What | Build time | In the app | By voice | Default |
+|---|---|---|---|---|
+| Notification access | — | Android's notification-listener settings; the setup's permissions step and Home's *Fix* (`openListener`) | — | off (Android) |
+| Apps read (`Inbox.apps`) | — | setup step 2; Settings › Messages › Apps I read | `set_preference messaging_apps` ("add WhatsApp": CHANNEL; "remove …": SETTINGS) | none |
+| Group chats (`Inbox.groups`) | — | the same picker | `set_preference group_chats` (CHANNEL when turned on) | off |
+| Who is answered and how | — | rules and groups ([access-model.md](access-model.md)) | `set_rule`, `set_contact_group` | family ACT_NOTIFY 5/day, work ASK, others never |
+| Undo window | — | Settings › Messages › Time to undo | `set_preference undo_seconds` | 30 s |
+| Constants | `MAX_SEEN` = 2000, `MAX_DIGEST` = 200, `THIRD_PARTY_MS` = 180 000, `OWNER_MS` = 120 000 (scribe), echo window 20 s, `Inbox.DEFAULT_APPS` | | | |
+
+No `local.properties` key affects this channel. Debug builds: `--es apps`, `--ez groups`,
+`--es contacts`, `--es incoming --es from` on `MainActivity`.
 
 ## State and data
 
@@ -137,15 +151,18 @@ The reply goes to the conversation the message came from; the model never choose
 **Retry** (`MessageListener.retry`, used by `CatchUp` after a connection cut): an entry with status
 `no_answer` and a known conversation is set to `retrying` and run through `Turns.thirdParty` again.
 
-**What `scripts/e2e.sh` checks** (emulator; `fakechat` posts MessagingStyle notifications with a
-reply action and records replies in `files/replies.txt`; setup through debug extras `--es owner
-Milton --es apps <fakechat> --ez groups false --ez stop false --es contacts Laura:work,Ana:family`):
+**What `scripts/e2e.sh` checks** (emulator only; `fakechat` posts MessagingStyle notifications
+with a reply action and a `tel:` person for known numbers, and records replies in its
+`files/replies.txt`; notification access granted with `cmd notification allow_listener`; setup
+through debug extras `--es owner Milton --es apps <fakechat> --ez groups false --ez stop false
+--ez clean true --es language es --ez voice false --es contacts Laura:work,Ana:family`):
 
 | Case | Check |
 |---|---|
 | Laura (work) asks | *Approve* + PIN, sent after the window; the reply starts with the introduction naming Milton |
 | Ana (family) | answered without asking, after the window |
 | Pat (unknown) | no reply |
+| A stranger named "Ana" without a number | no reply; logged as unverified (the display name is not an identity) |
 | Injection from Ana | no owner tool called (logcat); no calendar text in replies |
 | Group chat | not handled |
 | Undo within the window | never sent; journal has `undone` |

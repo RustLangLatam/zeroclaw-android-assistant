@@ -25,9 +25,10 @@ token was encrypted (`EncryptedSharedPreferences`).
 
 Option 2. `Vault` keeps an AES-256-GCM key in the Android Keystore, in secure hardware when the
 phone has it. The key never leaves the Keystore. Every file the app owns is sealed with it:
-policy, activity log, memory copy, notes, style, email, seen messages, introductions, pending
-memory writes, reminders, news, and the photo index. A copy of these files on another device, or
-restored after a factory reset, cannot be opened.
+policy, activity log, memory copy, notes, style, email accounts and mail, seen messages,
+introductions, pending memory writes, reminders, news, the photo index and the cached voice lines
+([ADR-0027](0027-assistant-voice-from-a-cloud-speech-model.md)). A copy of these files on another
+device, or restored after a factory reset, cannot be opened.
 
 Option 3 is not possible today. ZeroClaw opens its SQLite memory, its session store and
 `config.toml` itself, and v0.8.5 has no at-rest encryption for them (no SQLCipher). Its own secrets

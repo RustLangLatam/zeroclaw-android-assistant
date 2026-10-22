@@ -6,7 +6,7 @@
 | Code | `app/.../OwnerChat.kt` (`OwnerChat`, `Promises`), `app/.../MainActivity.kt` (`send`, `act`, `listen`, `barge`, `speak`, `confirmOwner`, intents), `app/.../Commands.kt`, `app/.../Lexicon.kt` (`assets/lexicon.json`), `app/.../Voice.kt` (`Voices`, `asKsandra`, `VoiceProbe`), `app/.../CloudVoice.kt`, `app/.../Offline.kt`, `app/.../Cards.kt`, `app/.../Phrases.kt`, `app/.../App.kt` (`presence`, `Sections`, `MenuSheet`, `CardSheet`), `app/.../Screens.kt` (`Home`, `Presence`, `Conversation`, `Composer`), `app/.../MessageListener.kt` (`Turns.open`) |
 | Tests | `app/src/test/.../CommandsTest.kt`, `PromisesTest.kt`, `OfflineTest.kt`, `OfflineTalkTest.kt`, `CloudVoiceTest.kt`, `VoiceTest.kt`, `CardsTest.kt`, `LanguageTest.kt`, `PhrasesTest.kt`; `scripts/e2e.sh` drives the app through debug extras but checks the notification channel, not the chat |
 | Decisions | [ADR-0009](../adr/0009-gateway-only-through-kotlin-client.md), [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md), [ADR-0012](../adr/0012-owner-history-24-messages.md), [ADR-0015](../adr/0015-interface-commands-in-code.md), [ADR-0006](../adr/0006-kill-switch-in-the-app.md), [ADR-0021](../adr/0021-process-state-with-funneled-writes.md), [ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md), [ADR-0027](../adr/0027-assistant-voice-from-a-cloud-speech-model.md), [ADR-0029](../adr/0029-ui-text-in-android-string-resources.md) |
-| Last checked against code | 2026-10-22, commit `37f416d` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -55,6 +55,21 @@ and failures through `onError`):
 | `TOOL_CALL` | count the call; a tool in `PhoneMcp.OTHERS_WORDS` (including ZeroClaw's web tools) sets `Guard.heardOthers`; `Line(TOOL, Labels.tool(name, args))` |
 | `DONE` | `Promises` check (below); `Ui.thinking = false`; `Line(ASSISTANT, fullResponse)`; `onAnswer` speaks it when answers are read aloud (`Guard.voice`) or the question was spoken |
 | `ERROR` | `Ui.thinking = false`; `Line(NOTE, t(R.string.ownerchat_something_failed) + message)`; `onError` (listen again); on the offline agent, one retry in a new session |
+
+## Configuration
+
+| What | Build time (`local.properties` → `BuildConfig`) | In the app | By voice (`set_preference`) | Default |
+|---|---|---|---|---|
+| Answers read aloud | — | Settings › Presence › Speak aloud; setup's last step | `voice` | off |
+| Open microphone | — | Settings › Presence › Open microphone (asks `RECORD_AUDIO`) | `open_mic` (CHANNEL when turned on) | off |
+| Warmth | — | Settings › Presence › How I talk to you | `warmth` | natural |
+| Language | — | setup step 0; Settings | `language` | the phone's, Spanish if unsupported |
+| Phone voice | — | Settings › Voice (`chooseVoice`) | `her_voice` | best offered (`Voices.offer`) |
+| Natural voice | `voice.url` → `VOICE_URL`, `voice.model` → `VOICE_MODEL`, `voice.apiKey` → `VOICE_API_KEY`, `voice.name` → `VOICE_NAME`, `voice.perMinute` → `VOICE_PER_MINUTE` (US$, for the cost shown); offered only when URL and key are set (`CloudVoice.configured`) | Settings › Voice › Natural voice | `her_voice natural` | not chosen |
+| Natural voice ceiling | — | Settings › What I cost (US$ 2 / 5 / 10 / none) | `voice_ceiling` (CHANNEL when raised or removed) | US$ 5 (`Guard.DEFAULT_VOICE_CEILING`) |
+| Answers without internet | `offline.model.name` / `url` / `sha256` / `bytes` → `OFFLINE_MODEL_*`; the option exists only when URL, SHA-256 and size are set (`Offline.configured`) | Settings › Without internet | `offline` | off |
+| App mode | — | menu; commands | `set_mode` tool | assistant mode |
+| Constants | `FOLLOW_UP_MS` = 20 s, `FIRST_SOUND_MS` = 2.5 s, `IDLE_MS` = 60 s, `KEEP_CHARS` = 160, `KEEP_FILES` = 300, `HISTORY` = 30, `LOCAL_TURN_MS` = 180 s, greeting gap 3 h | | | |
 
 ## State and data
 
@@ -215,7 +230,7 @@ and a connector sheet set `FLAG_SECURE` on the window (`Place.private`).
 **Debug-only extras** (`debugIntent`, ignored unless `BuildConfig.DEBUG`), used by `scripts/e2e.sh`,
 and `scripts/screenshots.sh`: `say` (+`spoken`), `incoming`+`from` (a third-party
 turn), `apps`, `groups`, `stop`, `clean` (counters), `clearActivity`, `fresh` (new session), `owner`
-(completes setup), `contacts` (e.g. `Laura:work,Ana:family`), `language`, `voice`, `news`/`watch`
+(completes setup), `contacts` (e.g. `Laura:work,Ana:family`), `language`, `voice`, `news`/`newsAgain`/`watch`
 (run a topic check), `call` (a high reminder in 3 s), and capture controls (`palette`, `appMode`,
 `arrange`, `voiceName`, `section`, `card`/`cardBody`/`closeCard`, `narrate`, `narrateFile`,
 `ringFull`, `pose`, `keepMark`, `face`, `faceVideo`, `quietRecorded`, `allowCapture`, `hideCosts`).

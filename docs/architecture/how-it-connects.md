@@ -15,7 +15,7 @@ Every link between the app, the daemon, Android and external services, in the or
 | `PhoneNews` | `news.google.com/rss` | HTTPS | none |
 | `PhoneWidgets`, `weather` tool | `api.open-meteo.com` | HTTPS | none |
 | `Videos` (`find_videos`) | YouTube Data API | HTTPS | `youtube.apiKey` when configured; else a YouTube search link |
-| `CloudVoice` | speech model provider | WebSocket (TLS) | `voice.apiKey` ([ADR-0027](../adr/README.md)) |
+| `CloudVoice` | speech model provider | WebSocket (TLS) | `voice.apiKey` ([ADR-0027](../adr/0027-assistant-voice-from-a-cloud-speech-model.md)) |
 | `PhoneReminders`, `PhoneNews` | `AlarmManager` → `ReminderReceiver`, `NewsReceiver` | broadcasts (not exported) | `PendingIntent.FLAG_IMMUTABLE` |
 | notifications | `ApprovalReceiver`, `MainActivity` | broadcasts and activity intents | immutable `PendingIntent`s; strong approvals go through `BiometricPrompt` |
 
@@ -161,6 +161,7 @@ to `Loopback.MAX_BODY`, no chunking; the body is read only after authentication)
 |---|---|
 | not `POST`, or unknown path | `405` |
 | missing or wrong bearer key | `401`, logged |
+| a `Content-Length` that is not a number or is over `Loopback.MAX_BODY` (1 MiB) | `413` |
 | `initialize` | protocol version echoed, `tools` capability, server `phone` |
 | `tools/list` | the endpoint's tools only |
 | `tools/call` | a single `text` content item |
@@ -415,7 +416,7 @@ grey.
 - **Speech out, platform**: one `TextToSpeech` per activity in `Language.locale` and the voice the
   owner chose (`Voice.kt`), pitch and rate from the warmth setting, `QUEUE_FLUSH`; `onRangeStart`
   bumps `Ui.word` so the mark beats on each word.
-- **Speech out, cloud** (optional, [ADR-0027](../adr/README.md)): when the owner selected the natural
+- **Speech out, cloud** (optional, [ADR-0027](../adr/0027-assistant-voice-from-a-cloud-speech-model.md)): when the owner selected the natural
   voice, `CloudVoice` sends the text the agent wrote to a realtime speech model over one WebSocket kept
   open across lines, as an audio-only, out-of-band response (no conversation, no tools), and plays
   16-bit PCM at 24 kHz through `AudioTrack`. The platform voice speaks instead when there is no

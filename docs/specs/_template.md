@@ -21,6 +21,12 @@ One paragraph: what this component is for and what it is not for.
 What it offers and what it uses: functions, MCP tools, intents, notifications, files, ports,
 events. Name, input, output, who calls it.
 
+## Configuration
+
+Where each behaviour is set: build time (`local.properties` key → `BuildConfig` field → where it is
+read), in the app (which screen), by voice (`set_preference` key), and the default. "None" when
+nothing is configurable.
+
 ## State and data
 
 What it keeps, where (memory, file, ZeroClaw), its format, who writes and reads it, what survives a

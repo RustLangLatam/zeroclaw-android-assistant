@@ -56,29 +56,30 @@ Keystore key.
 ## Contents
 
 1. [Overview](#overview)
-2. [Presence Mark](#presence-mark)
-3. [Interaction](#interaction)
-4. [Home and widgets](#home-and-widgets)
-5. [Voice and manner](#voice-and-manner)
-6. [Colors](#colors)
-7. [Messages under rules](#messages-under-rules)
-8. [Rules](#rules)
-9. [Email and connectors](#email-and-connectors)
-10. [Calendar](#calendar)
-11. [Reminders](#reminders)
-12. [Contacts, photos and files](#contacts-photos-and-files)
-13. [News and cards](#news-and-cards)
-14. [Memory](#memory)
-15. [Offline](#offline)
-16. [Cost](#cost)
-17. [Security and privacy](#security-and-privacy)
-18. [Architecture](#architecture)
-19. [Versatility](#versatility)
-20. [Roadmap](#roadmap)
-21. [Limitations](#limitations)
-22. [Build and run](#build-and-run)
-23. [Documentation](#documentation)
-24. [License](#license)
+2. [Who it is for](#who-it-is-for)
+3. [Presence Mark](#presence-mark)
+4. [Interaction](#interaction)
+5. [Home and widgets](#home-and-widgets)
+6. [Voice and manner](#voice-and-manner)
+7. [Colors](#colors)
+8. [Messages under rules](#messages-under-rules)
+9. [Rules](#rules)
+10. [Email and connectors](#email-and-connectors)
+11. [Calendar](#calendar)
+12. [Reminders](#reminders)
+13. [Contacts, photos and files](#contacts-photos-and-files)
+14. [News and cards](#news-and-cards)
+15. [Memory](#memory)
+16. [Offline](#offline)
+17. [Cost](#cost)
+18. [Security and privacy](#security-and-privacy)
+19. [Architecture](#architecture)
+20. [Versatility](#versatility)
+21. [Roadmap](#roadmap)
+22. [Limitations](#limitations)
+23. [Build and run](#build-and-run)
+24. [Documentation](#documentation)
+25. [License](#license)
 
 ---
 
@@ -94,6 +95,36 @@ Three principles shape the design ([vision](docs/product/vision.md)):
   turn cannot reach an owner tool ([ADR-0003](docs/adr/0003-permissions-enforced-in-code.md)).
 - **ZeroClaw first.** The app adds only what requires the phone and reaches ZeroClaw only through the official Kotlin
   client ([ADR-0009](docs/adr/0009-gateway-only-through-kotlin-client.md)).
+
+## Who it is for
+
+An ordinary phone owner, not a power user: nothing to install besides the app, no terminal, no scripts, no
+configuration files. Four everyday profiles guide what gets built; each line below works today unless it links to
+its issue.
+
+**A parent short on time**
+- "Tell Ana I'll be late" without opening the messaging app.
+- Family messages answered when the owner cannot, within the owner's rules, with an undo window.
+- Medicine reminders that insist until acknowledged. Every 8 hours or on set weekdays: [#13](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/13).
+- A photo of a school circular turned into a reminder: [#16](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/16). A shopping list by voice: [#15](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/15).
+
+**An older person**
+- Speaking without touching anything; answers read aloud.
+- Medicines that ring full screen, like a call, until acknowledged.
+- Basic answers without internet: reminders, alarms, today's calendar, weather, opening an app.
+- A warning when a message looks like a scam: [#17](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/17). "Call my daughter" opening the dialer: [#19](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/19). A
+  simple mode with large text: [#23](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/23).
+
+**A small-business owner**
+- Important email separated from the noise; a reply to a client drafted and sent only after the owner approves with
+  the screen lock.
+- A calendar that refuses clashes and finds free time.
+- "What do I still have to answer?": [#12](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/12). Bills and parcels from email: [#20](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/20).
+
+**A commuter**
+- Music and media by voice; the phone's controls by voice (volume, brightness, do-not-disturb).
+- "Driving, I'll write later" sent to family and work, never to strangers: [#11](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/11). A notice before an
+  appointment with the way there: [#21](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/21).
 
 ## Presence Mark
 
@@ -379,21 +410,20 @@ flowchart LR
 
 ## Roadmap
 
-Planned items, consistent with [docs/product/features.md](docs/product/features.md); progress is tracked in the
-repository's GitHub issues.
+Tracked in GitHub issues, in phases. Each issue states the problem, the approach, how it fits the
+[access model](docs/specs/access-model.md), how it is tested on the emulator and when it is done.
 
-- Local model evaluated on real requests.
-- A log of every connection that leaves the phone ([ADR-0028](docs/adr/0028-a-log-of-what-leaves-the-phone.md),
-  proposed).
-- Model keys out of the APK.
-- Sharing a picture or document with the assistant: text read on the phone, a bill or appointment proposed as a
-  reminder.
-- Search by meaning over documents, emails and messages, on the phone.
-- Wake word (opt-in, on-device) and owner voice recognition.
-- Telegram, a dedicated WhatsApp account and Outlook as connectors.
-- Full-duplex voice conversation; encrypted memory backup.
-- Face and name chosen with the owner.
-- Acting inside other apps: deferred until an ADR decides whether it can be made safe.
+- **[Phase A: robustness and trust](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/1)** (current): start after a reboot, a gateway watchdog and no silent turns,
+  a health status with lost-permission notices, expired approvals kept for the owner, fail closed without a screen
+  lock, API keys out of the APK, a monthly model budget by voice, battery and memory measured, replies after
+  connectivity returns.
+- **[Phase B: everyday value](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/2)**: recurring reminders, busy or driving mode, what is still unanswered, scam
+  warnings, lists by voice, "call Ana" through the dialer, the system assist gesture, sharing a photo or PDF with the
+  assistant, birthdays, parcels and bills from email, a notice before appointments, the morning briefing, simple
+  mode.
+- **[Phase C and what is rejected](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/24)**: later features (owner's Telegram bot, encrypted backup, search by
+  meaning, wake word, real travel time) and what stays out of scope because it breaks the access model or is
+  expert-only (Accessibility automation of other apps, shell, arbitrary MCP servers, payments).
 
 ## Limitations
 
@@ -407,21 +437,39 @@ repository's GitHub issues.
 
 ## Build and run
 
-Requirements: JDK 21, the Android SDK (platform 35, build-tools 35), NDK 29.0.14206865, and `patchelf` on the `PATH`.
-Model, search, voice, offline model and signing settings go in `local.properties` (never committed); the full sample
-is in [AGENTS.md](AGENTS.md#build-run-test), the contribution workflow in [CONTRIBUTING.md](CONTRIBUTING.md).
+Requirements: JDK 21, the Android SDK (platform 35, build-tools 35.0.0), NDK 29.0.14206865, and `patchelf` in
+`/usr/bin`, `/usr/local/bin` or `~/.local/bin`. The first build downloads the ZeroClaw v0.8.5 and llama.cpp b11381
+Android binaries from their GitHub releases and verifies their SHA-256.
+
+The minimum `local.properties` (never committed) is the SDK path and the model:
+
+```properties
+sdk.dir=/path/to/Android/Sdk
+zeroclaw.provider=...
+zeroclaw.model=...
+zeroclaw.apiKey=...
+```
+
+Everything else (model price, web search, YouTube key, natural voice, offline model, release signing) is optional and
+listed with its `BuildConfig` field and the code that reads it in
+[docs/architecture/configuration.md](docs/architecture/configuration.md), together with the emulator and device notes.
 
 ```sh
-./gradlew testDebugUnitTest          # JVM unit tests
-./gradlew assembleDebug              # fetches and verifies the ZeroClaw v0.8.5 binary on first build
+./gradlew testDebugUnitTest          # JVM unit tests, no device needed
+./gradlew assembleDebug              # fetches and verifies the native binaries on first build
 adb install -r -g app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n org.rustlanglatam.zeroclaw.android/.MainActivity
-scripts/e2e.sh                       # end-to-end checks on the emulator, with the fakechat module
+scripts/e2e.sh                       # end-to-end checks, emulator only, with the fakechat module
 scripts/screenshots.sh en            # regenerates docs/images from the emulator
 ```
 
-**On a device:** Android 11 or later, arm64. Install the APK, open *Ksandra* and complete setup. Notification access,
-messaging apps and the family and work groups are needed only for reading and answering messages.
+**First run.** On an arm64 phone with Android 11 or later, or on an API 34 x86_64 emulator (the arm64 binaries run
+through translation). Open *Ksandra*: the service starts the daemon and pairs with it. The setup asks for a name and
+language, the permissions (notifications, contacts, calendar, photos; battery optimization off; full-screen reminders;
+optionally files, usage access, the overlay and notification access), and who the assistant talks to (messaging apps,
+family and work contacts, speak aloud). Notification access and messaging apps are needed only to read and answer
+messages; never select apps with real contacts on a test phone. The contribution workflow is in
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation
 
@@ -431,6 +479,7 @@ messaging apps and the family and work groups are needed only for reading and an
 | [docs/product/vision.md](docs/product/vision.md) | vision, principles, scope, non-goals |
 | [docs/product/features.md](docs/product/features.md) | features with status |
 | [docs/architecture](docs/architecture/README.md) | arc42 overview, C4 diagrams, runtime, storage, security, ZeroClaw facts |
+| [docs/architecture/configuration.md](docs/architecture/configuration.md) | every build and runtime setting, with the minimal start-up path |
 | [docs/specs](docs/specs/README.md) | one spec per component, including the [access model](docs/specs/access-model.md) |
 | [docs/adr](docs/adr/README.md) | architecture decision records (MADR) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | build, ground rules, pull requests |

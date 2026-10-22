@@ -6,7 +6,7 @@
 | Code | `app/.../AssistantService.kt` (`AssistantService`, `ApprovalReceiver`, `File.replaceWith`), `app/.../Loopback.kt`, `AndroidManifest.xml` (`.AssistantService`), `app/build.gradle.kts` (binary, `BuildConfig`) |
 | Tests | `app/src/test/.../LoopbackTest.kt` (keys, `withKeys`, `gatewayUp`); `scripts/e2e.sh` exercises the service end to end (daemon up, pairing, both agents answering, no owner tool called in a third-party turn) |
 | Decisions | [ADR-0001](../adr/0001-run-official-zeroclaw-daemon-in-app.md), [ADR-0004](../adr/0004-secrets-encryption-off.md), [ADR-0005](../adr/0005-bind-loopback-ipv4-explicitly.md), [ADR-0008](../adr/0008-app-writes-persona-files.md), [ADR-0009](../adr/0009-gateway-only-through-kotlin-client.md), [ADR-0012](../adr/0012-owner-history-24-messages.md), [ADR-0013](../adr/0013-memory-in-zeroclaw-with-phone-copy.md), [ADR-0016](../adr/0016-mcp-key-per-endpoint.md), [ADR-0018](../adr/0018-tool-less-agent-for-unattended-turns.md), [ADR-0020](../adr/0020-fail-closed-daemon-start.md), [ADR-0022](../adr/0022-what-stays-in-the-app.md), [ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md), [ADR-0026](../adr/0026-google-email-through-zeroclaws-email-channel.md) |
-| Last checked against code | 2026-10-22, commit `01f6f19` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -62,6 +62,33 @@ Notifications posted here (titles and channel names from string resources, [ADR-
 
 `Chime.channel(id)` deletes channel `id` and creates `"$id-k"` with the app's chime as its sound.
 
+## Configuration
+
+The single reference for every key is
+[architecture › configuration](../architecture/configuration.md). What this service reads: build
+time, from `local.properties` (never committed) through `app/build.gradle.kts` (`localString`, a
+missing key is `""`) into `BuildConfig`, read only here unless noted:
+
+| `local.properties` | `BuildConfig` | Used in | Required |
+|---|---|---|---|
+| `zeroclaw.provider` | `MODEL_PROVIDER` | provider and agent sections of `config.toml` | yes |
+| `zeroclaw.model` | `MODEL` | `[providers.models.<provider>.main|warm] model` | yes |
+| `zeroclaw.apiKey` | `MODEL_API_KEY` | the same sections' `api_key` | yes (the daemon starts without it; every turn fails) |
+| `zeroclaw.inputPerMTok`, `zeroclaw.outputPerMTok` | `MODEL_INPUT_PER_MTOK`, `MODEL_OUTPUT_PER_MTOK` | `[cost.rates…]` (`rates()`); both or neither | no: without them `usage` reports tokens, not dollars |
+| `zeroclaw.search` | `SEARCH_PROVIDER` (default `duckduckgo`) | `[web_search] search_provider` | no |
+| `zeroclaw.searchKey` | `SEARCH_KEY` | `<provider>_api_key` (brave, tavily, jina, bocha), or `searxng_instance_url` for `searxng` (`searchKey()`) | no |
+| `youtube.apiKey` | `YOUTUBE_KEY` | `find_videos` ([phone-mcp.md](phone-mcp.md)) | no |
+| `voice.*` | `VOICE_*` | `CloudVoice` ([owner-chat-and-voice.md](owner-chat-and-voice.md)) | no |
+| `offline.model.*` | `OFFLINE_MODEL_*` | `Offline`; the `offline` agent section is written regardless | no |
+
+Constants: `GATEWAY_PORT` = 42617, `MCP_PORT` = 42618, `CONFIG_MARK` (bumped by hand when the
+config layout changes, which rewrites every installed config and re-pairs), `NATIVE_TOOLS`,
+`FETCH_DOMAINS`, the per-agent limits in `initialConfig()` and `offline()`, the supervisor's
+backoff (2 s to 60 s). The binary versions and checksums (`zeroclawVersion` v0.8.5,
+`llamaVersion`) are in `app/build.gradle.kts`. Nothing here is set in the app or by voice; the
+parts of the config that follow settings are the email channels (`EmailAccounts.accounts`) and
+the workspace files (name, language, warmth, address, memory).
+
 ## State and data
 
 | What | Where | Written by | Survives |
@@ -86,9 +113,10 @@ it is extracted; downloaded for `v0.8.5` and checked by SHA-256 in `app/build.gr
   that counts is in the prefs), then `schema_version = 3`.
 - `[secrets] encrypt = false` ([ADR-0004](../adr/0004-secrets-encryption-off.md)); `[mcp] enabled = true`;
   `[memory] auto_save = false`, `embedding_provider = "none"`.
-- `[web_search]` enabled, `search_provider` from `zeroclaw.search` (default `duckduckgo`; brave,
-  tavily, jina or searxng with `zeroclaw.searchKey`, written as `<provider>_api_key` or
-  `searxng_instance_url`), `max_results = 6`, `timeout_secs = 15`.
+- `[web_search]` enabled, `search_provider` from `zeroclaw.search` (default `duckduckgo`, no key).
+  With `zeroclaw.searchKey` set, `searchKey()` writes `searxng_instance_url` for `searxng` (the key
+  is the instance URL) and `<provider>_api_key` for any other provider (brave, tavily, jina, bocha);
+  `max_results = 6`, `timeout_secs = 15`.
 - `[web_fetch]` enabled, `allowed_domains` = `FETCH_DOMAINS` (news and reference sites) and their
   subdomains, `max_response_size = 500000`. `[http_request] enabled = false`.
 - Providers: `[providers.models.<MODEL_PROVIDER>.main]` (`temperature = 0.3`) and `.warm`
@@ -112,11 +140,15 @@ it is extracted; downloaded for `v0.8.5` and checked by SHA-256 in `app/build.gr
   `supervised`, `workspace_only`, delegation forbidden, `max_actions_per_hour = 30`,
   `max_cost_per_day_cents = 100`, `memory_recall_limit = 0`, provider `.warm`.
 - `offline` ([ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md)): MCP server
-  `/mcp/offline` with the owner's key, tools `Offline.TOOLS`; provider
-  `[providers.models.llamacpp.local]` on `http://127.0.0.1:42620/v1` (`temperature = 0.2`,
-  `max_tokens = 400`, `timeout_secs = 180`); `max_history_messages = 6`, `memory_recall_limit = 0`,
+  `/mcp/offline` with the owner's key, bundle and risk profile with `allowed_tools = auto_approve`
+  = `offline__<tool>` for `Offline.TOOLS`, delegation forbidden; provider
+  `[providers.models.llamacpp.local]` (`Offline.ALIAS`) on `http://127.0.0.1:42620/v1`
+  (`Offline.PORT`; `temperature = 0.2`, `max_tokens = 400`, `timeout_secs = 180`,
+  `context_window = 8192` (`Offline.CONTEXT`), `vision = false`); runtime profile
+  `max_actions_per_hour = 30`, `max_history_messages = 6`, `memory_recall_limit = 0`,
   `max_tool_iterations = 4`, `max_system_prompt_chars = 2500`, `tool_dispatcher = "native"`,
-  `strict_tool_parsing = true`.
+  `strict_tool_parsing = true`, `compact_context = true`, `keep_tool_context_turns = 1`. Written
+  whether or not a local model is configured.
 - One `[channels.email.<alias>]` per connected account in observer mode (`EmailAccounts.config`, see [email.md](email.md)).
 
 `NATIVE_TOOLS = web_search_tool, web_fetch, calculator, memory_store, memory_recall, memory_forget`.
@@ -135,8 +167,9 @@ MCP tool names are `<server>__<tool>` (`PhoneMcp.toolNames`). No shell, file or 
 ## Behaviour
 
 `onStartCommand` (every call): `startForeground(1, …, FOREGROUND_SERVICE_TYPE_SPECIAL_USE)`,
-`Guard.load(filesDir)` (idempotent), `EmailAccounts.load`, `Offline.load`, the foreground
-notification re-posted with the loaded kill-switch state, `Floating.update`. Returns
+`Guard.load(filesDir)` (idempotent), `EmailAccounts.load`, `Mailbox.onPhone = EmailAccounts.seenOnPhone`,
+`Offline.load`, the foreground notification re-posted with the loaded kill-switch state,
+`Floating.update`. Returns
 `START_STICKY`. Only the first call per instance (`started.compareAndSet`) sets up, in this order:
 
 1. `away = CatchUp.start(this)` (before reminders are rescheduled, which fires missed ones).

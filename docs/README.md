@@ -7,12 +7,13 @@ Map of the project documentation. Standards and maintenance rules are defined in
 |---|---|---|
 | What is it for, what does it do? | [product/](product/): [vision](product/vision.md), [features](product/features.md) | — |
 | How is it built, how do the parts connect? | [architecture/](architecture/README.md) | arc42, C4 |
+| How is it configured, built and started? | [architecture/configuration.md](architecture/configuration.md) | — |
 | How does each component work? | [specs/](specs/README.md) | one spec per component, [template](specs/_template.md) |
 | Why is it built this way? | [adr/](adr/README.md) | MADR, [template](adr/_template.md) |
 | How to contribute? | [CONTRIBUTING.md](../CONTRIBUTING.md) | — |
 | How to report a vulnerability? | [SECURITY.md](../SECURITY.md) | — |
 
-Roadmap and open work are tracked in the repository's GitHub issues.
+Roadmap and open work are tracked in GitHub issues, grouped by phase in milestones: [Phase A: robustness and trust](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/1) (current), [Phase B: everyday value](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/2), and [Phase C](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/24).
 
 ## Rules
 

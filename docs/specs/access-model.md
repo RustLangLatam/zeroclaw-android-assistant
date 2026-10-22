@@ -6,7 +6,7 @@
 | Code | `Policy.kt`, `PhoneMcp.kt` (`Guard`), `Approvals.kt`; how the engine implements this model: [policy-engine.md](policy-engine.md) |
 | Tests | `app/src/test/.../PolicyTest.kt`, `GuardTest.kt`, `InboxTest.kt`, `IdentityTest.kt`; `scripts/e2e.sh` |
 | Decisions | [ADR-0002](../adr/0002-phone-tools-over-loopback-mcp-per-principal.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0006](../adr/0006-kill-switch-in-the-app.md), [ADR-0007](../adr/0007-third-party-turns-one-at-a-time.md), [ADR-0016](../adr/0016-mcp-key-per-endpoint.md), [ADR-0018](../adr/0018-tool-less-agent-for-unattended-turns.md), [ADR-0019](../adr/0019-contacts-by-stable-identity.md) |
-| Last checked against code | 2026-10-22, commit `01f6f19` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 How the assistant is allowed to act: who can ask it for what, which tools it may call, with how
 much autonomy, and what it may reveal. The assistant holds the owner's email, calendar, contacts
@@ -146,9 +146,9 @@ ZeroClaw enforces them at its tool-dispatch site:
 | ZeroClaw setting | Use here |
 |---|---|
 | `level` | `supervised` for every agent |
-| `allowed_tools` | each agent gets only its own MCP endpoint's tools; the owner agent also gets a fixed list of native tools (web search and fetch, calculator, memory); shell, file and cron tools are never allowed |
+| `allowed_tools` | each agent gets only its own MCP endpoint's tools; the owner agent also gets a fixed list of native tools (web search and fetch, calculator, memory) and, while an email account is connected, ZeroClaw's `email_search` and `email_read`; shell, file and cron tools are never allowed |
 | `auto_approve` | equal to `allowed_tools`: the app's policy decides each MCP call, so ZeroClaw's own approval is off |
-| `max_actions_per_hour`, `max_cost_per_day_cents` | runaway guard per agent (owner 60 / 300, third party 20 / 50, scribe 30 / 100) |
+| `max_actions_per_hour`, `max_cost_per_day_cents` | runaway guard per agent (owner 60 / 300, third party 20 / 50, scribe 30 / 100, offline 30 / no cost line) |
 | `delegation_policy` | `forbidden` for every agent |
 | `workspace_only` | `true`; the workspace is the app's private storage |
 | `memory_recall_limit` | `0` for the third-party, scribe and offline agents |
@@ -187,6 +187,7 @@ owner:
   message.send:         { scope: group:family, autonomy: act_notify, limit: 5/day, undo: 30s }
 third_party:
   tools: [take_message, availability]
+  message.take:         { scope: all,          autonomy: act, limit: 10/day }
   availability:         { scope: group:work,   detail: busy_free }
   notification.reply:   { scope: group:work,   autonomy: ask }
   notification.reply:   { scope: group:family, autonomy: act_notify, limit: 5/day }
@@ -283,8 +284,19 @@ autonomy words are recognized in Spanish and English (`policy.autonomy.*` in `as
 biometric. A tap alone never confirms when the phone has a screen lock. It guards strong approvals,
 resuming after the kill switch, rule changes and saving the setup.
 
+## Configuration
+
+Nothing in the access model is set at build time. The rules, the kill switch, the undo window and
+the contact groups live in `files/policy.json` and change only through the app (the rules screen,
+*Pause* / *Resume*, Settings › Messages › Time to undo, the setup's people step) or through the
+owner tools above (`set_rule`, `set_contact_group`, `set_preference undo_seconds`), each gated as
+described. Defaults: `Policy.DEFAULT_RULES`, undo window 30 s, no groups, not stopped. The ZeroClaw
+risk profiles are written by [AssistantService](assistant-service.md) from constants, never from
+settings.
+
 ## Open issues
 
 - Without a screen lock (`KeyguardManager.isDeviceSecure` false) there is no credential: strong
-  approvals are refused by `Guard.attempt` before asking, while rule changes and resuming after a
-  pause are confirmed by a tap. The setup lists the missing screen lock.
+  approvals are refused by `Guard.attempt` before asking, while rule changes, resuming after a
+  pause and saving the setup pass without confirmation (`confirmOwner` returns `true` at once).
+  The introduction after the setup lists the missing screen lock.

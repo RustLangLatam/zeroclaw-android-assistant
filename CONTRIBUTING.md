@@ -4,17 +4,19 @@ Thanks for helping. This document covers how to build, the rules every change fo
 
 ## Getting started
 
-Requirements: JDK 21, the Android SDK (platform 35, build-tools 35), NDK 29.0.14206865, and `patchelf` on the `PATH`.
+Requirements: JDK 21, the Android SDK (platform 35, build-tools 35.0.0), NDK 29.0.14206865, and `patchelf` in
+`/usr/bin`, `/usr/local/bin` or `~/.local/bin`.
 
 ```sh
 ./gradlew testDebugUnitTest      # JVM unit tests (no device needed)
 ./gradlew assembleDebug          # fetches and verifies the ZeroClaw and llama.cpp release binaries on first build
 ```
 
-The build works without `local.properties` keys; the assistant then has no model to talk to. To run it, copy the
-optional settings from [AGENTS.md](AGENTS.md#build-run-test) into `local.properties` (never committed). The emulator
-setup (`zc34`, fake contacts, PIN `1234`) and the end-to-end checks (`scripts/e2e.sh`, with the `fakechat` module) are
-described there as well.
+The build works without `local.properties` (CI has none); the assistant then has no model to talk to. To run it, set
+`sdk.dir`, `zeroclaw.provider`, `zeroclaw.model` and `zeroclaw.apiKey` in `local.properties` (never committed). Every
+key, the minimal start-up path, the emulator setup (`zc34`, fake contacts, PIN `1234`) and the end-to-end checks
+(`scripts/e2e.sh`, with the `fakechat` module) are in
+[docs/architecture/configuration.md](docs/architecture/configuration.md).
 
 ## Ground rules
 

@@ -34,6 +34,6 @@ documentation are in [ADR-0000](0000-documentation-standards.md).
 | [0024](0024-languages-in-kotlin-pairs.md) | Languages as Kotlin pairs, not Android resources | Superseded by [0029](0029-ui-text-in-android-string-resources.md) |
 | [0025](0025-an-offline-agent-on-a-local-model.md) | Without internet, an offline agent on a local model | Accepted |
 | [0026](0026-google-email-through-zeroclaws-email-channel.md) | The owner's Google email through ZeroClaw's email channel, as an observer | Accepted |
-| [0027](0027-assistant-voice-from-a-cloud-speech-model.md) | The assistant's voice from a cloud speech model, the phone's voice as the fallback | Accepted |
+| [0027](0027-assistant-voice-from-a-cloud-speech-model.md) | Assistant voice from a cloud speech model, platform TTS as fallback | Accepted |
 | [0028](0028-a-log-of-what-leaves-the-phone.md) | A log of every connection that leaves the phone | Proposed (deferred) |
 | [0029](0029-ui-text-in-android-string-resources.md) | UI text in Android string resources | Accepted |

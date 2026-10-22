@@ -6,7 +6,7 @@
 | Code | `app/.../App.kt` (`App`, `Main`, `Place`, `Sections`, `presence()`, `MenuSheet`, `ApprovalSheet`), `app/.../Screens.kt` (`Home`, `PanoramaLine`, `panorama`, `Board`, `Presence`, `TalkHint`, `Moment`), `app/.../Widgets.kt`, `app/.../HomeWidgets.kt`, `app/.../PhoneWidgets.kt`, `app/.../Panorama.kt`, `app/.../Notes.kt`, `app/.../Commands.kt`, `app/.../MainActivity.kt` (`send`, `act`, `setAppMode`, `ask`, `Ui`) |
 | Tests | `app/src/test/.../WidgetsTest.kt` (rows, move, swap, limits, `layout:2` migration, sky, unread), `PanoramaTest.kt` (order, calm and arranging, curious never health), `CommandsTest.kt`, `NotesTest.kt`, `EvanesceTest.kt`, `PrivateScreensTest.kt`; `scripts/e2e.sh` taps *Undo* on Home's moment |
 | Decisions | [ADR-0015](../adr/0015-interface-commands-in-code.md), [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md), [ADR-0017](../adr/0017-splash-melts-into-the-button.md), [ADR-0029](../adr/0029-ui-text-in-android-string-resources.md) |
-| Last checked against code | 2026-10-22, commit `01f6f19` |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -44,6 +44,18 @@ mark itself ([presence-mark.md](presence-mark.md)) nor the content of each place
 
 All visible text comes from string resources through `t(R.string…)` / `tn(R.plurals…)`, in the
 assistant's language ([ADR-0029](../adr/0029-ui-text-in-android-string-resources.md)).
+
+## Configuration
+
+| What | Where | Default |
+|---|---|---|
+| Widgets | on Home: long press to arrange, "−" to remove, *Add*; by voice `set_preference widget_add|widget_remove <widget>` (`SETTINGS`); `my_settings` lists them | `Widgets.DEFAULT` |
+| Mode | the menu, the board's Assistant mode tile, the `APP_MODE` / `ASSISTANT_MODE` commands; by voice `set_mode app|assistant` (`INTERFACE`) | assistant mode |
+| Notes on the assistant's card | by voice only: `show_on_home` (title ≤ 24 characters, value ≤ 18, `hours`), `remove_from_home` | none |
+| Command words | `assets/lexicon.json` `commands.*` (ADR-0029) | — |
+| Weather | no key, no `local.properties` entry; Android `ACCESS_COARSE_LOCATION` (asked by the card) and location services on; constants: 30 min between fetches, 10 s timeout, `Widgets.RAIN = 30` | — |
+| Other cards | AGENDA needs `READ_CALENDAR`; MESSAGES and MAIL need notification access ([notification-channel.md](notification-channel.md)); ALARM, BATTERY, REMINDERS, NEWS need nothing | — |
+| Panorama timing | constants in `PanoramaLine`: 5 s + 160 ms per character over 40 | — |
 
 ## State and data
 
@@ -135,8 +147,9 @@ fit glides once.
 | GREETING (wide) | good morning (6–11), good afternoon (12–19), else good evening, with the owner's name; in app mode, the voice line while the assistant speaks | — |
 | PANORAMA (wide) | `PanoramaLine` | per item |
 
-`show_on_home` also adds the KSANDRA card when it is missing and there is room, and says so when
-there is none; `remove_from_home` removes a note by title.
+`show_on_home` (title cut to 24 characters, value to 18; a note with the same normalized title
+replaces the old one) also adds the KSANDRA card when it is missing and there is room, and says so
+when there is none; `remove_from_home` removes a note by title.
 
 **Weather** (`PhoneWidgets`). The card calls `refreshWeather()` on show and every 60 s; it fetches
 only with coarse location granted, location services on, and 30 min since the last attempt. Place:

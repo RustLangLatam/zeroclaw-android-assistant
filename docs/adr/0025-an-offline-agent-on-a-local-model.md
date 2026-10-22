@@ -33,19 +33,23 @@ picks its agent (`Turns.open`). A short prompt keeps the first token within seco
 what the small model can do is decided in the config, not left to the model. ZeroClaw keeps the
 memory, the sessions and the cost accounting of both agents.
 
-- The engine, llama.cpp's `llama-server` (MIT), ships in the APK like ZeroClaw: a pinned release,
-  checked by SHA-256, its libraries stripped by the build (the NDK) and found through
-  `RUNPATH=$ORIGIN` (Android's linker under ARM translation ignores `LD_LIBRARY_PATH`).
-- The model, a small local model in GGUF format (1.7B parameters, Q4_K_M, Apache-2.0, 1.1 GB,
-  Spanish and English, tool calls), is downloaded only when the owner enables the option, and
-  checked by SHA-256.
+- The engine, llama.cpp's `llama-server` (MIT), ships in the APK like ZeroClaw: a pinned release
+  (`llamaVersion` in `app/build.gradle.kts`), checked by SHA-256, its libraries stripped by the
+  build (the NDK) and found through `RUNPATH=$ORIGIN` (Android's linker under ARM translation
+  ignores `LD_LIBRARY_PATH`).
+- The model is configuration: `offline.model.name`, `offline.model.url`, `offline.model.sha256` and
+  `offline.model.bytes` in `local.properties` (a GGUF file); without them the option is unavailable.
+  It is downloaded only when the owner enables the option (Settings, or `set_preference`), and
+  checked by SHA-256. Developed and measured with a 1.7B-parameter Q4_K_M model of 1.1 GB, Spanish
+  and English, with tool calls.
 - The server runs only while the phone is offline and the option is on: it holds about 1.5 GB of
   memory.
 - Replies to other people are never written by the local model: they wait for the internet.
-- The small model gets its own MCP endpoint with five of the owner's tools, thinking disabled
-  (`/no_think`), and a new session per outage. Requests that must be exact (reminders, alarms,
-  calendar entries, opening an app), when stated explicitly, are handled by the app itself rather
-  than by the small model.
+- The small model gets its own MCP endpoint (`/mcp/offline`) with six of the owner's tools
+  (`Offline.TOOLS`: `remind`, `list_reminders`, `create_alarm`, `next_alarm`, `list_events`,
+  `open_app`), thinking disabled (`/no_think`), and a new session per outage. Requests that must
+  be exact (reminders, alarms, calendar entries, opening an app), when stated explicitly, are
+  handled by the app itself (`Offline.direct`) rather than by the small model.
 
 ## Consequences
 

@@ -5,8 +5,8 @@
 | Status | Stable |
 | Code | `app/.../PhoneMcp.kt` (`PhoneMcp`, `TOOLS`, `HANDLERS`, `rpc`, `OTHERS_WORDS`, `Guard`), `app/.../Loopback.kt`; helpers it calls: `PhoneApps`, `PhoneMail`, `PhoneEmail`, `PhoneGallery`, `PhoneFiles`, `PhoneReminders`, `PhoneNews`, `PhoneDevice`, `PhoneWidgets`, `Mailbox`, `Inbox`, `Memory`, `Notes`, `Cards`, `Routines`, `Usage`, `Videos`, `Agenda`, `Preferences`, `Sections`, `contactName` (`MessageListener.kt`) |
 | Tests | `app/src/test/.../LoopbackTest.kt` (head and body limits, keys, gateway check), `PhoneMcpTest.kt` (every listed tool has a handler and nothing else is served; the JSON-RPC protocol; a throwing tool), `GuardTest.kt`; unit tests of the pure helpers (`AgendaTest`, `AppsTest`, `FilesTest`, `PhotosTest`, `MailboxTest`, `MemoryTest`, `NewsTest`, `RemindersTest`, `DeviceTest`, `PreferencesTest`, `PolicyTest`, `CardsTest`, `NotesTest`, `RoutinesTest`, `VideosTest`); `scripts/e2e.sh` checks that no `tool owner` log line appears during a third-party injection |
-| Decisions | [ADR-0002](../adr/0002-phone-tools-over-loopback-mcp-per-principal.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0005](../adr/0005-bind-loopback-ipv4-explicitly.md), [ADR-0007](../adr/0007-third-party-turns-one-at-a-time.md), [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md), [ADR-0016](../adr/0016-mcp-key-per-endpoint.md), [ADR-0020](../adr/0020-fail-closed-daemon-start.md), [ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md), [ADR-0019](../adr/0019-contacts-by-stable-identity.md) (proposed) |
-| Last checked against code | 2026-10-22, commit `37f416d` |
+| Decisions | [ADR-0002](../adr/0002-phone-tools-over-loopback-mcp-per-principal.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0005](../adr/0005-bind-loopback-ipv4-explicitly.md), [ADR-0007](../adr/0007-third-party-turns-one-at-a-time.md), [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md), [ADR-0016](../adr/0016-mcp-key-per-endpoint.md), [ADR-0020](../adr/0020-fail-closed-daemon-start.md), [ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md), [ADR-0019](../adr/0019-contacts-by-stable-identity.md) |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -123,6 +123,18 @@ Cross-cutting rules applied in the handlers:
 With no third-party turn in progress (`thirdPartySender == null`) both answer
 `No conversation is in progress; nothing was done.`
 
+## Configuration
+
+| What | Where | Default |
+|---|---|---|
+| Port, limits | constants: `AssistantService.MCP_PORT` = 42618, `MAX_CONNECTIONS` = 16, `READ_TIMEOUT_MS` = 10 000, `Loopback.MAX_HEAD` = 16 KiB, `MAX_BODY` = 1 MiB, `MIN_UNDO_SECONDS` = 10 | — |
+| Endpoint keys | generated per process (`AssistantService.mcpSecret`), written into `config.toml` | — |
+| `find_videos` | `youtube.apiKey` → `BuildConfig.YOUTUBE_KEY`; blank → `Videos.fallback` (a search link) | blank |
+| `set_preference` values | [settings-and-setup.md](settings-and-setup.md) | |
+| Offline tool subset | constant `Offline.TOOLS` | |
+
+Nothing else about the server is configurable; the tool behaviours' own settings are in their specs.
+
 ## State and data
 
 - In memory: the server socket and per-connection threads; nothing per request survives.
@@ -167,7 +179,8 @@ With no third-party turn in progress (`thirdPartySender == null`) both answer
 
 ## Open issues
 
-- Targets are keyed by display name (`contactName` resolves only digits);
-  [ADR-0019](../adr/0019-contacts-by-stable-identity.md) is proposed.
+- Owner-tool targets (`send_message`, `send_email`) are the name the model gives; `contactName`
+  resolves only a phone number to a contact. [ADR-0019](../adr/0019-contacts-by-stable-identity.md)
+  covers incoming senders, not these targets.
 - `thirdPartySender` is process-global; it relies on third-party turns running one at a time.
 - The HTTP reader supports only ZeroClaw's MCP client (no chunked bodies, one request per connection).

@@ -18,7 +18,7 @@ decision rationale in the [ADRs](../adr/README.md). Known limitations are stated
 | 4. Solution strategy | [ADR-0001](../adr/0001-run-official-zeroclaw-daemon-in-app.md), [ADR-0002](../adr/0002-phone-tools-over-loopback-mcp-per-principal.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0010](../adr/0010-zeroclaw-first-voice-first.md) |
 | 5. Building blocks | [Components](#components); one [spec](../specs/README.md) each |
 | 6. Runtime view | [how-it-connects.md](how-it-connects.md): start, chat, tools, messages, approvals, reminders, news, catch-up, voice, offline |
-| 7. Deployment view | [Threads and processes](#threads-and-processes), [Ports](#ports) |
+| 7. Deployment view | [Threads and processes](#threads-and-processes), [Ports](#ports), [configuration.md](configuration.md): build requirements, `local.properties`, what the app writes at runtime, minimal start-up |
 | 8. Cross-cutting concepts | [security.md](security.md), [storage.md](storage.md), [model-and-code.md](model-and-code.md), [access model](../specs/access-model.md), [Localization](#localization) |
 | 9. Architecture decisions | [adr/](../adr/README.md) |
 | 10. Quality requirements | [access model › principles](../specs/access-model.md#principles) |

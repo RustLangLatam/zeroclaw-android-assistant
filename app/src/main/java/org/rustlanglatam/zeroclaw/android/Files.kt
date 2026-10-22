@@ -43,7 +43,7 @@ object Files {
 
     /** Renders the top 10 hits for the agent, noting when other apps' files could not be searched. */
     fun describe(hits: List<Hit>, terms: List<String>, filesKnown: Boolean): String {
-        val note = if (filesKnown) "" else "\n(Files of other apps such as WhatsApp are not searched: the owner has not allowed access to all files; Ajustes › Permisos.)"
+        val note = if (filesKnown) "" else "\n(Files of other apps such as WhatsApp are not searched: the owner has not allowed access to all files; Settings › Permissions.)"
         if (hits.isEmpty()) return "Nothing found for ${terms.joinToString(" ")}.$note"
         return "Found, best first (shown on the Files screen):\n" +
             hits.take(10).joinToString("\n") { "- ${it.title} — ${it.where}" } + note

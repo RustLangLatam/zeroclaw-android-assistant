@@ -5,8 +5,8 @@
 | Status | Stable |
 | Code | `app/.../Policy.kt` (`Principal`, `Autonomy`, `Risk`, `Capability`, `Scope`, `Rule`, `Decision`, `Policy`, `Disclosure`, `introduction`), `app/.../PhoneMcp.kt` (`object Guard`), `app/.../Approvals.kt` (`Approvals`, `Journal`, `Outbox`, `Saved`), `app/.../Act.kt`, `app/.../Labels.kt`; callers in `AssistantService.kt` (`askOwner`, `offerUndo`, `tell`, `ApprovalReceiver`) and `MainActivity.kt` (`answer`, `approveIntent`, `confirmOwner`, `setStopped`, `editRule`) |
 | Tests | `app/src/test/.../PolicyTest.kt`, `GuardTest.kt`, `JournalTest.kt`, `LabelsTest.kt`, `InboxTest.kt` (saved rules, new defaults, channel settings); `scripts/e2e.sh` (ask with credential, act-and-notify, undo, kill switch, no owner tool reached from a third-party turn) |
-| Decisions | [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0002](../adr/0002-phone-tools-over-loopback-mcp-per-principal.md), [ADR-0006](../adr/0006-kill-switch-in-the-app.md), [ADR-0007](../adr/0007-third-party-turns-one-at-a-time.md), [ADR-0016](../adr/0016-mcp-key-per-endpoint.md), [ADR-0019](../adr/0019-contacts-by-stable-identity.md) (proposed), [ADR-0021](../adr/0021-process-state-with-funneled-writes.md), [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md) |
-| Last checked against code | 2026-10-22, commit `37f416d` |
+| Decisions | [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0002](../adr/0002-phone-tools-over-loopback-mcp-per-principal.md), [ADR-0006](../adr/0006-kill-switch-in-the-app.md), [ADR-0007](../adr/0007-third-party-turns-one-at-a-time.md), [ADR-0016](../adr/0016-mcp-key-per-endpoint.md), [ADR-0019](../adr/0019-contacts-by-stable-identity.md), [ADR-0021](../adr/0021-process-state-with-funneled-writes.md), [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md) |
+| Last checked against code | 2026-10-22, commit `64e1087` |
 
 ## Purpose
 
@@ -40,8 +40,8 @@ the tools themselves ([phone-abilities.md](phone-abilities.md)).
 | `Guard.attempt(…)` | same, returning a typed `Outcome` (`Done`, `Queued`, `Refused(notApproved)`) | notification channel, `gated` |
 | `Guard.undo(id)` | `Boolean`; refunds the daily use, logs `undone` | Home and floating-mark undo, `ApprovalReceiver` (`undo` extra) |
 | `Guard.setStopped(stopped)` | kill switch; saves synchronously; `onStopped` | `MainActivity.setStopped`, debug `stop` extra |
-| `Guard.load(dir)` / `save()` / `saveNow()` | `files/policy.json`, `files/activity.jsonl` | `AssistantService`, `MainActivity.onCreate`, `CallActivity`, `MessageListener`; every setting change |
-| `Approvals.request(act, strong)` / `answer(id, approved)` / `find(id)` | blocks the caller up to 60 s → `Boolean` | `Guard.attempt`; `MainActivity.answer`, `approveIntent`, `ApprovalReceiver` |
+| `Guard.load(dir)` / `save()` / `saveNow()` | `files/policy.json`, `files/activity.jsonl` | `AssistantService`, `MainActivity.onCreate`, `CallActivity` (`PhoneReminders.kt`), `MessageListener`; every setting change |
+| `Approvals.request(act, strong)` / `answer(id, approved)` / `find(id)` / `count()` | blocks the caller up to 60 s → `Boolean` | `Guard.attempt`; `MainActivity.answer`, `approveIntent`, `ApprovalReceiver` |
 | Hooks `approvals.onRequest`, `Guard.onNotify`, `onQueued`, `onSaved`, `onStopped`, `secure`, `missing` | set in `AssistantService.onStartCommand` (`askOwner`, `tell`, `offerUndo`, identity rewrite debounced 1.5 s, daemon stop/start, keyguard check) and `MainActivity` (`missing`) | |
 | `Labels.capability/group/status/scope/autonomy/rule/tool` | owner-facing strings (`t(R.string.…)`, [ADR-0029](../adr/0029-ui-text-in-android-string-resources.md)) | screens, notifications, approval prompts |
 | `introduction(owner, rules, groups, apps, undoSeconds, groupChats, missing)` | self-introduction text built from string resources | `MainActivity.introduce`; `AssistantService` (`TOOLS.md`) |
@@ -54,6 +54,18 @@ Notifications (posted by `AssistantService`):
 - Undo: channel `outbox-k` (high), id `3000 + item.id`, action Undo, `setTimeoutAfter(undoSeconds)`;
   posted only when neither the app (`Floating.appVisible`) nor the floating mark (`Floating.showing`)
   can show the countdown.
+
+## Configuration
+
+| What | Build time | In the app | By voice | Default |
+|---|---|---|---|---|
+| Rules (autonomy per rule) | — | Settings › Permissions and privacy › What I can do (`Rules`, credential) | `set_rule` (RULES, credential) | `Policy.DEFAULT_RULES` |
+| Kill switch | — | Settings or Home *Pause* / *Resume* (resume: credential); menu | commands "pause" / "resume" ([owner-chat-and-voice.md](owner-chat-and-voice.md)) | off |
+| Undo window | — | Settings › Messages › Time to undo (10 / 30 / 60 / 120 s) | `set_preference undo_seconds` (CHANNEL when shorter) | 30 s; floor `PhoneMcp.MIN_UNDO_SECONDS` = 10, cap 120 |
+| Contact groups | — | setup and Settings › People (credential) | `set_contact_group` (CONTACT_GROUPS, credential) | none |
+| Approval timeout, log size, counters | constants: `Approvals(timeoutMs = 60_000)`, `Journal.MAX = 500` | — | — | — |
+
+Debug builds only: `--ez stop`, `--ez clean` (counters), `--es contacts` on `MainActivity`.
 
 ## State and data
 
@@ -75,8 +87,9 @@ Notifications (posted by `AssistantService`):
 `version` (2). Version 1 kept the log inside the file; it is migrated once to `activity.jsonl`.
 Missing keys take defaults; a rule that does not parse (unknown capability or principal) is
 dropped alone. `Guard.load` runs once per process and also loads `seen.txt`, `mail.json`,
-`memory.json`, `notes.json` and `style.json`. `save()` writes on one IO thread 150 ms after the
-last change (consecutive changes coalesce); `saveNow()` writes synchronously (kill switch).
+`memory.json`, `notes.json` and `style.json`. `save()` writes on one IO thread (`guard-io`) 150 ms
+after the first change since the last write (changes within that window coalesce into one write);
+`saveNow()` writes synchronously (kill switch). Each write calls `onSaved`.
 
 ## Behaviour
 
@@ -214,8 +227,11 @@ Principals: OWNER (the owner's agent, the offline agent and the app itself) and 
 third-party agent; notification replies). Untrusted input: tool arguments from the model (contact
 names, texts), sender names from notifications (used as `Target.contact`), and intents to the
 exported `MainActivity` (only intents carrying the process's seal are honoured). Group membership is
-keyed by display name ([ADR-0019](../adr/0019-contacts-by-stable-identity.md), proposed). The kill
-switch covers the phone tools and stops the daemon.
+keyed by the saved contact's display name; an incoming sender maps to it only when the
+notification's number, address or contact link resolves to that contact, never by the name shown
+([ADR-0019](../adr/0019-contacts-by-stable-identity.md)). For owner tools the target is the name the
+model gives (`contactName` resolves a phone number to a contact; other text is used as given). The
+kill switch covers the phone tools and stops the daemon.
 
 ## Screen lock
 
