@@ -12,7 +12,8 @@ Read before changing tools or policy: the [access model](docs/specs/access-model
 autonomy) and [security](docs/architecture/security.md). Documentation map: [docs/README.md](docs/README.md);
 architecture in [docs/architecture/](docs/architecture/README.md), one spec per component in
 [docs/specs/](docs/specs/README.md), decisions in [docs/adr/](docs/adr/README.md). Roadmap and open work are tracked in
-GitHub issues.
+GitHub issues, by phase in milestones (Phase A: robustness and trust, current; Phase B: everyday value). Each PR
+references its issue (`Closes #N`) and updates the specs it changes.
 
 ## Rules
 

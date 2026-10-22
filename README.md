@@ -379,21 +379,20 @@ flowchart LR
 
 ## Roadmap
 
-Planned items, consistent with [docs/product/features.md](docs/product/features.md); progress is tracked in the
-repository's GitHub issues.
+Tracked in GitHub issues, in phases. Each issue states the problem, the approach, how it fits the
+[access model](docs/specs/access-model.md), how it is tested on the emulator and when it is done.
 
-- Local model evaluated on real requests.
-- A log of every connection that leaves the phone ([ADR-0028](docs/adr/0028-a-log-of-what-leaves-the-phone.md),
-  proposed).
-- Model keys out of the APK.
-- Sharing a picture or document with the assistant: text read on the phone, a bill or appointment proposed as a
-  reminder.
-- Search by meaning over documents, emails and messages, on the phone.
-- Wake word (opt-in, on-device) and owner voice recognition.
-- Telegram, a dedicated WhatsApp account and Outlook as connectors.
-- Full-duplex voice conversation; encrypted memory backup.
-- Face and name chosen with the owner.
-- Acting inside other apps: deferred until an ADR decides whether it can be made safe.
+- **[Phase A: robustness and trust](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/1)** (current): start after a reboot, a gateway watchdog and no silent turns,
+  a health status with lost-permission notices, expired approvals kept for the owner, fail closed without a screen
+  lock, API keys out of the APK, a monthly model budget by voice, battery and memory measured, replies after
+  connectivity returns.
+- **[Phase B: everyday value](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/2)**: recurring reminders, busy or driving mode, what is still unanswered, scam
+  warnings, lists by voice, "call Ana" through the dialer, the system assist gesture, sharing a photo or PDF with the
+  assistant, birthdays, parcels and bills from email, a notice before appointments, the morning briefing, simple
+  mode.
+- **[Phase C and what is rejected](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/24)**: later features (owner's Telegram bot, encrypted backup, search by
+  meaning, wake word, real travel time) and what stays out of scope because it breaks the access model or is
+  expert-only (Accessibility automation of other apps, shell, arbitrary MCP servers, payments).
 
 ## Limitations
 

@@ -13,7 +13,7 @@ Map of the project documentation. Standards and maintenance rules are defined in
 | How to contribute? | [CONTRIBUTING.md](../CONTRIBUTING.md) | — |
 | How to report a vulnerability? | [SECURITY.md](../SECURITY.md) | — |
 
-Roadmap and open work are tracked in the repository's GitHub issues.
+Roadmap and open work are tracked in GitHub issues, grouped by phase in milestones: [Phase A: robustness and trust](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/1) (current), [Phase B: everyday value](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/2), and [Phase C](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/24).
 
 ## Rules
 
