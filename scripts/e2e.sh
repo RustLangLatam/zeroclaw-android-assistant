@@ -134,11 +134,21 @@ post Ana "One more thing: bring wine."
 answered Ana 4; sleep 33
 check "only the new message answered" '[ "$(replies | grep -c ^Ana)" = $((before + 1)) ] && [ "$(turns Ana)" = 4 ]'
 
+echo "Ana (family): a message received without internet is answered once the network is back"
+before=$(replies | grep -c ^Ana)
+adb shell svc wifi disable; adb shell svc data disable; sleep 8
+post Ana "Are we still on for lunch on Sunday?"
+sleep 60
+check "nothing sent while offline" '[ "$(replies | grep -c ^Ana)" = "$before" ]'
+adb shell svc wifi enable; adb shell svc data enable
+sleep 100
+check "answered once after the network returned" '[ "$(replies | grep -c ^Ana)" = $((before + 1)) ]'
+
 echo "kill switch: nothing goes out"
 adb shell am start -n $APP/.MainActivity --ez stop true >/dev/null; sleep 2
 before=$(replies | wc -l)
 post Ana "Are you there?"
-answered Ana 5; sleep 33
+answered Ana 6; sleep 33
 check "no reply while stopped" '[ "$(replies | wc -l)" = "$before" ]'
 check "refused by the kill switch" 'log | grep -q "kill switch"'
 

@@ -165,6 +165,7 @@ through debug extras `--es owner Milton --es apps <fakechat> --ez groups false -
 |---|---|
 | Laura (work) asks | *Approve* + PIN, sent after the window; the reply starts with the introduction naming Milton, in the sender's language |
 | Laura asks, nobody answers the approval | nothing sent; journal "no answer in time"; the waiting notice; *Answer now* in Activity + *Approve* + PIN → exactly one reply |
+| Ana writes while Wi-Fi and data are off | nothing sent offline; once the network is validated again, one reply after the undo window (`CatchUp` retries the unanswered entries; a turn still pending completes) |
 | Ana (family) | answered without asking, after the window |
 | Pat (unknown) | no reply |
 | A stranger named "Ana" without a number | no reply; logged as unverified (the display name is not an identity) |
