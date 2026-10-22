@@ -927,4 +927,11 @@
     <string name="news_channel_important">Important news</string>
     <string name="offline_not_configured">Not available in this build (no local model configured)</string>
     <string name="reminders_call_title_x">%1$s is calling you</string>
+    <string name="health_channel">What I need to work</string>
+    <string name="health_title">%1$s lost something she needs</string>
+    <string name="health_notifications">I can\'t read your messages: notification access was turned off.</string>
+    <string name="health_battery">Android may close me in the background: battery optimization is on for me.</string>
+    <string name="health_full_screen">I can\'t ring you full screen for urgent reminders.</string>
+    <string name="assistantservice_x_cannot_start">%1$s can\'t start</string>
+    <string name="assistantservice_still_trying_to_start">I keep trying; nothing is answered meanwhile.</string>
 </resources>

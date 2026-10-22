@@ -927,4 +927,11 @@
     <string name="news_channel_important">Noticias importantes</string>
     <string name="offline_not_configured">No disponible en esta versión (sin modelo local configurado)</string>
     <string name="reminders_call_title_x">%1$s te llama</string>
+    <string name="health_channel">Lo que necesito para funcionar</string>
+    <string name="health_title">%1$s perdió algo que necesita</string>
+    <string name="health_notifications">No puedo leer tus mensajes: se desactivó el acceso a las notificaciones.</string>
+    <string name="health_battery">Android puede cerrarme en segundo plano: la optimización de batería está activa para mí.</string>
+    <string name="health_full_screen">No puedo llamarte a pantalla completa para los recordatorios urgentes.</string>
+    <string name="assistantservice_x_cannot_start">%1$s no puede arrancar</string>
+    <string name="assistantservice_still_trying_to_start">Sigo intentándolo; mientras tanto no respondo nada.</string>
 </resources>
