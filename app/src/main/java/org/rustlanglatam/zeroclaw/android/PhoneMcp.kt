@@ -640,10 +640,17 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     text.isBlank() || at == null -> "Needs text, and time HH:MM with date (YYYY-MM-DD) or days_from_today, or minutes_from_now."
                     at <= System.currentTimeMillis() -> "That time has passed; ask the owner for another."
                     else -> Guard.gated(principal, Capability.REMINDERS, Policy.OWNER_TARGET, Act.remind(level, text, reminders.format(at))) {
-                        val r = reminders.add(text, at, level, args.optBoolean("daily", false))
-                        // High-level or daily reminders are announced to the owner immediately, regardless of who requested them.
-                        if (r.level == Reminders.Level.HIGH || r.daily) Guard.onNotify(t(R.string.phonemcp_i_ll_call_you) + "${r.text} · ${reminders.format(r.at)}" + (if (r.daily) t(R.string.phonemcp_every_day) else ""))
-                        "Reminder #${r.id} set for ${reminders.format(r.at)}${if (r.daily) ", every day" else ""}, level ${level.name.lowercase()}" +
+                        val repeat = when {
+                            args.optInt("every_hours", 0) > 0 -> Reminders.Repeat.Hours(args.optInt("every_hours").coerceIn(1, 24))
+                            args.optString("weekdays").isNotBlank() -> Reminders.Repeat.weekdays(args.optString("weekdays"))?.let { Reminders.Repeat.Weekdays(it) }
+                            args.optInt("monthly_day", 0) in 1..31 -> Reminders.Repeat.Monthly(args.optInt("monthly_day"))
+                            else -> null
+                        }
+                        val r = reminders.add(text, at, level, args.optBoolean("daily", false) && repeat == null, repeat)
+                        val every = Reminders.every(r)
+                        // High-level or repeating reminders are announced to the owner immediately, regardless of who requested them.
+                        if (r.level == Reminders.Level.HIGH || r.repeats) Guard.onNotify(t(R.string.phonemcp_i_ll_call_you) + "${r.text} · ${reminders.format(r.at)}" + (if (r.repeats) " · $every" else ""))
+                        "Reminder #${r.id} set for ${reminders.format(r.at)}${if (every.isEmpty()) "" else ", $every"}, level ${level.name.lowercase()}" +
                             (if (level == Reminders.Level.HIGH) " (you will call them, full screen, until they answer)." else ".")
                     }
                 }
@@ -1352,11 +1359,14 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     listOf("title", "start"), "title" to "string", "date" to "string", "days_from_today" to "integer", "start" to "string",
                     "minutes" to "integer", "note" to "string", "overlap_ok" to "boolean"),
                 tool("remind", "Remind the owner of something at a time: text, time HH:MM with date (YYYY-MM-DD) or days_from_today, " +
-                    "or minutes_from_now; daily=true to repeat every day; level low (a quiet notice), normal (a notification that " +
-                    "sounds) or high (you call the owner, full screen, until they answer: for what must not be missed). Health, " +
-                    "such as a medicine, is always high.",
+                    "or minutes_from_now (the first time). To repeat, one of: daily=true (every day); every_hours (1-24: \"every 8 hours " +
+                    "the pill\", counted from the first time); weekdays (\"mon,wed,fri\", or \"weekdays\"); monthly_day (1-31: \"the 5th " +
+                    "of every month\"). level low (a quiet notice), normal (a notification that sounds) or high (you call the owner, full " +
+                    "screen, until they answer: for what must not be missed). Health, such as a medicine, is always high. To answer " +
+                    "\"did I take it?\", list_reminders shows when each was confirmed.",
                     listOf("text"), "text" to "string", "date" to "string", "days_from_today" to "integer", "time" to "string",
-                    "minutes_from_now" to "integer", "level" to "string", "daily" to "boolean"),
+                    "minutes_from_now" to "integer", "level" to "string", "daily" to "boolean", "every_hours" to "integer",
+                    "weekdays" to "string", "monthly_day" to "integer"),
                 tool("follow_topic", "Keep the owner up to date on a topic (\"keep me posted on…\"): topic in a few search words; " +
                     "time HH:MM for a daily briefing (default 08:00), or every_hours (1-24) to tell as it happens. You will be asked to write " +
                     "each briefing from the new headlines.", listOf("topic"), "topic" to "string", "time" to "string", "every_hours" to "integer"),

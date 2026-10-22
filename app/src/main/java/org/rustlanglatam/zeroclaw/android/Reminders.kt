@@ -103,13 +103,64 @@ object Reminders {
 
     enum class Level { LOW, NORMAL, HIGH }
 
+    /** How a reminder repeats, besides [Reminder.daily]: every N hours, on some weekdays, or monthly on a day. */
+    sealed interface Repeat {
+        /** Every [hours] hours from the first time (1 to 24), regardless of the clock: for medicines. */
+        data class Hours(val hours: Int) : Repeat
+        /** On these days of the week, at the first time's hour and minute. */
+        data class Weekdays(val days: Set<java.time.DayOfWeek>) : Repeat
+        /** On this day of each month (1 to 31; the last day in a shorter month), at the first time's hour and minute. */
+        data class Monthly(val day: Int) : Repeat
+
+        /** Compact form kept in `reminders.json`: `h8`, `w1,3,5` (ISO days, Monday 1), `m5`. */
+        fun code(): String = when (this) {
+            is Hours -> "h$hours"
+            is Weekdays -> "w" + days.map { it.value }.sorted().joinToString(",")
+            is Monthly -> "m$day"
+        }
+
+        companion object {
+            fun of(code: String?): Repeat? = runCatching {
+                when (code?.firstOrNull()) {
+                    'h' -> Hours(code.drop(1).toInt().also { require(it in 1..24) })
+                    'w' -> Weekdays(code.drop(1).split(',').map { java.time.DayOfWeek.of(it.trim().toInt()) }.toSet().also { require(it.isNotEmpty()) })
+                    'm' -> Monthly(code.drop(1).toInt().also { require(it in 1..31) })
+                    else -> null
+                }
+            }.getOrNull()
+
+            /** Parses weekdays as a model or the owner writes them: "mon,wed,fri", "lunes y viernes", "1,3,5", "weekdays". */
+            fun weekdays(text: String): Set<java.time.DayOfWeek>? {
+                val t = Commands.normalize(text)
+                if (Regex(Lexicon["routines.weekdays"]).containsMatchIn(t)) return (1..5).map { java.time.DayOfWeek.of(it) }.toSet()
+                if (Regex(Lexicon["routines.weekends"]).containsMatchIn(t)) return setOf(java.time.DayOfWeek.SATURDAY, java.time.DayOfWeek.SUNDAY)
+                val days = mutableSetOf<java.time.DayOfWeek>()
+                Regex("[1-7]").findAll(t).forEach { days += java.time.DayOfWeek.of(it.value.toInt()) }
+                // routines.day.0 is Sunday … routines.day.6 Saturday, as in Routines.
+                (0..6).forEach { i ->
+                    if (Regex("\\b(" + Lexicon["routines.day.$i"] + ")\\b").containsMatchIn(t)) days += java.time.DayOfWeek.of(if (i == 0) 7 else i)
+                }
+                return days.takeIf { it.isNotEmpty() }
+            }
+        }
+    }
+
     data class Reminder(
         val id: Int, val text: String, val at: Long, val level: Level,
         /** Whether the reminder repeats daily at the same time. */
         val daily: Boolean = false,
         /** Number of unanswered calls made so far for a HIGH reminder. */
         val tries: Int = 0,
-    )
+        /** Any other repetition; `null` for a one-time (or [daily]) reminder. */
+        val repeat: Repeat? = null,
+        /** When the owner confirmed it (epoch millis), latest last, at most [DONE_KEPT]: "did I take the 2 o'clock one?". */
+        val doneAt: List<Long> = emptyList(),
+    ) {
+        val repeats get() = daily || repeat != null
+    }
+
+    /** Number of confirmations kept per reminder. */
+    const val DONE_KEPT = 20
 
     /** Interval between repeated calls of an unanswered HIGH reminder, up to [CALLS] calls. */
     const val AGAIN_MS = 5 * 60_000L
@@ -130,12 +181,41 @@ object Reminders {
         else -> null
     }
 
-    /** Returns the next occurrence of a daily reminder after [now], or `null` for a one-time reminder. */
-    fun next(r: Reminder, now: Long): Long? {
-        if (!r.daily) return null
-        var at = r.at
-        while (at <= now) at += 24 * 3600_000L
-        return at
+    /**
+     * Returns the next occurrence of a repeating reminder after [now], or `null` for a one-time reminder. Daily, weekday
+     * and monthly reminders keep their hour and minute in [zone] across daylight-saving changes; every-N-hours reminders
+     * keep a fixed interval. A monthly day past a short month's end falls on its last day.
+     */
+    fun next(r: Reminder, now: Long, zone: java.time.ZoneId = java.time.ZoneId.systemDefault()): Long? {
+        val first = java.time.Instant.ofEpochMilli(r.at).atZone(zone)
+        val time = first.toLocalTime()
+        val today = java.time.Instant.ofEpochMilli(maxOf(now, r.at)).atZone(zone).toLocalDate()
+        fun at(date: java.time.LocalDate) = date.atTime(time).atZone(zone).toInstant().toEpochMilli()
+        return when (val repeat = r.repeat ?: if (r.daily) Repeat.Weekdays(java.time.DayOfWeek.entries.toSet()) else null) {
+            null -> null
+            is Repeat.Hours -> {
+                val step = repeat.hours * 3600_000L
+                if (r.at > now) r.at else r.at + ((now - r.at) / step + 1) * step
+            }
+            is Repeat.Weekdays -> (0L..7L).map { today.plusDays(it) }.first { it.dayOfWeek in repeat.days && at(it) > now }.let(::at)
+            is Repeat.Monthly -> (0L..2L).map { java.time.YearMonth.from(today).plusMonths(it) }
+                .map { it.atDay(minOf(repeat.day, it.lengthOfMonth())) }.first { at(it) > now }.let(::at)
+        }
+    }
+
+    /**
+     * Returns the first time of [r]: its own time, moved for weekday and monthly repetitions to the first allowed day
+     * at that time (the same day when it is allowed).
+     */
+    fun first(r: Reminder, zone: java.time.ZoneId = java.time.ZoneId.systemDefault()): Long =
+        if (r.repeat is Repeat.Weekdays || r.repeat is Repeat.Monthly) next(r, r.at - 1, zone) ?: r.at else r.at
+
+    /** The repetition in plain words for the agent: "every day", "every 8 h", "on MONDAY, FRIDAY", "monthly on day 5". */
+    fun every(r: Reminder): String = when (val repeat = r.repeat) {
+        null -> if (r.daily) "every day" else ""
+        is Repeat.Hours -> "every ${repeat.hours} h"
+        is Repeat.Weekdays -> "on " + repeat.days.sorted().joinToString(", ") { it.name.lowercase() }
+        is Repeat.Monthly -> "monthly on day ${repeat.day}"
     }
 
     /** Returns when an unanswered HIGH reminder calls again, or `null` once [CALLS] is reached or for other levels. */
@@ -143,18 +223,25 @@ object Reminders {
 
     fun encode(list: List<Reminder>): String = JSONArray(list.map {
         JSONObject().put("id", it.id).put("text", it.text).put("at", it.at).put("level", it.level.name).put("daily", it.daily).put("tries", it.tries)
+            .put("every", it.repeat?.code()).put("done", JSONArray(it.doneAt))
     }).toString()
 
     fun decode(text: String): List<Reminder> = runCatching {
         val a = JSONArray(text)
         (0 until a.length()).map { i ->
             val o = a.getJSONObject(i)
-            Reminder(o.getInt("id"), o.getString("text"), o.getLong("at"), Level.valueOf(o.getString("level")), o.optBoolean("daily"), o.optInt("tries"))
+            Reminder(
+                o.getInt("id"), o.getString("text"), o.getLong("at"), Level.valueOf(o.getString("level")), o.optBoolean("daily"), o.optInt("tries"),
+                Repeat.of(o.optString("every").takeIf { o.has("every") }), o.optJSONArray("done")?.let { d -> (0 until d.length()).map { d.getLong(it) } }.orEmpty(),
+            )
         }
     }.getOrDefault(emptyList())
 
     /** Renders the reminders, sorted by time, for the owner's agent. */
     fun describe(list: List<Reminder>, format: (Long) -> String): String =
         if (list.isEmpty()) "No reminders."
-        else list.sortedBy { it.at }.joinToString("\n") { "#${it.id} ${format(it.at)}${if (it.daily) " every day" else ""} [${it.level.name.lowercase()}] ${it.text}" }
+        else list.sortedBy { it.at }.joinToString("\n") { r ->
+            "#${r.id} ${format(r.at)}" + every(r).let { if (it.isEmpty()) "" else " $it" } + " [${r.level.name.lowercase()}] ${r.text}" +
+                (if (r.doneAt.isEmpty()) "" else "; confirmed: " + r.doneAt.takeLast(5).joinToString(", ") { format(it) })
+        }
 }
