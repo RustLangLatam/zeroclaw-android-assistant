@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.media.AudioAttributes
 import android.media.Ringtone
 import android.media.RingtoneManager
@@ -220,12 +221,19 @@ class PhoneReminders(context: Context) {
     }
 }
 
-/** Reschedules reminders and news checks after a reboot, since alarms do not survive it. */
+/** After a reboot or an app update: reschedules reminders and news checks (alarms do not survive) and starts the assistant. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED && intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
         runCatching { PhoneReminders(context).rescheduleAll() }
         runCatching { PhoneNews(context).rescheduleAll() }
+        // Starts the assistant without waiting for the owner to open the app or for the notification listener to
+        // reconnect (it never does without notification access). Before setup there is no owner to serve. Both
+        // broadcasts are exempt from the background foreground-service start restrictions for `specialUse`.
+        runCatching {
+            Guard.load(context.filesDir)
+            if (Guard.setUp) context.startForegroundService(Intent(context, AssistantService::class.java))
+        }.onFailure { Log.w(AssistantService.TAG, "assistant not started after ${intent.action}: ${it.message}") }
     }
 }
 
