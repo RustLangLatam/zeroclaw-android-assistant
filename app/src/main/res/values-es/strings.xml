@@ -981,4 +981,10 @@
     <string name="labels_say_you_re_busy">Decir que no puedes atender (modo ocupado)</string>
     <string name="act_tell_x_you_re_busy">Decirle a %1$s que no puedes atender</string>
     <string name="act_busy_mode_for_x_min">Modo ocupado durante %1$d min</string>
+    <string name="setting_unanswered_hours">mensajes sin responder</string>
+    <string name="unanswered_channel">Sin responder</string>
+    <string name="unanswered_title">Te siguen esperando</string>
+    <string name="unanswered_one">%1$s sigue esperando tu respuesta (más de %2$d h).</string>
+    <string name="unanswered_many">%1$s siguen esperando tu respuesta (más de %2$d h).</string>
+    <string name="act_see_what_is_unanswered">Ver lo que sigue sin responder</string>
 </resources>

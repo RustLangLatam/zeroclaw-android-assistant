@@ -78,6 +78,7 @@ data class Act(val log: String, val title: String, val detail: String? = null, v
         fun messageFrom(from: String, text: String) = Act("message from $from: $text", t(R.string.act_message_from_x, from), text)
         fun busyReply(entry: Int, to: String, text: String) = Act("busy reply #$entry to $to: $text", t(R.string.act_tell_x_you_re_busy, to), text, ref = entry)
         fun busy(minutes: Long) = Act("busy mode for $minutes min", t(R.string.act_busy_mode_for_x_min, minutes))
+        fun unanswered() = Act("list unanswered", t(R.string.act_see_what_is_unanswered))
         fun availability(hour: Int, from: String) = Act("availability at $hour:00 for $from", t(R.string.act_tell_x_whether_you_re_free, from, hour))
     }
 }

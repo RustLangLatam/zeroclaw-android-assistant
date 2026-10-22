@@ -981,4 +981,10 @@
     <string name="labels_say_you_re_busy">Say you are busy (busy mode)</string>
     <string name="act_tell_x_you_re_busy">Tell %1$s you are busy</string>
     <string name="act_busy_mode_for_x_min">Busy mode for %1$d min</string>
+    <string name="setting_unanswered_hours">unanswered messages</string>
+    <string name="unanswered_channel">Still unanswered</string>
+    <string name="unanswered_title">Still waiting for you</string>
+    <string name="unanswered_one">%1$s is still waiting for your answer (over %2$d h).</string>
+    <string name="unanswered_many">%1$s are still waiting for your answer (over %2$d h).</string>
+    <string name="act_see_what_is_unanswered">See what is still unanswered</string>
 </resources>

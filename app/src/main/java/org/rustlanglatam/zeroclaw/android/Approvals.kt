@@ -183,6 +183,8 @@ object Saved {
         val voiceCeiling: Double = Guard.DEFAULT_VOICE_CEILING,
         /** Monthly US$ budget for the cloud model ([Guard.modelBudget], [Budget]); 0 means none. */
         val modelBudget: Double = 0.0,
+        /** Hours after which unanswered messages are pointed out ([Guard.unansweredHours]); 0 means off. */
+        val unansweredHours: Int = Guard.DEFAULT_UNANSWERED_HOURS,
     )
 
     /** File format version: 1 embedded the log; 2 moves it to `activity.jsonl` and adds the counters. */
@@ -214,6 +216,7 @@ object Saved {
         .put("voiceName", state.voiceName)
         .put("voiceCeiling", state.voiceCeiling)
         .put("modelBudget", state.modelBudget)
+        .put("unansweredHours", state.unansweredHours)
         .put("counters", JSONObject().apply { state.counters.forEach { (k, v) -> put(k, v) } })
         .put("version", VERSION)
         .toString()
@@ -257,6 +260,7 @@ object Saved {
             voiceName = json.optString("voiceName").takeIf { json.has("voiceName") && it.isNotEmpty() },
             voiceCeiling = json.optDouble("voiceCeiling", Guard.DEFAULT_VOICE_CEILING),
             modelBudget = json.optDouble("modelBudget", 0.0),
+            unansweredHours = json.optInt("unansweredHours", Guard.DEFAULT_UNANSWERED_HOURS),
             // Format version 1 stored the log here; it is read once and migrated to its own file.
             log = json.optJSONArray("log")?.map {
                 Journal.Entry(it.getString("at"), Principal.valueOf(it.getString("principal")), it.getString("action"),

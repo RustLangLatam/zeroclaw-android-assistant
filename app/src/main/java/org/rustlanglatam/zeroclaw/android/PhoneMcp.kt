@@ -224,6 +224,10 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                 "Your voice is now ${Voices.name(voice)} (${Voices.label(voice).second})."
             } ?: ("Voices you can use: " + (if (CloudVoice.configured) "the natural one (from the internet, the most human), " else "") +
                 Voices.available.joinToString { "${Voices.name(it)} (${Voices.label(it).second})" } + ".")
+            Preferences.Setting.UNANSWERED_HOURS -> (if (Device.onOff(value) == false) 0 else Regex("\\d+").find(value)?.value?.toIntOrNull()?.coerceIn(1, 48))?.let {
+                Guard.unansweredHours = it
+                if (it == 0) "You no longer point out unanswered messages." else "You point out family and work messages still unanswered after $it h, once a day per person."
+            }
             Preferences.Setting.MODEL_BUDGET -> Preferences.ceiling(value)?.let {
                 Guard.modelBudget = it
                 Budget.forget()
@@ -1050,6 +1054,15 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     }
                 }
             },
+            "unanswered" to { principal, _ ->
+                Guard.gated(principal, Capability.MESSAGES_READ, Policy.OWNER_TARGET, Act.unanswered()) {
+                    val now = System.currentTimeMillis()
+                    // On request, everything unsettled counts, whatever its age.
+                    val shown = MessageListener.shownConversations() ?: Inbox.digest.map { it.conversation }.toSet()
+                    Unanswered.describe(Unanswered.messages(Inbox.digest.toList(), Policy.groups, shown, now, 0),
+                        Unanswered.mails(Mailbox.mails.toList(), Mailbox.opened.toSet(), now, 0), reminders::format)
+                }
+            },
             "set_mode" to { principal, args ->
                 run {
                 val app = args.optString("mode").lowercase().trim() == "app"
@@ -1468,7 +1481,7 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     "learning (on/off), read_mail (on/off), floating_mark (on/off), floating_place (left/right, top/middle/bottom), undo_seconds (a number), group_chats (on/off), widget_add or " +
                     "widget_remove (weather, alarm, agenda, messages, mail, reminders, battery, news), language (Spanish, English, or " +
                     "the phone's: \"speak to me in English\"), name (the owner's name), her_voice (which of your voices you speak with: one by its name, or its region, or \"natural\" for the natural one " +
-                    "from the internet; without a value you get the list), voice_ceiling (US$ a month the natural voice may cost, then the phone's; \"none\" for none), model_budget (US$ a month the model may cost; past it only the basics until next month; \"none\" for no budget), messaging_apps (\"add WhatsApp\", \"remove Telegram\"), offline (on/off: answer even without internet; on downloads a small model of " +
+                    "from the internet; without a value you get the list), voice_ceiling (US$ a month the natural voice may cost, then the phone's; \"none\" for none), unanswered_hours (after how many hours to point out unanswered family and work messages; \"off\"), model_budget (US$ a month the model may cost; past it only the basics until next month; \"none\" for no budget), messaging_apps (\"add WhatsApp\", \"remove Telegram\"), offline (on/off: answer even without internet; on downloads a small model of " +
                     "${Offline.size(Offline.BYTES)}: before turning it on, tell the owner in plain words that it downloads once on Wi-Fi, that " +
                     "answers without internet are simpler and slower and use more battery, and turn it on only after they agree).", listOf("setting", "value"),
                     "setting" to "string", "value" to "string"),
@@ -1478,6 +1491,8 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     "answer now (the app writes it; nobody else is answered). minutes, or until HH:MM; reason busy or driving; " +
                     "end=true when the owner is free again. At most 12 hours.",
                     emptyList(), "minutes" to "integer", "until" to "string", "reason" to "string", "end" to "boolean"),
+                tool("unanswered", "What still waits for the owner's own answer (\"what do I still have to answer?\"): family and work " +
+                    "messages nobody answered whose chat the owner has not opened, and important emails not opened.", emptyList()),
                 tool("set_contact_group", "Put a contact in the owner's family or work group, or take them out (group: family, work or none), " +
                     "when the owner asks (\"add Ana to family\"). It decides whom you answer on your own, so the app asks the owner " +
                     "for their PIN itself: call it at once, without asking them to confirm in words first.",
@@ -1588,6 +1603,7 @@ object Guard {
                 Voices.chosen = state.voiceName
                 voiceCeiling = state.voiceCeiling
                 modelBudget = state.modelBudget
+                unansweredHours = state.unansweredHours
                 policy.restoreCounters(state.counters)
             }
         }
@@ -1633,6 +1649,10 @@ object Guard {
 
     /** Monthly budget in US$ for the cloud model ([Budget]); once reached, no cloud turn starts until next month. 0 means none. */
     @Volatile var modelBudget = 0.0
+
+    /** Hours after which an unanswered family or work message is pointed out ([Unanswered]); 0 turns it off. */
+    @Volatile var unansweredHours = DEFAULT_UNANSWERED_HOURS
+    const val DEFAULT_UNANSWERED_HOURS = 4
     const val DEFAULT_VOICE_CEILING = 5.0
 
     /**
@@ -1664,7 +1684,7 @@ object Guard {
         val state = Saved.State(
             policy.rules, policy.stopped, undoSeconds, emptyList(), Inbox.apps, Inbox.groups,
             Policy.owner.takeIf { setUp }, Policy.groups, voice, bubble, "${if (Floating.right) "right" else "left"}:${Floating.height}", Ink.palette.key, Policy.address, warmth.name, Mailbox.reading, openMic, Widgets.encode(widgets), appMode,
-            policy.counters(), Language.chosen, Offline.wanted, Voices.chosen, voiceCeiling, modelBudget,
+            policy.counters(), Language.chosen, Offline.wanted, Voices.chosen, voiceCeiling, modelBudget, unansweredHours,
         )
         runCatching { target.writeSealed(Saved.encode(state)) }
             .onFailure { Log.e(AssistantService.TAG, "policy not saved: ${it.message}") }
