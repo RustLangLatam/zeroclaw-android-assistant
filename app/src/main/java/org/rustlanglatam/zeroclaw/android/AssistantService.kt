@@ -540,13 +540,13 @@ class AssistantService : Service() {
 
         const val TAG = "ZeroClaw"
 
-        /** Version marker of the config this app writes; a config with another marker is replaced and paired again. */
         /** Interval between gateway health checks while the daemon runs. */
         private const val WATCH_MS = 60_000L
 
         /** Time a health check may take before it counts as missed. */
         private const val HEALTH_MS = 5_000L
 
+        /** Version marker of the config this app writes; a config with another marker is replaced and paired again. */
         private const val CONFIG_MARK = "# ksandra-config 20"
 
         /** Returns the model's cost rates from `local.properties`, or an empty string; without them ZeroClaw counts tokens but not cost. */
