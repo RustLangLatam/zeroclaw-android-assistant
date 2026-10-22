@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a capability or a change of behavior.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What the owner cannot do today, and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The behavior you propose. New abilities must state the capability and autonomy they need in the policy.
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Security and privacy
+      description: What data it reads or sends, whether it can act for the owner, and how the owner stays in control.

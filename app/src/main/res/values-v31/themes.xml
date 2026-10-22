@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From Android 12 the system draws the splash: the mark as the button it is, lighting up (splash_mark,
+         from scripts/splash.py); MainActivity then carries it to the button's place and lets it melt into it. -->
+    <style name="ZeroClaw" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:windowSplashScreenBackground">@color/splash</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
+        <item name="android:windowSplashScreenAnimationDuration">950</item>
+    </style>
+    <!-- The default palette's background. -->
+    <color name="splash">#0C0D0F</color>
+</resources>

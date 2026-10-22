@@ -1,0 +1,19 @@
+# Gradle / Android Studio
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Native binaries are fetched, not committed
+app/src/main/jniLibs/
+
+# Secrets
+*.jks
+*.keystore
+
+# Gradle download cache for the ZeroClaw release
+.zeroclaw/

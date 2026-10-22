@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The window behind the interface, in the brand's near-black, so the app opens without a flash. -->
+    <style name="ZeroClaw" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+    <color name="background">#0C0D0F</color>
+</resources>

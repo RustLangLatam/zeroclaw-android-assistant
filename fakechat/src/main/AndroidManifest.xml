@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application android:label="Fake chat">
+        <!-- Post a message: adb shell am broadcast -n org.rustlanglatam.zeroclaw.fakechat/.Post with string extras from, text and optionally number (the sender as tel:), chat (the conversation) and, for a group chat, group. -->
+        <receiver
+            android:name=".Post"
+            android:exported="true" />
+        <receiver
+            android:name=".Replied"
+            android:exported="false" />
+        <!-- Post an email: adb shell am broadcast -n org.rustlanglatam.zeroclaw.fakechat/.Mail with string extras from, subject, text. -->
+        <receiver
+            android:name=".Mail"
+            android:exported="true" />
+        <!-- An email, open: where a mail notification's tap leads. -->
+        <activity
+            android:name=".Inbox"
+            android:exported="false"
+            android:theme="@android:style/Theme.Material.Dialog" />
+        <!-- An email app for drafts: what the assistant writes is recorded in files/mail-out.txt, never sent. -->
+        <activity
+            android:name=".Compose"
+            android:exported="true"
+            android:theme="@android:style/Theme.Material.Dialog">
+            <intent-filter>
+                <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="mailto" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
