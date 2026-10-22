@@ -77,6 +77,7 @@ references its issue (`Closes #N`) and updates the specs it changes.
 | `app/.../Preferences.kt` | settings by voice (`set_preference`); contact groups by voice (`set_contact_group`, credential) |
 | `app/.../Device.kt`, `PhoneDevice.kt` | device controls: brightness, volume, flashlight, do-not-disturb, rotation; system panels |
 | `app/.../Busy.kt` | busy, meeting or driving mode: one fixed reply per family or work contact, do-not-disturb |
+| `app/.../Lists.kt` | lists by voice (shopping, to-do), kept in ZeroClaw's memory; the Home lists card |
 | `app/.../Scam.kt` | possible-scam warnings decided in code (link or phone, plus codes, or money with urgency) |
 | `app/.../Unanswered.kt` | family and work messages still unanswered and unopened, important emails not opened; a daily quiet notice |
 | `app/.../Budget.kt` | the owner's monthly model budget: no cloud turn past it, notices at 80 % and 100 % |

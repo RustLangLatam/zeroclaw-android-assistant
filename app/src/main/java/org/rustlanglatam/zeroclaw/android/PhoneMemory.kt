@@ -24,6 +24,8 @@ object PhoneMemory {
         Memory.onDrop = { item -> write(app, Pending.Op(Pending.FORGET, item.key)) }
         Notes.onPut = { note -> write(app, Pending.Op(Pending.STORE, note.key)) }
         Notes.onDrop = { note -> write(app, Pending.Op(Pending.FORGET, note.key)) }
+        Lists.onPut = { list -> write(app, Pending.Op(Pending.STORE, list.key)) }
+        Lists.onDrop = { list -> write(app, Pending.Op(Pending.FORGET, list.key)) }
     }
 
     /**
@@ -62,6 +64,7 @@ object PhoneMemory {
         when (op.kind) {
             Pending.STORE -> Memory.items.firstOrNull { it.key == op.key }?.let { client.memory.store(it.key, it.text, Memory.category(it), AGENT) }
                 ?: Notes.current().firstOrNull { it.key == op.key }?.let { client.memory.store(it.key, Notes.content(it), Notes.CATEGORY, AGENT) }
+                ?: Lists.all().firstOrNull { it.key == op.key }?.let { client.memory.store(it.key, Lists.content(it), Lists.CATEGORY, AGENT) }
             else -> client.memory.forget(op.key, AGENT)
         }
         true
@@ -85,9 +88,11 @@ object PhoneMemory {
                 val entries = client.memory.search(MemorySearch(agent = AGENT))
                 // Known limitation: a write still in flight can be missed by this read; the next sync picks it up.
                 // Home-screen notes share the same memory, distinguished by their category.
-                val (notes, memories) = entries.partition { it.category == Notes.CATEGORY }
+                val (notes, rest) = entries.partition { it.category == Notes.CATEGORY }
+                val (lists, memories) = rest.partition { it.category == Lists.CATEGORY }
                 Memory.replace(memories.map { Memory.fromStore(it.key, it.content, it.category, time(it.timestamp)) })
                 Notes.replace(notes.map { Notes.fromStore(it.key, it.content) })
+                Lists.replace(lists.map { Lists.fromStore(it.key, it.content) })
             }
         }.onFailure { Log.w(AssistantService.TAG, "memory sync: ${it.message}") }
     }

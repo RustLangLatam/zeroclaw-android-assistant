@@ -32,6 +32,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Greeting and rotating line | Greeting by name; one line with state, news, messages or a question | Implemented |
 | Widgets | Weather, alarm, calendar, messages, email, reminders, battery, news; two rows of four, arranged by drag or by voice | Implemented |
 | Notes on Home | `show_on_home`: a flight time, a deadline, a birthday; optional expiry | Implemented |
+| Lists by voice | "Add milk and bread to the shopping list", "I already bought the bread", "what do I need to buy?"; kept in ZeroClaw's memory, shown in a Home card; sending one goes through the usual approval | Implemented |
 
 ## Messages from people
 

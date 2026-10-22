@@ -234,6 +234,7 @@ private fun open(ui: MainActivity, widget: Widget) = when (widget) {
     Widget.NEWS -> Ui.place = Place.NEWS
     Widget.REMINDERS -> ui.send(t(R.string.homewidgets_what_reminders_do_i_have), byVoice = true, from = widget.label)
     Widget.KSANDRA -> Notes.current().firstOrNull()?.let { ui.send(t(R.string.homewidgets_tell_me_about_x, it.title), byVoice = true, from = widget.label) }.let { }
+    Widget.LISTS -> ui.send(t(R.string.homewidgets_what_is_on_my_list), byVoice = true, from = widget.label)
     Widget.WEATHER, Widget.BATTERY, Widget.GREETING, Widget.PANORAMA -> Unit
 }
 
@@ -290,6 +291,11 @@ private fun Card(ui: MainActivity, widget: Widget, modifier: Modifier = Modifier
             Widget.KSANDRA -> Notes.current().let { notes ->
                 if (notes.isEmpty()) Value("—", t(R.string.homewidgets_from_ksandra))
                 else notes[(Ui.tick / 6) % notes.size].let { Value(it.value, it.title.lowercase(), warm = true) }
+            }
+            // The fullest list: its item count large, the first items small.
+            Widget.LISTS -> Lists.all().maxByOrNull { it.items.size }.let { l ->
+                if (l == null || l.items.isEmpty()) Value("—", t(R.string.homewidgets_lists))
+                else Value("${l.items.size}", l.items.take(3).joinToString(", ").lowercase(), warm = true)
             }
             Widget.GREETING, Widget.PANORAMA -> Unit
         }

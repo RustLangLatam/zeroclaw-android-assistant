@@ -171,6 +171,15 @@ class PhoneMcp(private val context: Context, private val port: Int) {
         return JSONObject().put("content", JSONArray().put(JSONObject().put("type", "text").put("text", text)))
     }
 
+    /** Adds the lists widget to Home the first time a list is used, when there is room. */
+    private fun showList(list: Lists.OwnerList) {
+        if (Guard.widgets.none { it.widget == Widget.LISTS }) {
+            val added = Widgets.add(Guard.widgets, Widget.LISTS)
+            if (added != Guard.widgets) { Guard.widgets = added; Guard.save() }
+        }
+        Ui.refresh()
+    }
+
     /**
      * Returns whether setting [setting] to [value] widens access: reads more sources, opens the microphone, shortens
      * the undo window, or raises the voice spending ceiling. Such changes require the stronger [Capability.CHANNEL].
@@ -1063,6 +1072,35 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                         Unanswered.mails(Mailbox.mails.toList(), Mailbox.opened.toSet(), now, 0), reminders::format)
                 }
             },
+            "list_add" to { principal, args ->
+                val name = args.optString("list").trim().ifEmpty { t(R.string.lists_shopping) }
+                val items = Lists.items(args.optString("items"))
+                if (items.isEmpty()) "Which items? Say them, separated by commas."
+                else Guard.gated(principal, Capability.MEMORY, Policy.OWNER_TARGET, Act.list(name)) {
+                    val list = Lists.add(name, items)
+                    showList(list)
+                    Lists.describe(list) + " Confirm in a few words."
+                }
+            },
+            "list_remove" to { principal, args ->
+                val name = args.optString("list").trim().ifEmpty { t(R.string.lists_shopping) }
+                Guard.gated(principal, Capability.MEMORY, Policy.OWNER_TARGET, Act.list(name)) {
+                    Lists.remove(name, Lists.items(args.optString("items")))?.let { Lists.describe(it) } ?: "There is no list called \"$name\"."
+                }
+            },
+            "list_show" to { principal, args ->
+                val name = args.optString("list").trim()
+                Guard.gated(principal, Capability.MEMORY, Policy.OWNER_TARGET, Act.list(name.ifEmpty { "*" })) {
+                    if (name.isEmpty()) Lists.all().takeIf { it.isNotEmpty() }?.joinToString("\n") { Lists.describe(it) } ?: "No lists yet."
+                    else Lists.describe(Lists.named(name))
+                }
+            },
+            "list_clear" to { principal, args ->
+                val name = args.optString("list").trim().ifEmpty { t(R.string.lists_shopping) }
+                Guard.gated(principal, Capability.MEMORY, Policy.OWNER_TARGET, Act.list(name)) {
+                    if (Lists.clear(name)) "The $name list is deleted." else "There is no list called \"$name\"."
+                }
+            },
             "set_mode" to { principal, args ->
                 run {
                 val app = args.optString("mode").lowercase().trim() == "app"
@@ -1486,6 +1524,13 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     "answers without internet are simpler and slower and use more battery, and turn it on only after they agree).", listOf("setting", "value"),
                     "setting" to "string", "value" to "string"),
                 tool("my_settings", "Your settings now, and who is family and who is work.", emptyList()),
+                tool("list_add", "Add items to one of the owner's lists (\"add milk and bread to the shopping list\"): list (its name; " +
+                    "the shopping list if none), items (comma-separated). Lists are kept in your memory and shown on Home.",
+                    listOf("items"), "list" to "string", "items" to "string"),
+                tool("list_remove", "Take items off a list (\"I already bought the bread\"): list, items.", listOf("items"), "list" to "string", "items" to "string"),
+                tool("list_show", "Read a list (\"what do I need to buy?\"), or all lists without a name. To send a list to someone, " +
+                    "read it and then use send_message.", emptyList(), "list" to "string"),
+                tool("list_clear", "Delete a whole list when the owner asks.", emptyList(), "list" to "string"),
                 tool("set_busy", "Busy, meeting or driving mode when the owner says so (\"I'm in a meeting until 11\", \"I'm driving\"): " +
                     "until then do-not-disturb is on and family and work who write get one fixed reply each saying the owner cannot " +
                     "answer now (the app writes it; nobody else is answered). minutes, or until HH:MM; reason busy or driving; " +
@@ -1620,6 +1665,7 @@ object Guard {
         Mailbox.load(File(dir, "mail.json"))
         Memory.load(File(dir, "memory.json"))
         Notes.load(File(dir, "notes.json"))
+        Lists.load(File(dir, "lists.json"))
         Empathy.Style.load(File(dir, "style.json"))
     }
 

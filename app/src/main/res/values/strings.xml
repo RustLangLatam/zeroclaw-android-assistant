@@ -996,4 +996,10 @@
     <string name="scam_phone">a phone number</string>
     <string name="scam_money">money</string>
     <string name="scam_credentials">your codes or details</string>
+    <string name="lists_shopping">shopping</string>
+    <string name="act_change_the_x_list">Change the %1$s list</string>
+    <string name="widget_lists_label">Lists</string>
+    <string name="widget_lists_detail">your fullest list: how many items and the first ones</string>
+    <string name="homewidgets_lists">lists</string>
+    <string name="homewidgets_what_is_on_my_list">What is on my list?</string>
 </resources>
