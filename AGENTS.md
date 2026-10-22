@@ -76,6 +76,7 @@ references its issue (`Closes #N`) and updates the specs it changes.
 | `app/.../Bond.kt` | the mark's ring segments (profile coverage) and glow (load) |
 | `app/.../Preferences.kt` | settings by voice (`set_preference`); contact groups by voice (`set_contact_group`, credential) |
 | `app/.../Device.kt`, `PhoneDevice.kt` | device controls: brightness, volume, flashlight, do-not-disturb, rotation; system panels |
+| `app/.../Budget.kt` | the owner's monthly model budget: no cloud turn past it, notices at 80 % and 100 % |
 | `app/.../Usage.kt` | model cost from ZeroClaw's `/api/cost`, by voice (`usage`) and in Settings |
 | `app/.../Offline.kt` | offline answers: opt-in, model download, `llama-server` engine, basics handled in code ([ADR-0025](docs/adr/0025-an-offline-agent-on-a-local-model.md)) |
 | `app/.../Voice.kt` | platform text-to-speech voices and the owner's choice |

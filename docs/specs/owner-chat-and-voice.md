@@ -254,6 +254,8 @@ turn), `apps`, `groups`, `stop`, `clean` (counters), `clearActivity`, `fresh` (n
 - TTS initialization fails: nothing is spoken by the phone's voice; text still shows.
 - Natural voice fails before any audio: the phone's voice says the line; mid-line: the line ends.
 - `ERROR` frame: a NOTE line; thinking cleared.
+- Monthly model budget reached (`Budget.reached`): no cloud turn; the basics handled in code answer
+  (`Offline.direct`), anything else gets a line saying the budget is reached and can be raised in Settings.
 - Cloud turn silent (no frame, approval waits excluded): after 25 s (`SLOW_MS`) a NOTE says it is still working;
   after 90 s (`SILENT_MS`) a NOTE asks the owner to try again, thinking is cleared, `onError` runs and the socket is
   closed so the next turn reconnects. Checked once a second by the `owner-chat-watch` thread.

@@ -274,6 +274,11 @@ object Turns {
      * what happens, not the message.
      */
     fun thirdParty(context: Context, sender: String, text: String, done: (String?) -> Unit = {}) = thread {
+        // Past the owner's monthly budget no cloud turn starts; the message stays unanswered in Activity.
+        if (Budget.reached()) {
+            Guard.journal.add(Principal.THIRD_PARTY, "reply to $sender", "not started", "the owner's monthly budget is reached")
+            return@thread done(null)
+        }
         one.acquire()
         Guard.thirdPartySender = sender
         // Each turn has its own completion flag, and the semaphore is released before [done] runs: a reply waiting
@@ -304,6 +309,8 @@ object Turns {
      * Uses its own session; [done] receives the answer, or `null` on failure or timeout.
      */
     fun scribe(context: Context, prompt: String, done: (String?) -> Unit) {
+        // Past the owner's monthly budget the caller uses its own plain text.
+        if (Budget.reached()) return done(null)
         val finished = java.util.concurrent.atomic.AtomicBoolean()
         fun finish(answer: String?) { if (finished.compareAndSet(false, true)) done(answer) }
         val turn = open(context, AssistantService.SCRIBE, onFailure = { finish(null) }) { chat, frame ->

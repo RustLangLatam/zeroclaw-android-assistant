@@ -42,7 +42,7 @@ and the phone's own controls (`device_setting`, [phone-abilities.md](phone-abili
 | `usage` | — | SETTINGS, ACT | ZeroClaw's `/api/cost` this month, today and per agent (`Usage.describe`), plus the natural voice's minutes and ceiling |
 
 `widens` (CHANNEL instead of SETTINGS): `group_chats`, `read_mail` or `open_mic` turned on; a
-messaging app added; `undo_seconds` lowered; `voice_ceiling` raised or removed while a ceiling is set.
+messaging app added; `undo_seconds` lowered; `voice_ceiling` or `model_budget` raised or removed while one is set.
 
 **`open_section`** (`Sections.open`, run on the main thread, then `MainActivity.bringToFront`):
 
@@ -123,6 +123,7 @@ learning (`files/memory.json`).
 | `name` | the owner's name (1–40 characters) | from the setup | `owner` | Settings › You › Name (`NameSheet` → `saveSetup`) |
 | `her_voice` | a phone voice by name or region, or `natural` (when configured); without a value, the list | the best offered voice | `voiceName` (`cloud` for the natural voice) | Settings › Voice: Natural voice on top when `voice.*` is configured (with its price per minute), then the phone's voices offered by `Voices.offer` (same quality or better than the best free offline one, of the assistant's language), each with a stable name, how it sounds, whether it is on the phone, needs internet or downloads; touching one plays a sample (`chooseVoice`) |
 | `voice_ceiling` | US$ a month for the natural voice; `none` = 0 (no ceiling) | US$ 5 | `voiceCeiling` | Settings › What I cost › My natural voice: this month's minutes (and dollars with `voice.perMinute`), chips US$ 2 / 5 / 10 / no cap; at the ceiling the phone's voice speaks until the next month |
+| `model_budget` | US$ a month for the model; `none` = 0 (no budget). Past it only the basics until next month; notices at 80 % and 100 % ([access-model.md](access-model.md#enforcement-layers)). Without a model price it is saved but cannot apply | none | `modelBudget` | Settings › What I cost › Monthly budget for the model: US$ 5, 10, 20 or no cap |
 | `messaging_apps` | "add WhatsApp", "remove Telegram" | none until the setup | `apps` | Settings › Messages › Apps I read |
 | `warmth` | quiet / natural / close | `NATURAL` | `warmth` | Settings › Presence › How I talk to you |
 | `voice` | on / off (`Device.onOff`) | off | `voice` | Settings › Presence › Speak aloud; setup's last step |

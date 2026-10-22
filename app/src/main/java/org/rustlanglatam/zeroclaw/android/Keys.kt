@@ -14,6 +14,9 @@ object Keys {
         MODEL_PROVIDER({ BuildConfig.MODEL_PROVIDER }),
         MODEL({ BuildConfig.MODEL }),
         MODEL_KEY({ BuildConfig.MODEL_API_KEY }, secret = true),
+        /** The model's price, US$ per million input and output tokens; the build's applies only to the build's model. */
+        MODEL_INPUT_PER_MTOK({ BuildConfig.MODEL_INPUT_PER_MTOK.takeIf { Keys[MODEL] == BuildConfig.MODEL }.orEmpty() }),
+        MODEL_OUTPUT_PER_MTOK({ BuildConfig.MODEL_OUTPUT_PER_MTOK.takeIf { Keys[MODEL] == BuildConfig.MODEL }.orEmpty() }),
         SEARCH_PROVIDER({ BuildConfig.SEARCH_PROVIDER }),
         SEARCH_KEY({ BuildConfig.SEARCH_KEY }, secret = true),
         YOUTUBE_KEY({ BuildConfig.YOUTUBE_KEY }, secret = true),
@@ -52,7 +55,7 @@ object Keys {
         return when (key) {
             Key.MODEL_PROVIDER, Key.SEARCH_PROVIDER -> v.matches(Regex("[A-Za-z0-9_-]+"))
             Key.VOICE_URL -> v.startsWith("wss://")
-            Key.VOICE_PER_MINUTE -> v.toDoubleOrNull()?.let { it >= 0 } == true
+            Key.VOICE_PER_MINUTE, Key.MODEL_INPUT_PER_MTOK, Key.MODEL_OUTPUT_PER_MTOK -> v.toDoubleOrNull()?.let { it >= 0 } == true
             else -> true
         }
     }
