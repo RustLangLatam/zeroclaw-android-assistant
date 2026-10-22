@@ -184,6 +184,9 @@ through debug extras `--es owner Milton --es apps <fakechat> --ez groups false -
 ## Failure modes
 
 - No notification access: nothing is read; the setup's introduction lists it as missing (`MainActivity.missing`).
+- Notification access turned off later (by the owner, a vendor update or a battery manager): `onListenerDisconnected`
+  calls `Health.check`, which posts "I can't read your messages" within seconds; the notice opens the app, whose Home
+  shows how to restore it. While access is still granted, the listener asks to be rebound (`requestRebind`).
 - Notification removed by the user or the source app before the reply goes: no reply action →
   `could_not_answer`, and the owner is told.
 - Gateway down or not paired: the turn waits for a token up to 180 s, then `no_answer`; after a

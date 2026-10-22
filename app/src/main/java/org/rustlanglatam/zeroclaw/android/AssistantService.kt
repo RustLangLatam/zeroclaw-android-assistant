@@ -80,6 +80,13 @@ class AssistantService : Service() {
             reload = { daemon?.destroy() }
             // Watches connected email accounts directly, not only through the email app's notifications.
             PhoneEmail.watch(this)
+            // Notices when Android takes away something the assistant needs while the app is closed.
+            thread(name = "health", isDaemon = true) {
+                while (!stopping) {
+                    runCatching { Health.check(this) }.onFailure { Log.w(TAG, "health check: ${it.message}") }
+                    Thread.sleep(Health.EVERY_MS)
+                }
+            }
             Guard.onStopped = { stopped ->
                 if (stopped) { gatewayOurs = false; daemon?.destroy() }
                 getSystemService(NotificationManager::class.java).notify(1, notification())
@@ -126,6 +133,7 @@ class AssistantService : Service() {
             val since = SystemClock.elapsedRealtime()
             if (up) {
                 failures = 0
+                down(false)
                 if (first) { first = false; firstUp() }
                 daemon?.let { process -> thread(name = "zeroclaw-watch", isDaemon = true) { watch(process) } }
                 val code = daemon?.waitFor()
@@ -137,7 +145,7 @@ class AssistantService : Service() {
                 if (SystemClock.elapsedRealtime() - since > 5 * 60_000) pause = 2_000L
             } else {
                 daemon?.destroy()
-                if (++failures == 3) tell(t(R.string.assistantservice_zeroclaw_can_t_start_i_keep))
+                if (++failures == 3) { tell(t(R.string.assistantservice_zeroclaw_can_t_start_i_keep)); down(true) }
             }
             Thread.sleep(pause)
             pause = (pause * 2).coerceAtMost(60_000L)
@@ -520,14 +528,35 @@ class AssistantService : Service() {
 
     private fun channel(id: String, name: String, importance: Int) = Chime.channel(this, id, name, importance)
 
-    /** Builds the ongoing foreground notification, reflecting whether the assistant is paused. */
+    /** Whether the daemon has failed to start three times in a row; shown in the ongoing notification until it is up. */
+    @Volatile private var isDown = false
+
+    private fun down(value: Boolean) {
+        if (isDown == value) return
+        isDown = value
+        getSystemService(NotificationManager::class.java).notify(1, notification())
+    }
+
+    /** Builds the ongoing foreground notification, reflecting whether the assistant is paused or cannot start. */
     private fun notification(): Notification {
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(NotificationChannel("assistant", t(R.string.assistantservice_ksandra_in_the_background), NotificationManager.IMPORTANCE_LOW))
         val stopped = Guard.policy.stopped
         return Notification.Builder(this, "assistant")
-            .setContentTitle(if (stopped) t(R.string.assistantservice_x_is_paused, Policy.ASSISTANT) else t(R.string.assistantservice_x_is_attentive, Policy.ASSISTANT))
-            .setContentText(if (stopped) t(R.string.assistantservice_i_answer_nothing_and_do_nothing) else null)
+            .setContentTitle(
+                when {
+                    stopped -> t(R.string.assistantservice_x_is_paused, Policy.ASSISTANT)
+                    isDown -> t(R.string.assistantservice_x_cannot_start, Policy.ASSISTANT)
+                    else -> t(R.string.assistantservice_x_is_attentive, Policy.ASSISTANT)
+                },
+            )
+            .setContentText(
+                when {
+                    stopped -> t(R.string.assistantservice_i_answer_nothing_and_do_nothing)
+                    isDown -> t(R.string.assistantservice_still_trying_to_start)
+                    else -> null
+                },
+            )
             .setSmallIcon(R.drawable.ic_mark)
             .setContentIntent(PendingIntent.getActivity(this, 1, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE))
             .setOngoing(true)

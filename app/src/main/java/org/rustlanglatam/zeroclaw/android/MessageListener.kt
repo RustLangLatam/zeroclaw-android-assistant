@@ -40,6 +40,17 @@ class MessageListener : NotificationListenerService() {
         AssistantService.keepAlive()
     }
 
+    /**
+     * Android unbinds the listener when notification access is turned off, and occasionally for no visible reason:
+     * rebinds while access is still granted; otherwise [Health] tells the owner.
+     */
+    override fun onListenerDisconnected() {
+        val granted = getSystemService(android.app.NotificationManager::class.java)
+            .isNotificationListenerAccessGranted(android.content.ComponentName(this, MessageListener::class.java))
+        if (granted) requestRebind(android.content.ComponentName(this, MessageListener::class.java))
+        runCatching { Health.check(this) }.onFailure { Log.w(AssistantService.TAG, "health check: ${it.message}") }
+    }
+
     override fun onListenerConnected() {
         Guard.load(filesDir)
         // Lets a message that got no answer (e.g. no connection) be answered again while its conversation is still known.

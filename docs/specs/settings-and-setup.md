@@ -206,6 +206,10 @@ can lift it for automated captures (`allowCapture` extra).
   parse is dropped, not the file.
 - Approval timeout: the contact-group or rule change is refused.
 - `open_section` waits up to 2 s for the main thread; an unknown key answers `NOT opened`.
+- A permission lost after setup (notification access when messaging apps are selected, the battery exemption,
+  full-screen intents): `Health.check` runs every minute in the service and on listener disconnect, and posts one
+  notice naming what is missing; tapping it opens the app, whose Home shows the fix (`MainActivity.lacking`). The
+  notice is withdrawn once nothing is missing.
 
 ## Security
 

@@ -55,10 +55,11 @@ Notifications posted here (titles and channel names from string resources, [ADR-
 
 | Id | Channel | When |
 |---|---|---|
-| 1 | `assistant`, `IMPORTANCE_LOW`, ongoing; title "<assistant> is attentive" or "<assistant> is paused" (with a line saying nothing is done until resumed) | foreground; re-posted when the kill switch changes |
+| 1 | `assistant`, `IMPORTANCE_LOW`, ongoing; title "<assistant> is attentive", "<assistant> can't start" (three failed starts in a row, until up) or "<assistant> is paused" (with a line saying nothing is done until resumed) | foreground; re-posted when the kill switch changes |
 | `1000 + pending.id` | `Chime.channel("approvals", …, HIGH)` | `Guard.approvals.onRequest` when no `MainActivity.prompt` is set; actions *Approve* / *Decline*; a strong *Approve* opens `MainActivity` with a sealed `approve` extra |
 | `3000 + item.id` | `Chime.channel("outbox", …, HIGH)`, timeout `undoSeconds` | `Guard.onQueued`, only if neither `Floating.appVisible` nor `Floating.showing`; action *Undo* |
 | 4000 | — | cancelled by `digest()` (left by older versions) |
+| 400 000 | `Chime.channel("health", …, DEFAULT)` | `Health.check`: something the assistant needs was lost since the previous check; cancelled when nothing is missing |
 
 `Chime.channel(id)` deletes channel `id` and creates `"$id-k"` with the app's chime as its sound.
 
@@ -246,6 +247,7 @@ thread and `OutOfMemoryError` keep Android's handler.
 | MCP port busy | `PhoneMcp` gives up; ZeroClaw is not started; the owner is told |
 | Gateway not ZeroClaw's or not healthy in ~60 s | logged; the process destroyed; tried again with the growing pause; told at the third failure |
 | Daemon dies later | `supervise` sees the exit, stops returning the token, starts it again |
+| Daemon fails to start three times in a row | the owner is told once; the ongoing notification says "<assistant> can't start" until the gateway is up again |
 | Daemon alive but its gateway hung | the `zeroclaw-watch` thread checks `/health` every 60 s (`WATCH_MS`, 5 s timeout `HEALTH_MS`); two misses in a row: logged, recorded in Activity ("assistant engine → restarted"), the process killed with SIGKILL (`stopStale`), and `supervise` starts it again. Not checked while paused |
 | No pairing code / pairing throws | caught in `supervise`; tried again |
 | 401 on chat | `pairingTaken` (owner told once), then `pair(refused = token)` once per refused token |

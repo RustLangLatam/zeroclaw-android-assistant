@@ -69,6 +69,7 @@ references its issue (`Closes #N`) and updates the specs it changes.
 | `app/.../Agenda.kt` | clashes and free time before any commitment |
 | `app/.../Photos.kt`, `PhoneGallery.kt` | photo search: dates from MediaStore, on-device labels and faces |
 | `app/.../Files.kt`, `PhoneFiles.kt` | file search: Downloads, Documents, WhatsApp, Telegram, plus emails and messages |
+| `app/.../Health.kt` | permissions the assistant needs in the background, checked every minute; a notice when one is lost |
 | `app/.../Absence.kt`, `CatchUp.kt` | away and back: the cause (phone off, app closed, offline) and a prioritized summary |
 | `app/.../Bond.kt` | the mark's ring segments (profile coverage) and glow (load) |
 | `app/.../Preferences.kt` | settings by voice (`set_preference`); contact groups by voice (`set_contact_group`, credential) |
