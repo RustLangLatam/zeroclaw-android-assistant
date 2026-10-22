@@ -167,8 +167,9 @@ name, no apps, no groups, voice off). `App` shows `Setup` while `Ui.draft != nul
 | 1 | `SetupNeeds` | each need with a button (the table under Configuration): runtime permissions; fingerprint (optional); battery unrestricted; on Xiaomi devices autostart and the lock-screen permission; full-screen intent; optional: all files, usage access, overlay, notification access. *Continue* is always enabled |
 | 2 | `SetupPeople` | apps read (`messagingApps`: installed `Inbox.DEFAULT_APPS` plus picked, plus `fakechat` in debug builds) and group chats; family and work from contacts with a phone number (`DraftPicker`); anyone else (never answered); Speak aloud; Start (first time) or Save |
 
-`saveSetup(d, what)`: blank name → toast; on a secured phone `confirmOwner(what)` first (cancel →
-nothing saved), on an unsecured phone it saves directly. It sets `Policy.owner`, `Inbox.apps`,
+`saveSetup(d, what)`: blank name → toast; the first setup, or a change that does not widen
+(`Policy.widens`: new apps, group chats, a person given a group), saves directly; a widening change needs
+`confirmOwner(what)` first (cancel → nothing saved; without a screen lock it is refused). It sets `Policy.owner`, `Inbox.apps`,
 `Inbox.groups`, `Policy.groups = groupsOf(family, work)`, `Guard.voice`, `Guard.setUp = true`,
 saves, rewrites the persona files, clears the draft; the first time it calls `introduce()`
 ([owner-chat-and-voice.md](owner-chat-and-voice.md)). After setup, `onCreate` requests missing
@@ -193,7 +194,7 @@ can lift it for automated captures (`allowCapture` extra).
 
 - These tools exist only on `/mcp/owner`; every call goes through `Guard.gated` and is logged.
 - CONTACT_GROUPS, CHANNEL and RULES are COMMITS_OWNER: never changed by the agent without the owner's credential.
-- Saving the setup, a name change or a people change on a secured phone needs `confirmOwner`.
+- A setup change that widens what is read or answered needs `confirmOwner`; without a screen lock it is refused.
 - An unknown setting or unreadable value changes nothing and saves nothing.
 - The undo window is never below 10 s, also when loaded from disk.
 - Nobody is family or work and no app is read until the setup is saved.
@@ -222,7 +223,5 @@ can lift it for automated captures (`allowCapture` extra).
 ## Open issues
 
 - Adding and removing rules in the app is not built; only autonomy changes.
-- On a phone without a screen lock the credential steps pass without confirmation
-  ([policy-engine.md](policy-engine.md)).
 - The model key ships inside the APK (`BuildConfig.MODEL_API_KEY`) and in `config.toml`; a settings
   screen that stores it in the Keystore is not built (noted in `app/build.gradle.kts`).

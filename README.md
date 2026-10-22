@@ -348,8 +348,8 @@ Details in [docs/architecture/security.md](docs/architecture/security.md) and
   daily limit ([ADR-0003](docs/adr/0003-permissions-enforced-in-code.md)).
 - **Separate endpoints per principal.** The owner's agent and the third-party agent use separate MCP endpoints
   (`/mcp/owner`, `/mcp/third_party`) with bearer keys, served on `127.0.0.1` only.
-- **Device credential.** Strong approvals, rule changes, contact groups and resuming require biometrics or the screen
-  lock. Without a screen lock, strong approvals are refused.
+- **Device credential.** Strong approvals, widening a rule, contact groups and resuming require biometrics or the
+  screen lock. Without a screen lock all of these are refused; narrowing never needs it.
 - **Undo window and kill switch.** Outward actions wait 10 to 120 s (default 30); "pause" stops everything
   ([ADR-0006](docs/adr/0006-kill-switch-in-the-app.md)).
 - **Injection awareness.** After a turn reads other people's text (a message, an email, a web page, file names), the

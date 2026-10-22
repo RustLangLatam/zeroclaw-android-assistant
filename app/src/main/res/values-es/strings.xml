@@ -942,4 +942,5 @@
         <item quantity="one">%1$d mensaje espera tu decisión</item>
         <item quantity="other">%1$d mensajes esperan tu decisión</item>
     </plurals>
+    <string name="mainactivity_set_a_screen_lock_first">Primero pon un bloqueo de pantalla: sin él no puedo confirmar que eres tú, así que no amplío lo que puedo hacer.</string>
 </resources>
