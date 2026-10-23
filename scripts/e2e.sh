@@ -170,9 +170,10 @@ check "the scam is pointed out with its reasons" 'log | grep -q "possible scam"'
 check "no reply to the scam" '[ "$(replies | grep -c ^Pat)" = "$pb" ]'
 
 echo "a bill by email: offered as a reminder, nothing created on its own"
-adb shell am broadcast -n $FAKE/.Mail --es from "'Aguas de Valencia'" --es subject "'Recibo de agua'" --es text "'Importe: 32,15 euros. Vence el 02/11/2030.'" >/dev/null
+# A new subject each run: an email already seen is not read again.
+adb shell am broadcast -n $FAKE/.Mail --es from "'Aguas de Valencia'" --es subject "'Recibo de agua $(date +%s)'" --es text "'Importe: 32,15 euros. Vence el 02/11/2030.'" >/dev/null
 sleep 6
-check "the bill is offered with its amount and due date" 'adb shell dumpsys notification --noredact | grep -A20 "id=402" | grep -q "32,15"'
+check "the bill is offered with its amount and due date" 'adb shell dumpsys notification --noredact | awk "/id=402/{f=1} f&&/android.text=/{print; f=0}" | grep -q "32,15"'
 check "no reminder created on its own" '! log | grep -q "^remind .*32,15"'
 
 echo "kill switch: nothing goes out"
