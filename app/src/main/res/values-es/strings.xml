@@ -1001,4 +1001,6 @@
     <string name="widget_lists_detail">tu lista más larga: cuántas cosas y las primeras</string>
     <string name="homewidgets_lists">listas</string>
     <string name="homewidgets_what_is_on_my_list">¿Qué tengo en la lista?</string>
+    <string name="labels_open_the_dialer">Abrir el marcador para llamar a alguien</string>
+    <string name="act_open_the_dialer_for_x">Abrir el marcador para llamar a %1$s</string>
 </resources>

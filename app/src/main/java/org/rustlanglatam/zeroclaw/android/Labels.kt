@@ -10,6 +10,7 @@ object Labels {
         Capability.MESSAGE_TAKE -> t(R.string.labels_take_messages)
         Capability.AVAILABILITY_SHARE -> t(R.string.labels_say_whether_you_re_free)
         Capability.BUSY_REPLY -> t(R.string.labels_say_you_re_busy)
+        Capability.DIAL -> t(R.string.labels_open_the_dialer)
         Capability.MESSAGE_SEND -> t(R.string.labels_send_messages)
         Capability.NOTIFICATION_REPLY -> t(R.string.labels_answer_messages)
         Capability.CALENDAR_ACCEPT -> t(R.string.labels_accept_invitations)

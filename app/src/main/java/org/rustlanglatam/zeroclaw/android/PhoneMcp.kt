@@ -365,6 +365,21 @@ class PhoneMcp(private val context: Context, private val port: Int) {
         else "Could not change $name."
     }.getOrElse { "Could not change the contact: ${it.message}" }
 
+    /**
+     * Returns the number of the contact named [name]: an exact name first, else the only contact whose name contains it
+     * (two or more matches are ambiguous: `null`).
+     */
+    private fun numberOf(name: String): String? {
+        phoneOf(name)?.let { return it }
+        if (!granted(Manifest.permission.READ_CONTACTS) || name.isBlank()) return null
+        val phone = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+        val found = context.contentResolver.query(phone, arrayOf(ContactsContract.CommonDataKinds.Phone.CONTACT_ID, ContactsContract.CommonDataKinds.Phone.NUMBER),
+            "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?", arrayOf("%$name%"), null)?.use { c ->
+            buildList { while (c.moveToNext()) add(c.getLong(0) to c.getString(1)) }
+        }.orEmpty()
+        return found.map { it.first }.distinct().singleOrNull()?.let { id -> found.first { it.first == id }.second }
+    }
+
     /** Returns the first phone number of the contact named exactly [name], or `null`. */
     private fun phoneOf(name: String): String? {
         if (!granted(Manifest.permission.READ_CONTACTS)) return null
@@ -1079,6 +1094,19 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                         Unanswered.mails(Mailbox.mails.toList(), Mailbox.opened.toSet(), now, 0), reminders::format)
                 }
             },
+            "dial" to { principal, args ->
+                val name = args.optString("contact").trim()
+                val number = numberOf(name)
+                when {
+                    name.isEmpty() -> "Who? The contact's name."
+                    number == null -> "No single contact called \"$name\" with a phone number; ask which one, or use find_contact."
+                    else -> Guard.gated(principal, Capability.DIAL, Policy.OWNER_TARGET, Act.dial(name)) {
+                        // ACTION_DIAL only fills in the number: the owner presses call. The app never places a call (no CALL_PHONE).
+                        runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:" + android.net.Uri.encode(number))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                            .fold({ "The dialer is open with $name's number; the owner presses call." + unconfirmed() }, { "Could not open the dialer: ${it.message}" })
+                    }
+                }
+            },
             "list_add" to { principal, args ->
                 val name = args.optString("list").trim().ifEmpty { t(R.string.lists_shopping) }
                 val items = Lists.items(args.optString("items"))
@@ -1534,6 +1562,8 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     "answers without internet are simpler and slower and use more battery, and turn it on only after they agree).", listOf("setting", "value"),
                     "setting" to "string", "value" to "string"),
                 tool("my_settings", "Your settings now, and who is family and who is work.", emptyList()),
+                tool("dial", "Call someone (\"call Ana\", \"llama a mi hermana\"): opens the phone's dialer with the contact's number, " +
+                    "and the owner presses call; you never place the call. contact: the contact's name as saved.", listOf("contact"), "contact" to "string"),
                 tool("list_add", "Add items to one of the owner's lists (\"add milk and bread to the shopping list\"): list (its name; " +
                     "the shopping list if none), items (comma-separated). Lists are kept in your memory and shown on Home.",
                     listOf("items"), "list" to "string", "items" to "string"),
