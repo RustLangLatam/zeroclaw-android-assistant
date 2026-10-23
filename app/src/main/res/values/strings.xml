@@ -1018,4 +1018,12 @@
     <string name="share_nothing_title">Nothing to read</string>
     <string name="share_nothing">I couldn\'t find any text in what you shared.</string>
     <string name="share_ask_prompt">I shared a document with you; this is its text, read on the phone. Tell me in a few words what it is and what I should do; propose a reminder or a calendar entry only for me to confirm.</string>
+    <string name="birthdays_channel">Birthdays</string>
+    <string name="birthdays_title">Birthday tomorrow</string>
+    <string name="birthdays_tomorrow">Tomorrow is %1$s\'s birthday.</string>
+    <string name="birthdays_write_something">Write them something</string>
+    <string name="birthdays_remind_me_tomorrow">Remind me tomorrow</string>
+    <string name="birthdays_reminder_text">Congratulate %1$s</string>
+    <string name="birthdays_ask">Tomorrow is %1$s\'s birthday. Propose a short message to congratulate them, in my style, and show it to me in a card; do not send it until I say so.</string>
+    <string name="act_see_upcoming_birthdays">See upcoming birthdays</string>
 </resources>

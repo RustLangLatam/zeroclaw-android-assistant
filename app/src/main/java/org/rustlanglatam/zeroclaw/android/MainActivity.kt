@@ -278,6 +278,10 @@ class MainActivity : ComponentActivity() {
         approveIntent(intent)
         listenIntent(intent)
         sharedIntent(intent)
+        intent.getStringExtra("birthday")?.let { name ->
+            intent.removeExtra("birthday")
+            Birthdays.offer(name) { prompt -> runOnUiThread { send(prompt, byVoice = false) } }
+        }
         mailIntent(intent)
         placeIntent(intent)
     }
@@ -450,6 +454,8 @@ class MainActivity : ComponentActivity() {
         }
         // Scripted UI captures: palette, settings section, card shown or closed, and a line spoken verbatim.
         intent.getStringExtra("palette")?.let { setPalette(Palettes.of(it)) }
+        // The birthday card for a contact (`--es birthdayCard Ana`), as the day-before notice opens it.
+        intent.getStringExtra("birthdayCard")?.let { name -> Birthdays.offer(name) { prompt -> runOnUiThread { send(prompt, byVoice = false) } } }
         // Busy mode for N minutes (`--ei busy 30`); 0 ends it.
         if (intent.hasExtra("busy")) intent.getIntExtra("busy", 0).let { if (it > 0) Busy.start(this, it.toLong(), Busy.Reason.BUSY) else Busy.end(this) }
         // Schedules a high-level reminder three seconds ahead to exercise the full-screen reminder call.

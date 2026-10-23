@@ -94,7 +94,7 @@ Behaviour of each group is specified where noted.
 | Device | `device_setting`, `device_status`, `weather` | DEVICE | [phone-abilities.md](phone-abilities.md), [home-and-widgets.md](home-and-widgets.md) |
 | Calls | `dial` (opens the dialer with the contact's number; never places a call) | DIAL | [phone-abilities.md](phone-abilities.md) |
 | Photos and files | `find_photos` / `find_files` | PHOTOS_READ / FILES_READ | [phone-abilities.md](phone-abilities.md) |
-| Reminders | `remind`, `list_reminders`, `cancel_reminder`, `move_reminder` | REMINDERS | [reminders.md](reminders.md) |
+| Reminders | `remind`, `list_reminders`, `cancel_reminder`, `move_reminder`; `birthdays` (CONTACTS_READ) | REMINDERS | [reminders.md](reminders.md) |
 | News and videos | `follow_topic`, `unfollow_topic`, `list_topics`, `news`, `find_videos` | NEWS | [news.md](news.md) |
 | Email (notifications) | `list_emails`, `read_email` / `draft_email` | EMAIL_READ / EMAIL_DRAFT | [email.md](email.md) |
 | Email (accounts) | `connect_email` / `email_mark_read`, `email_archive` / `email_delete` / `send_email` (target `Policy.target(name)`) | SETTINGS / ITEMS_MANAGE / ITEMS_DELETE / MESSAGE_SEND | [email.md](email.md) |

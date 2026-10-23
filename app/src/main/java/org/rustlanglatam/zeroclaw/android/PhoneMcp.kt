@@ -1107,6 +1107,13 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     }
                 }
             },
+            "birthdays" to { principal, args ->
+                val days = args.optInt("days", 30).coerceIn(1, 366)
+                Guard.gated(principal, Capability.CONTACTS_READ, Policy.OWNER_TARGET, Act.birthdays()) {
+                    val today = java.time.LocalDate.now()
+                    Birthdays.describe(Birthdays.upcoming(Birthdays.read(context), today, days), today)
+                }
+            },
             "list_add" to { principal, args ->
                 val name = args.optString("list").trim().ifEmpty { t(R.string.lists_shopping) }
                 val items = Lists.items(args.optString("items"))
@@ -1564,6 +1571,8 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                 tool("my_settings", "Your settings now, and who is family and who is work.", emptyList()),
                 tool("dial", "Call someone (\"call Ana\", \"llama a mi hermana\"): opens the phone's dialer with the contact's number, " +
                     "and the owner presses call; you never place the call. contact: the contact's name as saved.", listOf("contact"), "contact" to "string"),
+                tool("birthdays", "Contacts' birthdays in the next days (\"who has a birthday soon?\"), from the phone's contacts; days (default 30).",
+                    emptyList(), "days" to "integer"),
                 tool("list_add", "Add items to one of the owner's lists (\"add milk and bread to the shopping list\"): list (its name; " +
                     "the shopping list if none), items (comma-separated). Lists are kept in your memory and shown on Home.",
                     listOf("items"), "list" to "string", "items" to "string"),

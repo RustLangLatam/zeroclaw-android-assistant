@@ -67,6 +67,16 @@ Android:
   `CatchUp.start` (reminders due while away, [away-and-catch-up.md](away-and-catch-up.md)). There is
   no reminders screen.
 
+## Contacts' birthdays
+
+`Birthdays.kt`: birthdays are read from the phone's contacts (`ContactsContract` events of type birthday; with or
+without a year). Once a day from 09:00 the service's minute loop tells the owner about tomorrow's (channel
+`birthdays`, id 400 004; the day told kept in the plain prefs `birthdays`). The notice opens a card: *Write them
+something* asks the agent to propose a message in a card and not to send it until the owner says so (sending then
+follows the usual `MESSAGE_SEND` rules); *Remind me tomorrow* creates a reminder at 09:00 (`remind`). The
+`birthdays` tool (`CONTACTS_READ`) lists the next ones (default 30 days). A 29 February falls on the 28th in other
+years. Debug: `--es birthdayCard <name>` shows the card.
+
 ## Configuration
 
 | What | Where | Default |
