@@ -415,10 +415,21 @@ private fun Fitted(text: String, style: androidx.compose.ui.text.TextStyle, colo
         autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = style.fontSize),
     )
 
-/** Single-line caption; text that does not fit scrolls once as a marquee and then rests. */
+/**
+ * Single-line caption: shrinks to fit, down to 11 sp on screen (also in simple mode, whose larger text would otherwise
+ * cut short words like "reminders"); text that still does not fit scrolls once as a marquee and then rests.
+ */
 @Composable
-private fun Caption(text: String) = Text(
-    // A marquee instead of an ellipsis, so long captions remain readable.
-    text, Modifier.basicMarquee(iterations = 1, initialDelayMillis = 2_000, velocity = 30.dp),
-    style = MaterialTheme.typography.labelMedium, color = Ink.slate, maxLines = 1, textAlign = TextAlign.Center,
-)
+private fun Caption(text: String) {
+    var fits by remember(text) { mutableStateOf(true) }
+    val style = MaterialTheme.typography.labelMedium.copy(color = Ink.slate, textAlign = TextAlign.Center)
+    androidx.compose.foundation.text.BasicText(
+        // A marquee instead of an ellipsis, so long captions remain readable.
+        text, if (fits) Modifier else Modifier.basicMarquee(iterations = 1, initialDelayMillis = 2_000, velocity = 30.dp),
+        style = style, maxLines = 1,
+        autoSize = if (fits) androidx.compose.foundation.text.TextAutoSize.StepBased(
+            minFontSize = (11f / if (Guard.simple) Simple.TEXT_SCALE else 1f).sp, maxFontSize = style.fontSize,
+        ) else null,
+        onTextLayout = { if (fits && it.hasVisualOverflow) fits = false },
+    )
+}
