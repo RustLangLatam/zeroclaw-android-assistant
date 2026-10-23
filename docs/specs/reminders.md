@@ -4,7 +4,7 @@
 |---|---|
 | Status | Stable |
 | Code | `app/.../Reminders.kt` (model, levels, time parsing, `asked`), `app/.../PhoneReminders.kt` (`PhoneReminders`, `BootReceiver`, `ReminderReceiver`, `CallActivity`); tools in `PhoneMcp.kt` (`remind`, `list_reminders`, `cancel_reminder`, `move_reminder`); rescheduling in `AssistantService.onStartCommand` |
-| Tests | `app/src/test/.../RemindersTest.kt` (health rule, repeated calls, daily next occurrence, encoding and description); `scripts/e2e.sh`: none |
+| Tests | `app/src/test/.../RemindersTest.kt` (health rule, repeated calls, next occurrence for daily, every N hours, weekdays across a clock change and monthly past a short month's end, the first allowed day, weekday words in both languages, encoding and description); `scripts/e2e.sh`: none |
 | Decisions | [ADR-0014](../adr/0014-reminders-in-the-app.md), [ADR-0003](../adr/0003-permissions-enforced-in-code.md), [ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md), [ADR-0027](../adr/0027-assistant-voice-from-a-cloud-speech-model.md) |
 | Last checked against code | 2026-10-22, commit `64e1087` |
 
@@ -18,7 +18,9 @@ decided in code. It is not the calendar, not a telephony call, and not ZeroClaw'
 
 - Decide the level (`Reminders.level`), including the health rule.
 - Keep the reminders (`files/reminders.json`) and set one exact alarm per reminder.
-- Deliver them by level; call again for an unanswered high one; move a daily one to its next day.
+- Deliver them by level; call again for an unanswered high one; move a repeating one to its next occurrence.
+- Repeat daily, every N hours (1–24), on chosen weekdays, or monthly on a day; keep when the owner confirmed each
+  call ("did I take it?").
 - Show the call (`CallActivity`): ring, vibrate, then speak once answered; snooze or done.
 - Set every alarm again when the service starts and after a reboot.
 
@@ -29,7 +31,7 @@ MCP tools, owner endpoint only (the offline agent reaches `remind` and `list_rem
 
 | Tool | Arguments | Does |
 |---|---|---|
-| `remind` | `text` (required); `time` HH:MM with `date` YYYY-MM-DD or `days_from_today`, or `minutes_from_now` (clamped 1–1440); `level` low / normal / high; `daily` | `PhoneReminders.add`; returns `Reminder #N set for yyyy-MM-dd HH:mm[, every day], level L` plus ` (you will call them, full screen, until they answer).` for high |
+| `remind` | `text` (required); `time` HH:MM with `date` YYYY-MM-DD or `days_from_today`, or `minutes_from_now` (clamped 1–1440); `level` low / normal / high; to repeat, one of `daily`, `every_hours` (1–24), `weekdays` ("mon,wed,fri", "lunes y viernes", "1,3,5", "weekdays") or `monthly_day` (1–31) | `PhoneReminders.add`; returns `Reminder #N set for yyyy-MM-dd HH:mm[, every day], level L` plus ` (you will call them, full screen, until they answer).` for high |
 | `list_reminders` | — | `Reminders.describe`: `#id yyyy-MM-dd HH:mm [every day] [level] text`, sorted by time |
 | `cancel_reminder` | `id` | `PhoneReminders.cancel(id)`: alarm and notification cancelled, removed |
 | `move_reminder` | `id`; `time` with `date` or `days_from_today`, or `minutes_from_now` | cancels and re-adds with the same text, level and repetition (new id) |
@@ -40,7 +42,7 @@ date means its next occurrence (09:00 asked at 10:00 is tomorrow). Level words c
 lexicon (English and Spanish). Missing text or an unparsable time →
 `Needs text, and time HH:MM with date (YYYY-MM-DD) or days_from_today, or minutes_from_now.`; a past
 time → `That time has passed; ask the owner for another.` Both are checked before the policy. A high
-or daily reminder is announced to the owner at once through `Guard.onNotify`, whoever asked.
+or repeating reminder is announced to the owner at once through `Guard.onNotify`, whoever asked.
 
 Offline, `Reminders.asked(words)` maps an explicit request (a reminder, an alarm, the day's agenda,
 the reminders list, the next alarm, opening an app, the weather) to a tool call that the app runs
@@ -78,7 +80,7 @@ Android:
 ## State and data
 
 `files/reminders.json`, sealed ([ADR-0023](../adr/0023-app-files-sealed-to-the-phone.md)): a JSON
-array of `{id, text, at, level, daily, tries}` (`Reminders.encode`/`decode`); `at` in epoch ms,
+array of `{id, text, at, level, daily, tries, every, done}` (`every`: `h8`, `w1,3,5` with ISO days, `m5`; `done`: the owner's confirmations, epoch ms, at most 20) (`Reminders.encode`/`decode`); `at` in epoch ms,
 `level` `LOW|NORMAL|HIGH`, `tries` = unanswered calls. Every write calls `Ui.refresh()`. A new id is
 max id + 1. Alarms live in `AlarmManager` only. An undecodable file reads as an empty list.
 
@@ -104,11 +106,14 @@ the asked level, or `NORMAL`.
 A high reminder whose `tries` reached `CALLS` (6) is not called again: a floating notice says it was
 not answered and `done(id)` runs.
 
-`done(id)`: cancels notification and alarm; a daily reminder moves to `Reminders.next` (same time,
+`done(id, confirmed)`: cancels notification and alarm; a confirmation from the call screen (*Done*) is added to
+`done`; a repeating reminder moves to `Reminders.next` (daily, weekday and monthly keep the hour and minute in the
+phone's zone across clock changes; every N hours keeps the interval; a monthly day past a short month's end falls
+on its last day) (same time,
 the next day after now) with `tries = 0` and is scheduled; any other is removed.
 
-`snooze(id, minutes)`: the reminder moves to now + minutes, `daily = false`, `tries = 0`; a daily one
-also gets a new daily copy (new id) at its next usual time. Every future reminder is scheduled again.
+`snooze(id, minutes)`: the reminder moves to now + minutes as a one-off, `tries = 0`; a repeating one also
+gets a new repeating copy (new id) at its next occurrence. Every future reminder is scheduled again.
 
 **Call** (`CallActivity`): `onStart` cancels the notification, sets `calling = true` and hides the
 floating mark. It rings the default ringtone (or alarm sound) with alarm usage, looping, so it sounds
@@ -131,9 +136,11 @@ saved); past and one-time → `due(id)` at once.
 - A health reminder is `HIGH` whatever the agent asked (code, not prompt).
 - A high reminder calls at most `CALLS = 6` times, `AGAIN_MS = 5 min` apart, unless answered.
 - One alarm per reminder id (`FLAG_UPDATE_CURRENT` on request code `400000 + id`).
-- Low and normal reminders end (or move to the next day if daily) as soon as they are delivered.
+- Low and normal reminders end (or move to their next occurrence if repeating) as soon as they are delivered.
+- A weekday or monthly reminder's first time falls on an allowed day (`Reminders.first`): "the 5th of every month
+  at 9" asked on the 23rd starts on the 5th.
 - All PendingIntents are immutable; the alarm receiver and the call activity are not exported.
-- High and daily reminders are announced to the owner when created.
+- High and repeating reminders are announced to the owner when created.
 
 ## Failure modes
 

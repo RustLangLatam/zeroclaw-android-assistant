@@ -67,9 +67,11 @@ class PhoneReminders(context: Context) {
     fun format(at: Long): String = Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()).format(hm)
 
     /** Stores a new reminder with the next free id, schedules it and returns it. */
-    @Synchronized fun add(text: String, at: Long, level: Reminders.Level, daily: Boolean): Reminders.Reminder {
+    @Synchronized fun add(text: String, at: Long, level: Reminders.Level, daily: Boolean, repeat: Reminders.Repeat? = null): Reminders.Reminder {
         val list = all()
-        val r = Reminders.Reminder((list.maxOfOrNull { it.id } ?: 0) + 1, text, at, level, daily)
+        val asked = Reminders.Reminder((list.maxOfOrNull { it.id } ?: 0) + 1, text, at, level, daily, repeat = repeat)
+        // The first time falls on a day the repetition allows: "the 5th of every month at 9" asked on the 23rd is the 5th.
+        val r = asked.copy(at = Reminders.first(asked))
         save(list + r)
         schedule(r)
         return r
@@ -86,16 +88,18 @@ class PhoneReminders(context: Context) {
     }
 
     /**
-     * Completes reminder [id], either confirmed by the owner or after a low or normal one was shown. A daily
-     * reminder is rescheduled for its next occurrence; any other is deleted.
+     * Completes reminder [id], either [confirmed] by the owner (recorded, so "did I take it?" can be answered) or after
+     * a low or normal one was shown. A repeating reminder is rescheduled for its next occurrence; any other is deleted.
      */
-    @Synchronized fun done(id: Int) {
+    @Synchronized fun done(id: Int, confirmed: Boolean = false) {
         val list = all()
         val r = list.firstOrNull { it.id == id } ?: return
         context.getSystemService(NotificationManager::class.java).cancel(NOTE + id)
         alarms().cancel(fire(id))
-        val next = Reminders.next(r, System.currentTimeMillis())
-        if (next == null) save(list - r) else r.copy(at = next, tries = 0).also { save(list - r + it); schedule(it) }
+        val now = System.currentTimeMillis()
+        val next = Reminders.next(r, now)
+        val log = if (confirmed) (r.doneAt + now).takeLast(Reminders.DONE_KEPT) else r.doneAt
+        if (next == null) save(list - r) else r.copy(at = next, tries = 0, doneAt = log).also { save(list - r + it); schedule(it) }
     }
 
     /** Postpones reminder [id] by [minutes]. */
@@ -103,9 +107,9 @@ class PhoneReminders(context: Context) {
         val list = all()
         val r = list.firstOrNull { it.id == id } ?: return
         context.getSystemService(NotificationManager::class.java).cancel(NOTE + id)
-        val later = r.copy(at = System.currentTimeMillis() + minutes * 60_000L, daily = false, tries = 0)
-        // A daily reminder becomes a one-off snooze plus a new daily copy at its original time of day.
-        save(list - r + later + (if (r.daily) listOfNotNull(Reminders.next(r, later.at)?.let { r.copy(id = list.maxOf { it.id } + 1, at = it) }) else emptyList()))
+        val later = r.copy(at = System.currentTimeMillis() + minutes * 60_000L, daily = false, repeat = null, tries = 0)
+        // A repeating reminder becomes a one-off snooze plus a new repeating copy at its next occurrence.
+        save(list - r + later + (if (r.repeats) listOfNotNull(Reminders.next(r, later.at)?.let { r.copy(id = list.maxOf { it.id } + 1, at = it, tries = 0) }) else emptyList()))
         all().filter { it.at > System.currentTimeMillis() }.forEach(::schedule)
     }
 
@@ -385,7 +389,7 @@ class CallActivity : ComponentActivity() {
 
     private fun finish(snooze: Boolean) {
         val id = reminder?.id ?: return finish()
-        if (snooze) PhoneReminders(this).snooze(id, 10) else PhoneReminders(this).done(id)
+        if (snooze) PhoneReminders(this).snooze(id, 10) else PhoneReminders(this).done(id, confirmed = true)
         finish()
     }
 

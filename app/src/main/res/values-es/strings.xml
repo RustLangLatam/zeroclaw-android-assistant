@@ -482,7 +482,6 @@
     <string name="phoneemail_i_could_not_reach_x_is">No pude llegar a %1$s (¿hay conexión, y el servidor está bien escrito?).</string>
     <string name="phoneemail_x_did_not_accept_that_address">%1$s no aceptó ese correo con esa contraseña.</string>
     <string name="phonemcp_connect_x">Conecta %1$s</string>
-    <string name="phonemcp_every_day">, cada día</string>
     <string name="phonemcp_i_changed_x">Cambié %1$s.</string>
     <string name="phonemcp_i_ll_call_you">"Te llamaré: "</string>
     <string name="phonemcp_i_ll_remember_x">Lo recordaré: %1$s</string>
