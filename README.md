@@ -51,7 +51,7 @@ Keystore key.
 > is implemented unless marked *planned*; the full list with status is in
 > [docs/product/features.md](docs/product/features.md).
 
-**Demo:** [81-second video](https://www.youtube.com/watch?v=S7aWUnvSr1g) ([en español](https://www.youtube.com/watch?v=Ng0dmRtv7IE)),
+**Demo:** [81-second video](https://www.youtube.com/watch?v=dwLGmIBOa_o) ([en español](https://www.youtube.com/watch?v=a4XVYHoyR1E)),
 recorded on the emulator with made-up contacts: an approval, an undo, a stranger, and a prompt injection refused.
 
 **Download:** the signed arm64 APK is on the [Releases](https://github.com/RustLangLatam/zeroclaw-android-assistant/releases/latest)
