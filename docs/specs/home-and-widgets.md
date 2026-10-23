@@ -63,6 +63,7 @@ assistant's language ([ADR-0029](../adr/0029-ui-text-in-android-string-resources
 |---|---|---|
 | `Guard.widgets` (default `Widgets.DEFAULT`) | `policy.json` as `["layout:2", "GREETING:top", …]` via `Guard.save` | yes |
 | `Guard.appMode` (Compose state) | `policy.json` | yes |
+| Lists shown by the `LISTS` card | ZeroClaw memory (agent `owner`, category `list`, key `list-<name>`), with a sealed copy in `files/lists.json` | yes |
 | Notes of the `KSANDRA` card | ZeroClaw memory (agent `owner`, category `widget`, key `widget-<title>`), with a sealed copy in `files/notes.json` | yes |
 | Last weather reading | prefs `weather` (`w`, `at`) | yes |
 | `Ui.place`, `Ui.menu`, `Ui.arranging`, `Ui.pending`, `Ui.connector`, `Ui.tick` | memory (`Ui`) | across rotation, not process death |
@@ -111,7 +112,7 @@ applies to outgoing items in Interactions, an approval sheet whose request ended
 is simply replaced), and the floating mark's notice pill.
 
 **Widgets** (`Widgets.kt`). Kinds and spans: GREETING and PANORAMA span 4 (a whole row); WEATHER,
-ALARM, AGENDA, MESSAGES, MAIL, REMINDERS, BATTERY, NEWS, KSANDRA span 1. `COLUMNS = 4`,
+ALARM, AGENDA, MESSAGES, MAIL, REMINDERS, BATTERY, NEWS, KSANDRA, LISTS span 1 (LISTS: the fullest list's item count and first items; a tap asks what is on the list; added to Home the first time a list is used, when there is room). `COLUMNS = 4`,
 `ROWS_ABOVE = 3`, `ROWS_BELOW = 1`.
 - `rows`: in order, a wide widget takes its own row; cards fill a row while the spans fit in 4.
 - `fits`: rows above ≤ 3 and below ≤ 1.

@@ -18,6 +18,7 @@ enum class Widget(@androidx.annotation.StringRes private val labelId: Int, @andr
     BATTERY(R.string.widget_battery_label, R.string.widget_battery_detail),
     NEWS(R.string.widget_news_label, R.string.widget_news_detail),
     KSANDRA(R.string.widget_ksandra_label, R.string.widget_ksandra_detail),
+    LISTS(R.string.widget_lists_label, R.string.widget_lists_detail),
     ;
 
     /** Localized name; [detail] is the localized description of what the widget shows. */

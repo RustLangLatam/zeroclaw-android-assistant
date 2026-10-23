@@ -51,7 +51,7 @@ class WidgetsTest {
         assertEquals(full + Placed(Widget.NEWS, true), Widgets.add(full, Widget.NEWS))
         val fuller = full + Placed(Widget.NEWS, true)
         assertEquals(emptyList<Widget>(), Widgets.available(fuller))
-        assertEquals(listOf(Widget.GREETING, Widget.KSANDRA), Widgets.available(Widgets.remove(fuller, Widget.GREETING)))
+        assertEquals(listOf(Widget.GREETING, Widget.KSANDRA, Widget.LISTS), Widgets.available(Widgets.remove(fuller, Widget.GREETING)))
     }
 
     @Test

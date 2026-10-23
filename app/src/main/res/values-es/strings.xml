@@ -995,4 +995,10 @@
     <string name="scam_phone">un teléfono</string>
     <string name="scam_money">dinero</string>
     <string name="scam_credentials">tus claves o datos</string>
+    <string name="lists_shopping">compra</string>
+    <string name="act_change_the_x_list">Cambiar la lista de %1$s</string>
+    <string name="widget_lists_label">Listas</string>
+    <string name="widget_lists_detail">tu lista más larga: cuántas cosas y las primeras</string>
+    <string name="homewidgets_lists">listas</string>
+    <string name="homewidgets_what_is_on_my_list">¿Qué tengo en la lista?</string>
 </resources>

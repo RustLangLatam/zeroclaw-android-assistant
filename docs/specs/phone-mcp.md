@@ -97,7 +97,7 @@ Behaviour of each group is specified where noted.
 | News and videos | `follow_topic`, `unfollow_topic`, `list_topics`, `news`, `find_videos` | NEWS | [news.md](news.md) |
 | Email (notifications) | `list_emails`, `read_email` / `draft_email` | EMAIL_READ / EMAIL_DRAFT | [email.md](email.md) |
 | Email (accounts) | `connect_email` / `email_mark_read`, `email_archive` / `email_delete` / `send_email` (target `Policy.target(name)`) | SETTINGS / ITEMS_MANAGE / ITEMS_DELETE / MESSAGE_SEND | [email.md](email.md) |
-| Memory | `remember`, `forget`, `recall`, `how_well_i_know_you`, `set_address` | MEMORY | [memory.md](memory.md) |
+| Memory and lists | `remember`, `forget`, `recall`, `how_well_i_know_you`, `set_address`; `list_add`, `list_remove`, `list_show`, `list_clear` | MEMORY | [memory.md](memory.md) |
 | Routines | `add_routine`, `list_routines`, `remove_routine` | ROUTINES | `Routines.kt` (ZeroClaw cron jobs run as owner turns) |
 | Interface | `show`, `show_on_home`, `remove_from_home`, `open_section`, `set_mode` | INTERFACE | [owner-chat-and-voice.md](owner-chat-and-voice.md), [home-and-widgets.md](home-and-widgets.md), [settings-and-setup.md](settings-and-setup.md) |
 | Settings and rules | `set_preference` (SETTINGS or CHANNEL), `my_settings`, `set_busy` (SETTINGS), `unanswered` (MESSAGES_READ), `usage`, `list_rules` / `set_contact_group` / `set_rule` | SETTINGS / CONTACT_GROUPS / RULES | [settings-and-setup.md](settings-and-setup.md), [policy-engine.md](policy-engine.md) |

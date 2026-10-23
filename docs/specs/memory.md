@@ -113,7 +113,8 @@ there is no token or the call fails, add it to `memory-pending.txt`.
 **Sync** (`PhoneMemory.sync`, a new thread; does nothing without a token): called after the gateway
 is healthy and paired (`AssistantService.run`) and each time Memory opens. First the pending
 operations are sent (failed ones stay). Once (`migrated == false`) every non-conversation item is
-stored in ZeroClaw. Then `memory.search(agent = "owner")` is split: category `widget` replaces
+stored in ZeroClaw. Then `memory.search(agent = "owner")` is split: category `list` replaces the owner's lists
+(`Lists`, key `list-<name>`, the name then one item per line, sealed copy `files/lists.json`); category `widget` replaces
 `Notes`, the rest replaces `Memory.items` (sorted by `at`), which saves and fires `onChange`.
 
 **What the agent is told**:
