@@ -1044,4 +1044,7 @@
     <string name="offers_morning_no">No, thanks</string>
     <string name="offers_morning_what">Tell me my day: appointments, reminders, the weather and what is waiting for me</string>
     <string name="offers_morning_done">Done: every morning at 8 I tell you your day.</string>
+    <string name="setting_simple_mode">simple mode</string>
+    <string name="simple_on">Simple mode on: bigger letters, I speak everything, slowly and briefly. Say "normal mode" to go back.</string>
+    <string name="simple_off">Back to normal mode.</string>
 </resources>

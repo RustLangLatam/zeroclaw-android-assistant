@@ -59,6 +59,7 @@ references its issue (`Closes #N`) and updates the specs it changes.
 | `app/.../App.kt`, `Screens.kt` | the interface (Compose): setup, Home, Interactions, Activity, Settings, approvals |
 | `app/.../Theme.kt`, `Labels.kt` | design tokens and the Presence Mark; the policy in plain words |
 | `app/.../Lexicon.kt` | input keywords per language, loaded from `assets/lexicon.json` |
+| `app/.../Simple.kt` | simple mode: larger text, everything aloud, slower speech, short answers |
 | `app/.../Offers.kt` | features offered once (the morning briefing in the first week) |
 | `app/.../Appointments.kt` | time to leave for appointments with an address (opens the map); low battery before one |
 | `app/.../Birthdays.kt` | contacts' birthdays: a notice the day before, a card to write something or be reminded |

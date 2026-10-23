@@ -126,6 +126,7 @@ learning (`files/memory.json`).
 | `model_budget` | US$ a month for the model; `none` = 0 (no budget). Past it only the basics until next month; notices at 80 % and 100 % ([access-model.md](access-model.md#enforcement-layers)). Without a model price it is saved but cannot apply | none | `modelBudget` | Settings › What I cost › Monthly budget for the model: US$ 5, 10, 20 or no cap |
 | `unanswered_hours` | hours after which unanswered family and work messages are pointed out (1–48); `off` = 0 | 4 | `unansweredHours` | — |
 | `leave_minutes` | minutes before an appointment with an address to say it is time to leave (5–180); `off` = 0 | 30 | `leaveMinutes` | — |
+| `simple_mode` | on/off: assistant mode, answers always aloud, text ×1.3, speech ×0.85, short answers in the persona; off restores the voice and mode the owner had (plain prefs `simple`). Also by command: "modo sencillo" / "simple mode", "modo normal" / "normal mode" | off | `simple` | — |
 | `messaging_apps` | "add WhatsApp", "remove Telegram" | none until the setup | `apps` | Settings › Messages › Apps I read |
 | `warmth` | quiet / natural / close | `NATURAL` | `warmth` | Settings › Presence › How I talk to you |
 | `voice` | on / off (`Device.onOff`) | off | `voice` | Settings › Presence › Speak aloud; setup's last step |

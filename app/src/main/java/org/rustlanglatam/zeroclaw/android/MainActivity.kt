@@ -592,6 +592,10 @@ class MainActivity : ComponentActivity() {
             Command.WIDGETS -> { go(Place.HOME); Ui.arranging = true }
             Command.PAUSE -> { Ui.menu = false; setStopped(true); if (byVoice) speak(t(R.string.mainactivity_all_right_i_ll_stay_paused)) }
             Command.RESUME -> { Ui.menu = false; setStopped(false) }
+            Command.SIMPLE_MODE, Command.NORMAL_MODE -> thread {
+                Simple.set(this, command == Command.SIMPLE_MODE)
+                runOnUiThread { tune(); remark(if (Guard.simple) t(R.string.simple_on) else t(R.string.simple_off)) }
+            }
             Command.APP_MODE -> setAppMode(true)
             Command.ASSISTANT_MODE -> setAppMode(false)
         }

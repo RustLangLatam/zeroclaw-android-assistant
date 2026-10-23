@@ -74,4 +74,14 @@ class CommandsTest {
         assertFalse(Commands.interrupts("dinero", saying))
         assertFalse(Commands.interrupts("", saying))
     }
+
+    @Test
+    fun simpleAndNormalModeBySpeech() {
+        assertEquals(Command.SIMPLE_MODE, Commands.of("modo sencillo"))
+        assertEquals(Command.SIMPLE_MODE, Commands.of("Ponte en modo fácil"))
+        assertEquals(Command.SIMPLE_MODE, Commands.of("simple mode"))
+        assertEquals(Command.NORMAL_MODE, Commands.of("vuelve al modo normal"))
+        assertEquals(Command.NORMAL_MODE, Commands.of("normal mode"))
+        assertEquals(Command.APP_MODE, Commands.of("modo app"))
+    }
 }

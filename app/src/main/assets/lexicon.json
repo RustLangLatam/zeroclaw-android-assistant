@@ -183,5 +183,10 @@
   "shared.appointment": "cita|consulta|appointment|visita|revision|reunion|meeting|reserva|booking",
   "shared.parcel": "pedido|envio|paquete|entrega|repartidor|order|shipment|shipped|parcel|package|delivery|delivered|tracking|seguimiento",
   "shared.arrives": "llega|llegara|entrega|entregaremos|arrives|arriving|delivered|out for delivery|estimated delivery|entrega estimada",
-  "preferences.setting.leave_minutes": "leave|salir|avisodecita|appointment"
+  "preferences.setting.leave_minutes": "leave|salir|avisodecita|appointment",
+  "commands.mode_simple": "(modo|modalidad) (sencillo|simple|facil)",
+  "commands.mode_simple_en": "(simple|easy) mode",
+  "commands.mode_normal": "(modo|modalidad) (normal|completo|de siempre)",
+  "commands.mode_normal_en": "(normal|full|regular) mode",
+  "preferences.setting.simple_mode": "simple|sencillo|facil"
 }

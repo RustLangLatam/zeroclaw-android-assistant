@@ -22,6 +22,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Languages | Spanish and English for the UI, voice and recognizer, following the phone or the owner's choice; third parties are answered in their language | Implemented |
 | Palettes | Night (default), Lavender, Dawn, Coral; each shifts with the time of day | Implemented |
 | Warmth | Discreet, natural or close: changes the persona, remarks and speech pace | Implemented |
+| Simple mode | "Modo sencillo": larger text, everything read aloud, slower speech, short answers; "modo normal" restores what was there. Confirmations still need the credential | Implemented |
 | Wake word | Hands-free activation by name, opt-in, on-device | Planned |
 | Owner voice recognition | Answer only the owner's voice | Planned |
 | Face and name chosen with the owner | A final stage of the Presence Mark | Planned |

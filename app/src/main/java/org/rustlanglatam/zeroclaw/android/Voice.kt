@@ -100,7 +100,7 @@ fun TextToSpeech.asKsandra() {
     Voices.available = offered
     (offered.firstOrNull { it.name == Voices.chosen } ?: base)?.let { voice = it; Voices.current = it.name }
     setPitch(1.0f)
-    setSpeechRate(when (Guard.warmth) { Warmth.QUIET -> 1.0f; Warmth.NATURAL -> 0.97f; Warmth.CLOSE -> 0.95f })
+    setSpeechRate(when (Guard.warmth) { Warmth.QUIET -> 1.0f; Warmth.NATURAL -> 0.97f; Warmth.CLOSE -> 0.95f } * if (Guard.simple) Simple.SPEECH_RATE else 1f)
 }
 
 /**

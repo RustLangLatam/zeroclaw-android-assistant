@@ -317,7 +317,15 @@ object Dimens {
 
 /** Applies the active [Ink] palette and the brand typography to [content]. */
 @Composable
-fun KsandraTheme(content: @Composable () -> Unit) = MaterialTheme(colorScheme = scheme(Ink.palette), typography = Type, content = content)
+fun KsandraTheme(content: @Composable () -> Unit) {
+    Ui.tick
+    // Simple mode scales every text by [Simple.TEXT_SCALE] on top of the system's font size.
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val scale = if (Guard.simple) Simple.TEXT_SCALE else 1f
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(density.density, density.fontScale * scale)) {
+        MaterialTheme(colorScheme = scheme(Ink.palette), typography = Type, content = content)
+    }
+}
 
 /**
  * Draws a glass surface clipped to [shape]: a translucent vertical-gradient fill and a 1 dp border
