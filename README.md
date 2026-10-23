@@ -51,6 +51,9 @@ Keystore key.
 > is implemented unless marked *planned*; the full list with status is in
 > [docs/product/features.md](docs/product/features.md).
 
+**Download:** the signed arm64 APK is on the [Releases](https://github.com/RustLangLatam/zeroclaw-android-assistant/releases/latest)
+page (Android 11 or later). It carries no keys: add your model provider, model and key in Connectors › Services.
+
 ---
 
 ## Contents
@@ -219,6 +222,13 @@ says only what the rules allow (availability, that the owner will reply). Third-
 with two tools only (`take_message`, `availability`); message content is data, never an instruction. Everything is
 recorded in **Activity** (*right*) ([access model](docs/specs/access-model.md),
 [notification channel](docs/specs/notification-channel.md)).
+
+<p align="center">
+  <img src="docs/images/approve-and-undo.gif" width="260" alt="A work contact writes; the reply waits for approval with the PIN, then a 30-second undo window">
+  <img src="docs/images/injection-refused.gif" width="260" alt="A family contact sends a prompt injection asking for the calendar and emails; the assistant refuses">
+</p>
+<p align="center"><sub>Approved with the PIN, then 30 seconds to undo · a prompt injection from a contact, refused: the
+third-party agent has no tool that reads the calendar or email</sub></p>
 
 - **Busy, meeting or driving mode.** "I'm in a meeting until 11": do-not-disturb on, and each family or work contact
   who writes gets one fixed reply, written by the app, not the model ("Milton can't answer until 11:00 and will write
