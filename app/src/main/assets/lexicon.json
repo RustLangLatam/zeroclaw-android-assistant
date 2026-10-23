@@ -160,5 +160,6 @@
   "routines.day.6": "sabado|sabados|saturday|sat",
   "routines.weekdays": "weekdays|entre semana|laborables|dias laborables",
   "routines.weekends": "weekends|fines de semana|fin de semana",
-  "preferences.setting.model_budget": "modelbudget|budget|presupuesto|gastomaximo|gastodelmodelo"
+  "preferences.setting.model_budget": "modelbudget|budget|presupuesto|gastomaximo|gastodelmodelo",
+  "preferences.setting.unanswered_hours": "unanswered|sinresponder|sincontestar|pendientes"
 }

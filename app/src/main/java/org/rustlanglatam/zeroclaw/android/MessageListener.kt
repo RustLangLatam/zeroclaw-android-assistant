@@ -45,6 +45,7 @@ class MessageListener : NotificationListenerService() {
      * rebinds while access is still granted; otherwise [Health] tells the owner.
      */
     override fun onListenerDisconnected() {
+        running = null
         val granted = getSystemService(android.app.NotificationManager::class.java)
             .isNotificationListenerAccessGranted(android.content.ComponentName(this, MessageListener::class.java))
         if (granted) requestRebind(android.content.ComponentName(this, MessageListener::class.java))
@@ -52,6 +53,7 @@ class MessageListener : NotificationListenerService() {
     }
 
     override fun onListenerConnected() {
+        running = this
         Guard.load(filesDir)
         // Lets a message that got no answer (e.g. no connection) be answered again while its conversation is still known.
         retry = { entry ->
@@ -209,6 +211,14 @@ class MessageListener : NotificationListenerService() {
     }
 
     companion object {
+        @Volatile private var running: MessageListener? = null
+
+        /**
+         * Returns the conversation keys of the messaging notifications on screen now, or `null` while the listener is
+         * not connected. A conversation the owner opened is usually cleared by its app, so it is no longer here.
+         */
+        fun shownConversations(): Set<String>? = running?.let { l -> runCatching { l.activeNotifications.orEmpty().map { it.key }.toSet() }.getOrNull() }
+
         /** Notification action buttons of an email or a conversation, keyed by `mail:<id>` or `msg:<conversation>`, for the agent to press. */
         private val buttons = ConcurrentHashMap<String, List<Notification.Action>>()
 

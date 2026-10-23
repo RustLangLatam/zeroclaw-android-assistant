@@ -131,6 +131,12 @@ turn. A 401 at open makes the app pair again (`AssistantService.pair(refused = t
 `Busy.now()` is set, a family or work contact is answered once with `Busy.reply` (`BUSY_REPLY`, the sender's
 language, no undo window: it is reversible and says only that the owner cannot answer), their later messages are
 marked `held_back`, and anyone else takes the usual turn.
+**Still unanswered** (`Unanswered.kt`): once a minute the service checks, for each family or work sender, whether
+their last message is unsettled (not `answered` or `queued`), older than `Guard.unansweredHours` (default 4, by voice
+`set_preference unanswered_hours`, `off` = 0) and still on screen (`MessageListener.shownConversations()`: a chat the
+owner opened is cleared by its app, so it no longer counts). New people get one quiet notice a day (channel
+`unanswered`, id 400 003, opens Activity; told names kept in the plain prefs `unanswered`). The `unanswered` tool
+(MESSAGES_READ) lists all of it on request, whatever the age, plus important emails not opened.
 
 **Reply** (`MessageListener.answer`):
 1. Blank or `null` answer → status `no_answer`. Else `waiting`.

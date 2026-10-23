@@ -27,6 +27,7 @@ object Preferences {
         HER_VOICE(R.string.setting_her_voice),
         VOICE_CEILING(R.string.setting_voice_ceiling),
         MODEL_BUDGET(R.string.setting_model_budget),
+        UNANSWERED_HOURS(R.string.setting_unanswered_hours),
         MESSAGING_APPS(R.string.setting_messaging_apps),
         ;
 
@@ -41,6 +42,7 @@ object Preferences {
                     n.isEmpty() -> null
                     Lexicon.words("preferences.setting.warmth").any(n::startsWith) -> WARMTH
                     Lexicon.words("preferences.setting.model_budget").any(n::startsWith) -> MODEL_BUDGET
+                    Lexicon.words("preferences.setting.unanswered_hours").any(n::startsWith) -> UNANSWERED_HOURS
                     Lexicon.words("preferences.setting.voice_ceiling").any(n::startsWith) -> VOICE_CEILING
                     Lexicon.words("preferences.setting.voice").any(n::startsWith) -> VOICE
                     Lexicon.words("preferences.setting.open_mic").any(n::startsWith) -> OPEN_MIC
