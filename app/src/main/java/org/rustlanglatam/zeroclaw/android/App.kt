@@ -766,7 +766,12 @@ private fun CardSheet(ui: MainActivity, card: Cards.Card) {
         Spacer(Modifier.height(18.dp))
         // Tapping an action sends its label as the owner's message.
         card.actions.forEachIndexed { i, label ->
-            val go = { close(); ui.send(label, from = card.title) }
+            val go: () -> Unit = {
+                close()
+                // A card the app made runs its action in code; any other answers the agent with the label.
+                val handler = Cards.handler(card.id, label)
+                if (handler != null) kotlin.concurrent.thread { handler() } else ui.send(label, from = card.title)
+            }
             if (i == 0) GlowButton(label, Modifier.fillMaxWidth(), onClick = go) else GhostButton(label, Modifier.fillMaxWidth(), onClick = go)
             Spacer(Modifier.height(10.dp))
         }

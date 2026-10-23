@@ -31,12 +31,19 @@ object Cards {
     val all = CopyOnWriteArrayList<Card>()
     private val ids = AtomicInteger()
 
-    fun show(title: String, body: String, actions: List<String>): Card =
+    /** Actions of cards shown by the app itself that run in code on the owner's tap instead of answering the agent. */
+    private val local = java.util.concurrent.ConcurrentHashMap<Int, Map<String, () -> Unit>>()
+
+    fun show(title: String, body: String, actions: List<String>, handlers: Map<String, () -> Unit> = emptyMap()): Card =
         Card(ids.incrementAndGet(), title.trim(), body.trim(), actions.map(String::trim).filter(String::isNotEmpty).take(3)).also {
+            if (handlers.isNotEmpty()) local[it.id] = handlers
             all += it
-            while (all.size > 30) all.removeAt(0)
+            while (all.size > 30) { local.remove(all.removeAt(0).id) }
             shown = it
         }
+
+    /** Returns the code to run for [label] on card [id], or `null` when the label is an answer for the agent. */
+    fun handler(id: Int, label: String): (() -> Unit)? = local[id]?.get(label)
 
     fun find(id: Int) = all.firstOrNull { it.id == id }
 

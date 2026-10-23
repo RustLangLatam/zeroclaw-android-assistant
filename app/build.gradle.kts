@@ -115,6 +115,8 @@ dependencies {
     // On-device photo search (PhoneGallery): labels and faces, models bundled, nothing leaves the phone.
     implementation("com.google.mlkit:image-labeling:17.0.9")
     implementation("com.google.mlkit:face-detection:16.1.7")
+    // Text in shared pictures and PDFs, recognized on the device (Latin script, bundled model).
+    implementation("com.google.mlkit:text-recognition:16.0.1")
     testImplementation("junit:junit:4.13.2")
     // Android's org.json is a stub in JVM tests.
     testImplementation("org.json:json:20240303")

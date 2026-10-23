@@ -226,6 +226,8 @@ never: [otp, passwords, banking_apps, health, forward_private]
   work group only). The third-party agent's answers go out as `NOTIFICATION_REPLY` (see
   [Notification channel](#notification-channel)). Personal data is never readable by the
   third-party agent, whatever the rules say.
+- Shared pictures and documents (`ShareActivity`): read on the phone; what was found becomes a card whose actions
+  run only on the owner's tap through the owner's tools; the text reaches the model only when the owner taps *Ask*.
 - Busy mode (`set_busy`, owner only; `Busy.kt`): until its end, family and work contacts get one fixed reply each,
   written in code in the sender's language ("Milton can't answer until 11:00…"), as `BUSY_REPLY`; it discloses only
   that the owner cannot answer, like `availability`. No agent turn runs for them meanwhile; their later messages are

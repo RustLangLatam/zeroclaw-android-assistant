@@ -82,7 +82,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 | Files | "where is the loan quote?": Downloads, Documents, WhatsApp and Telegram files by name, plus emails and messages that mention it | Implemented |
 | Apps and media | Most used apps first, open an app, play a search in a music, podcast or video app, media keys | Implemented |
 | Device controls | Brightness, volume, flashlight, do-not-disturb, rotation; system panels for airplane mode, Bluetooth, Wi-Fi, mobile data, location, NFC | Implemented |
-| Share a picture or document with the assistant | Text read on the phone; a bill or appointment proposed as a reminder | Planned |
+| Share a picture or document with the assistant | A bill, an appointment or a circular from the gallery or a PDF: text read on the phone; the due date, amount or time found in code; a reminder or a calendar entry proposed for the owner to tap; the text goes to the model only on "Ask Ksandra" | Implemented |
 | Search by meaning | Documents, emails and messages searched semantically on the phone | Planned |
 | Acting inside other apps | Deferred until an ADR decides whether it can be made safe | Planned |
 

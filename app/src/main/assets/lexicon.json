@@ -165,5 +165,20 @@
   "scam.urgency": "urgent|urgente|inmediat|immediately|ahora mismo|right now|ultimo aviso|last notice|final notice|hoy mismo|within 24|en 24 horas|en 48 horas|suspend|bloquead|blocked|locked|expira|expires|caduca|retenid|on hold|held at|cancelad|cancelled|deactivat|desactivad|claim|reclam",
   "scam.money": "pag|pay|payment|transfer|bizum|tarjeta|card|bank|banco|euros|dolares|dollars|usd|eur|premio|prize|ganaste|you won|reembolso|refund|fee|tasa|aduana|customs|gift card|crypto|bitcoin|deuda|debt|multa|fine",
   "scam.credentials": "contrasena|password|pin|codigo|code|verifica|verify|confirm your|confirma tus datos|datos bancarios|bank details|login|log in|inicia sesion|clave|otp|dni|ssn",
-  "lists.and": "y|e|and|plus|mas"
+  "lists.and": "y|e|and|plus|mas",
+  "shared.month.1": "enero|january|jan",
+  "shared.month.2": "febrero|february|feb",
+  "shared.month.3": "marzo|march|mar",
+  "shared.month.4": "abril|april|apr",
+  "shared.month.5": "mayo|may",
+  "shared.month.6": "junio|june|jun",
+  "shared.month.7": "julio|july|jul",
+  "shared.month.8": "agosto|august|aug",
+  "shared.month.9": "septiembre|setiembre|september|sep|sept",
+  "shared.month.10": "octubre|october|oct",
+  "shared.month.11": "noviembre|november|nov",
+  "shared.month.12": "diciembre|december|dec",
+  "shared.due": "vence|vencimiento|fecha limite|fecha de cargo|pagar antes|due|due date|pay by|payment due|antes del",
+  "shared.bill": "factura|recibo|invoice|bill|importe|total a pagar|amount due|total due",
+  "shared.appointment": "cita|consulta|appointment|visita|revision|reunion|meeting|reserva|booking"
 }
