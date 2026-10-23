@@ -3,7 +3,7 @@
 All notable changes. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - unreleased
+## [0.1.0] - 2026-10-23
 
 First public version: an on-device personal assistant for Android that runs the ZeroClaw v0.8.5 agent daemon inside
 the app, acts on the phone through tools on a loopback MCP server, and enforces every permission in code.
@@ -34,7 +34,7 @@ the app, acts on the phone through tools on a loopback MCP server, and enforces 
   without a visible answer.
 
 ### Known limits
-- Battery and memory measured on one mid-range phone only; arm64 only; not on the Play Store.
+- A full-day battery and memory measurement on a phone is still in progress (#9); arm64 only; not on the Play Store.
 - Good conversation needs a cloud model; no wake word; no automation of other apps by design.
 
 [0.1.0]: https://github.com/RustLangLatam/zeroclaw-android-assistant/releases/tag/v0.1.0
