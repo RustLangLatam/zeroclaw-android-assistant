@@ -986,4 +986,13 @@
     <string name="unanswered_one">%1$s is still waiting for your answer (over %2$d h).</string>
     <string name="unanswered_many">%1$s are still waiting for your answer (over %2$d h).</string>
     <string name="act_see_what_is_unanswered">See what is still unanswered</string>
+    <string name="scam_channel">Possible scams</string>
+    <string name="scam_title">This looks like a scam</string>
+    <string name="scam_notice">Careful: the message from %1$s looks like a scam (%2$s). Don\'t open the link, call or pay anything; I won\'t answer it.</string>
+    <string name="scam_unknown_sender">someone you don\'t know</string>
+    <string name="scam_urgency">urgency</string>
+    <string name="scam_link">a link</string>
+    <string name="scam_phone">a phone number</string>
+    <string name="scam_money">money</string>
+    <string name="scam_credentials">your codes or details</string>
 </resources>
