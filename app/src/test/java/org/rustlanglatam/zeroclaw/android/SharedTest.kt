@@ -44,4 +44,13 @@ class SharedTest {
     fun aDateWithoutYearAlreadyPastIsNextYear() {
         assertEquals(LocalDate.of(2027, 2, 3), Shared.dates("hasta el 3 de febrero", today).single().second)
     }
+
+    @Test
+    fun aParcelArrivingOnAWeekday() {
+        // 2026-10-23 is a Friday: "el jueves" is 2026-10-29.
+        val found = Shared.read("Tu pedido 112-4477 ha sido enviado. Llega el jueves. Seguimiento: AB123456789ES", today)
+        assertEquals(Shared.Kind.PARCEL, found.kind)
+        assertEquals(LocalDate.of(2026, 10, 29), found.date)
+        assertEquals(LocalDate.of(2026, 10, 24), Shared.read("Your package is out for delivery and arrives tomorrow.", today, english = true).date)
+    }
 }

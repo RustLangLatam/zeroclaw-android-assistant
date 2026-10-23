@@ -73,10 +73,37 @@ object Shares {
     private val day = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     /** A date as the owner reads it in the assistant's language ("26 oct", "Oct 26"). */
+    /**
+     * Looks at an email as it arrives: when it is a bill with a due date or a parcel with a delivery date, tells the
+     * owner quietly; the notice opens [offer] with the email's text. Nothing is created until the owner taps.
+     */
+    fun fromMail(context: android.content.Context, mail: Mailbox.Mail) {
+        val text = "${mail.subject}\n${mail.body}"
+        val found = Shared.read(text, LocalDate.now(), Inbox.english(text))
+        if (found.date == null || found.date.isBefore(LocalDate.now()) || found.kind !in setOf(Shared.Kind.BILL, Shared.Kind.PARCEL)) return
+        mails[mail.id] = mail
+        val said = if (found.kind == Shared.Kind.BILL) t(R.string.share_mail_bill, mail.from, found.amount ?: "", said(found.date))
+            else t(R.string.share_mail_parcel, mail.from, said(found.date))
+        val open = android.app.PendingIntent.getActivity(
+            context, 402_000 + Math.floorMod(mail.id, 1000),
+            MainActivity.sealed(Intent(context, MainActivity::class.java).putExtra("mailOffer", mail.id)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        context.getSystemService(android.app.NotificationManager::class.java).notify(
+            402_000 + Math.floorMod(mail.id, 1000),
+            android.app.Notification.Builder(context, Chime.channel(context, "mail-dates", t(R.string.share_mail_channel), android.app.NotificationManager.IMPORTANCE_LOW))
+                .setSmallIcon(R.drawable.ic_mark).setContentTitle(t(R.string.share_mail_title)).setContentText(said)
+                .setStyle(android.app.Notification.BigTextStyle().bigText(said)).setContentIntent(open).setAutoCancel(true).build(),
+        )
+    }
+
+    /** Emails offered by [fromMail] during this process, by id, for the notice to open. */
+    val mails = java.util.concurrent.ConcurrentHashMap<Int, Mailbox.Mail>()
+
     private fun said(date: LocalDate) = date.format(DateTimeFormatter.ofPattern(if (Language.current == Lang.EN) "MMM d" else "d MMM", Language.locale))
 
     /** Shows the card for [text]; [speak] reads it aloud and [ask] sends it to the agent, only when the owner taps them. */
-    fun offer(text: String, speak: (String) -> Unit, ask: (String) -> Unit) {
+    fun offer(text: String, speak: (String) -> Unit, ask: (String) -> Unit, from: String? = null) {
         if (text.isBlank()) { Cards.show(t(R.string.share_nothing_title), t(R.string.share_nothing), emptyList()); return }
         val today = LocalDate.now()
         val found = Shared.read(text, today, Inbox.english(text))
@@ -84,9 +111,11 @@ object Shares {
         val title = when (found.kind) {
             Shared.Kind.BILL -> t(R.string.share_bill)
             Shared.Kind.APPOINTMENT -> t(R.string.share_appointment)
+            Shared.Kind.PARCEL -> t(R.string.share_parcel)
             Shared.Kind.OTHER -> t(R.string.share_document)
         }
         val facts = listOfNotNull(
+            from,
             found.amount?.let { "**$it**" },
             found.date?.let { d -> (if (found.kind == Shared.Kind.BILL) t(R.string.share_due_x, said(d)) else said(d)) + (found.time?.let { " · $it" } ?: "") },
         ).joinToString(" · ")
@@ -103,6 +132,9 @@ object Shares {
                 }
                 Shared.Kind.APPOINTMENT -> if (found.time != null) actions[t(R.string.share_add_to_calendar)] = {
                     tools.owner("add_event", JSONObject().put("title", title).put("date", date.format(day)).put("start", found.time.toString()).put("note", excerpt.take(200)))
+                }
+                Shared.Kind.PARCEL -> actions[t(R.string.share_remind_me_on_x, said(date))] = {
+                    tools.owner("remind", JSONObject().put("text", t(R.string.share_parcel_arrives, from ?: title)).put("date", date.format(day)).put("time", "09:00"))
                 }
                 Shared.Kind.OTHER -> actions[t(R.string.share_remind_me_on_x, said(date))] = {
                     tools.owner("remind", JSONObject().put("text", excerpt.take(60)).put("date", date.format(day)).put("time", "09:00"))

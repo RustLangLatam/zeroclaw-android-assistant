@@ -1026,4 +1026,10 @@
     <string name="birthdays_reminder_text">Congratulate %1$s</string>
     <string name="birthdays_ask">Tomorrow is %1$s\'s birthday. Propose a short message to congratulate them, in my style, and show it to me in a card; do not send it until I say so.</string>
     <string name="act_see_upcoming_birthdays">See upcoming birthdays</string>
+    <string name="share_parcel">Parcel</string>
+    <string name="share_parcel_arrives">Your parcel arrives (%1$s)</string>
+    <string name="share_mail_channel">Dates in your email</string>
+    <string name="share_mail_title">Something to remember</string>
+    <string name="share_mail_bill">%1$s: a bill of %2$s due on %3$s. Want a reminder?</string>
+    <string name="share_mail_parcel">%1$s: your parcel arrives on %2$s. Want a reminder?</string>
 </resources>

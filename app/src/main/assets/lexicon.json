@@ -180,5 +180,7 @@
   "shared.month.12": "diciembre|december|dec",
   "shared.due": "vence|vencimiento|fecha limite|fecha de cargo|pagar antes|due|due date|pay by|payment due|antes del",
   "shared.bill": "factura|recibo|invoice|bill|importe|total a pagar|amount due|total due",
-  "shared.appointment": "cita|consulta|appointment|visita|revision|reunion|meeting|reserva|booking"
+  "shared.appointment": "cita|consulta|appointment|visita|revision|reunion|meeting|reserva|booking",
+  "shared.parcel": "pedido|envio|paquete|entrega|repartidor|order|shipment|shipped|parcel|package|delivery|delivered|tracking|seguimiento",
+  "shared.arrives": "llega|llegara|entrega|entregaremos|arrives|arriving|delivered|out for delivery|estimated delivery|entrega estimada"
 }

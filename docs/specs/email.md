@@ -82,6 +82,16 @@ Other interfaces:
   the `MAIL` widget (unopened count; warm when any is important; tap asks which emails are unread),
   the mark's `BUSY` load, `CatchUp` (emails while away).
 
+## Bills and parcels
+
+`Shares.fromMail` (called for every email in `MessageListener.mail()`): `Shared.read` on the subject and body finds a
+bill with a due date (an amount plus a bill or due word) or a parcel with a delivery date (a parcel word plus an
+arrival word; a weekday such as "arrives on Thursday" when no explicit date is given; "tomorrow"). A future one gets
+a quiet notice (channel `mail-dates`, ids from 402 000): *"Aguas de Valencia: a bill of 32,15 euros due on 2 Nov.
+Want a reminder?"*. The notice opens the same card as a shared document (`Shares.offer`): a reminder two days
+before a bill or on the parcel's day, *Read it to me*, *Ask Ksandra*; nothing is created until the owner taps.
+`MailDatesTest`: 18 of 20 sample emails (Spanish and English) are found; newsletters and chat are not.
+
 ## Configuration
 
 | What | Build time | In the app | By voice | Default |
