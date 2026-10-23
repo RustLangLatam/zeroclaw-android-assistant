@@ -973,4 +973,11 @@
     <string name="screens_model_budget">Monthly budget for the model</string>
     <string name="screens_model_budget_detail" formatted="false">Past it, only the basics until next month; I tell you at 80 %.</string>
     <string name="screens_model_budget_no_price">The model has no price, so its cost is unknown: add it in Connectors › Services.</string>
+    <string name="busy_reply_busy">%1$s can\'t answer until %2$s and will write to you later. This is %3$s, %1$s\'s assistant.</string>
+    <string name="busy_reply_driving">%1$s is driving and will write to you as soon as possible. This is %2$s, %1$s\'s assistant.</string>
+    <string name="busy_ended">Busy mode is over.</string>
+    <string name="busy_ended_told">Busy mode is over. I told %1$s that you couldn\'t answer.</string>
+    <string name="labels_say_you_re_busy">Say you are busy (busy mode)</string>
+    <string name="act_tell_x_you_re_busy">Tell %1$s you are busy</string>
+    <string name="act_busy_mode_for_x_min">Busy mode for %1$d min</string>
 </resources>

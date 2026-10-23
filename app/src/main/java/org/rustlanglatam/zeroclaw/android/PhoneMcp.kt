@@ -1034,6 +1034,29 @@ class PhoneMcp(private val context: Context, private val port: Int) {
             "device_status" to { principal, args ->
                 Guard.gated(principal, Capability.DEVICE, Policy.OWNER_TARGET, Act.deviceStatus()) { PhoneDevice(context).status() }
             },
+            "set_busy" to { principal, args ->
+                val minutes = args.optLong("minutes", 0).takeIf { it > 0 } ?: args.optString("until").takeIf { it.isNotBlank() }?.let { until ->
+                    Reminders.clock(until)?.let { t ->
+                        val now = java.time.LocalDateTime.now()
+                        var end = now.toLocalDate().atTime(t)
+                        if (!end.isAfter(now)) end = end.plusDays(1)
+                        java.time.Duration.between(now, end).toMinutes()
+                    }
+                }
+                when {
+                    args.optBoolean("end", false) -> Guard.gated(principal, Capability.SETTINGS, Policy.OWNER_TARGET, Act.busy(0)) {
+                        Busy.end(context)?.let { told -> "Busy mode ended" + (if (told.isEmpty()) "." else "; told: ${told.joinToString { Identity.bare(it) }}.") } ?: "Busy mode was not on."
+                    }
+                    minutes == null -> "Needs minutes, or until HH:MM (\"until 11\"), or end=true."
+                    else -> Guard.gated(principal, Capability.SETTINGS, Policy.OWNER_TARGET, Act.busy(minutes)) {
+                        val reason = if (args.optString("reason").lowercase().let { it.startsWith("driv") || it.startsWith("conduc") }) Busy.Reason.DRIVING else Busy.Reason.BUSY
+                        val p = Busy.start(context, minutes, reason)
+                        val until = java.time.Instant.ofEpochMilli(p.until).atZone(ZoneId.systemDefault()).toLocalTime().withSecond(0).withNano(0)
+                        "Busy mode on until $until (${reason.name.lowercase()}): family and work who write get one fixed reply each saying ${Policy.owner} " +
+                            "cannot answer now; nobody else is answered; do-not-disturb is ${if (p.dndByUs) "on" else "as it was"}. Tell the owner in one sentence."
+                    }
+                }
+            },
             "set_mode" to { principal, args ->
                 run {
                 val app = args.optString("mode").lowercase().trim() == "app"
@@ -1460,6 +1483,11 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     "answers without internet are simpler and slower and use more battery, and turn it on only after they agree).", listOf("setting", "value"),
                     "setting" to "string", "value" to "string"),
                 tool("my_settings", "Your settings now, and who is family and who is work.", emptyList()),
+                tool("set_busy", "Busy, meeting or driving mode when the owner says so (\"I'm in a meeting until 11\", \"I'm driving\"): " +
+                    "until then do-not-disturb is on and family and work who write get one fixed reply each saying the owner cannot " +
+                    "answer now (the app writes it; nobody else is answered). minutes, or until HH:MM; reason busy or driving; " +
+                    "end=true when the owner is free again. At most 12 hours.",
+                    emptyList(), "minutes" to "integer", "until" to "string", "reason" to "string", "end" to "boolean"),
                 tool("set_contact_group", "Put a contact in the owner's family or work group, or take them out (group: family, work or none), " +
                     "when the owner asks (\"add Ana to family\"). It decides whom you answer on your own, so the app asks the owner " +
                     "for their PIN itself: call it at once, without asking them to confirm in words first.",
@@ -1541,6 +1569,7 @@ object Guard {
     @Synchronized
     fun load(dir: File) {
         if (file != null) return
+        Busy.load(dir)
         val saved = File(dir, "policy.json")
         file = saved
         if (saved.exists()) {

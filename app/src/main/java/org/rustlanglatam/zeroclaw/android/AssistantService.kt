@@ -85,6 +85,7 @@ class AssistantService : Service() {
                 while (!stopping) {
                     runCatching { Health.check(this) }.onFailure { Log.w(TAG, "health check: ${it.message}") }
                     runCatching { Budget.check(this) }.onFailure { Log.w(TAG, "budget check: ${it.message}") }
+                    runCatching { Busy.tick(this) }.onFailure { Log.w(TAG, "busy check: ${it.message}") }
                     Thread.sleep(Health.EVERY_MS)
                 }
             }

@@ -52,6 +52,9 @@ adb install -r -g app/build/outputs/apk/debug/app-debug.apk >/dev/null
 adb install -r -g fakechat/build/outputs/apk/debug/fakechat-debug.apk >/dev/null
 adb shell "run-as $FAKE sh -c 'rm -f files/chat-* files/replies.txt'"
 adb shell cmd notification allow_listener $APP/$APP.MessageListener
+# Do-not-disturb access, used by busy mode.
+adb shell cmd notification allow_dnd $APP
+adb shell cmd notification set_dnd off
 adb shell am start -n $APP/.MainActivity --es owner Milton --es apps $FAKE --ez groups false --ez stop false --ez clean true --es language es --ez voice false --es contacts Laura:work,Ana:family >/dev/null
 sleep 8
 adb logcat -G 16M; adb logcat -c
@@ -143,6 +146,21 @@ check "nothing sent while offline" '[ "$(replies | grep -c ^Ana)" = "$before" ]'
 adb shell svc wifi enable; adb shell svc data enable
 sleep 100
 check "answered once after the network returned" '[ "$(replies | grep -c ^Ana)" = $((before + 1)) ]'
+
+echo "busy mode: family and work are told once, strangers never; do-not-disturb on and restored"
+lb=$(replies | grep -c ^Laura); pb=$(replies | grep -c ^Pat)
+adb shell am start -n $APP/.MainActivity --ei busy 30 >/dev/null; sleep 3
+check "do-not-disturb on" '[ "$(adb shell settings get global zen_mode | tr -d "\r")" != 0 ]'
+post Laura "Can you call me back?"
+post Pat "Hello, is this Milton?"
+sleep 15
+check "Laura told once, with the fixed reply" '[ "$(replies | grep -c ^Laura)" = $((lb + 1)) ] && replies | grep ^Laura | tail -1 | grep -q "until"'
+check "no reply to Pat" '[ "$(replies | grep -c ^Pat)" = "$pb" ]'
+post Laura "Hello again?"
+sleep 15
+check "Laura not told twice" '[ "$(replies | grep -c ^Laura)" = $((lb + 1)) ]'
+adb shell am start -n $APP/.MainActivity --ei busy 0 >/dev/null; sleep 2
+check "do-not-disturb restored" '[ "$(adb shell settings get global zen_mode | tr -d "\r")" = 0 ]'
 
 echo "kill switch: nothing goes out"
 adb shell am start -n $APP/.MainActivity --ez stop true >/dev/null; sleep 2
