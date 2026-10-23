@@ -1032,4 +1032,10 @@
     <string name="share_mail_title">Something to remember</string>
     <string name="share_mail_bill">%1$s: a bill of %2$s due on %3$s. Want a reminder?</string>
     <string name="share_mail_parcel">%1$s: your parcel arrives on %2$s. Want a reminder?</string>
+    <string name="setting_leave_minutes">notice before appointments</string>
+    <string name="appointments_channel">Before your appointments</string>
+    <string name="appointments_leave_title">Time to leave</string>
+    <string name="appointments_leave">Time to leave for %1$s (%2$s at %3$s). Tap to open the map.</string>
+    <string name="appointments_battery_title">Low battery</string>
+    <string name="appointments_battery">Your battery is at %1$d %% and you have %2$s at %3$s: charge it before you leave.</string>
 </resources>

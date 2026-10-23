@@ -88,6 +88,7 @@ class AssistantService : Service() {
                     runCatching { Busy.tick(this) }.onFailure { Log.w(TAG, "busy check: ${it.message}") }
                     runCatching { Unanswered.check(this) }.onFailure { Log.w(TAG, "unanswered check: ${it.message}") }
                     runCatching { Birthdays.check(this) }.onFailure { Log.w(TAG, "birthdays check: ${it.message}") }
+                    runCatching { Appointments.check(this) }.onFailure { Log.w(TAG, "appointments check: ${it.message}") }
                     Thread.sleep(Health.EVERY_MS)
                 }
             }
