@@ -51,6 +51,9 @@ Keystore key.
 > is implemented unless marked *planned*; the full list with status is in
 > [docs/product/features.md](docs/product/features.md).
 
+**Demo:** [81-second video](https://www.youtube.com/watch?v=S7aWUnvSr1g) ([en español](https://www.youtube.com/watch?v=Ng0dmRtv7IE)),
+recorded on the emulator with made-up contacts: an approval, an undo, a stranger, and a prompt injection refused.
+
 **Download:** the signed arm64 APK is on the [Releases](https://github.com/RustLangLatam/zeroclaw-android-assistant/releases/latest)
 page (Android 11 or later). It carries no keys: add your model provider, model and key in Connectors › Services.
 
