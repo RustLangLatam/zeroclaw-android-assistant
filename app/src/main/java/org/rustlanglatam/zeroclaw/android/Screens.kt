@@ -770,6 +770,12 @@ fun Control(ui: MainActivity, onBack: () -> Unit) {
                     val near = heights.minBy { kotlin.math.abs(it - Floating.height) }
                     chips(listOf(t(R.string.screens_top), t(R.string.screens_middle), t(R.string.screens_bottom)).mapIndexed { i, l -> l to (heights[i] == near) }) { Floating.place(ui, height = heights[it]) }
                 }
+                // The system's assist gesture opens the assistant listening once it is the chosen digital assistant.
+                Item(
+                    t(R.string.screens_assist_gesture),
+                    if (AssistActivity.chosen(ui)) t(R.string.screens_assist_gesture_on) else t(R.string.screens_assist_gesture_off),
+                    onClick = { runCatching { ui.startActivity(AssistActivity.settings()) } },
+                ) { Chevron() }
                 Item(t(R.string.screens_speak_aloud), t(R.string.screens_i_read_my_answers_aloud_as)) { Toggle(Guard.voice) { ui.setVoice(it) } }
                 Item(
                     t(R.string.screens_open_microphone),

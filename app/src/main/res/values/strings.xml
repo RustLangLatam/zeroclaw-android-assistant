@@ -1003,4 +1003,7 @@
     <string name="homewidgets_what_is_on_my_list">What is on my list?</string>
     <string name="labels_open_the_dialer">Open the dialer to call someone</string>
     <string name="act_open_the_dialer_for_x">Open the dialer to call %1$s</string>
+    <string name="screens_assist_gesture">Open me with the assistant gesture</string>
+    <string name="screens_assist_gesture_on">On: holding home (or the corner swipe) opens me listening</string>
+    <string name="screens_assist_gesture_off">Choose me as the digital assistant app; then holding home opens me listening</string>
 </resources>

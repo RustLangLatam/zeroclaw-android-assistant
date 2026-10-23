@@ -247,6 +247,13 @@ turn), `apps`, `groups`, `stop`, `clean` (counters), `clearActivity`, `fresh` (n
   Kotlin client.
 - An answer claiming an action with no tool run is not shown as is.
 
+**Assist gesture** (`Assist.kt`): once the owner chooses the app as the digital assistant (system default apps; the
+role cannot be requested by an app, so Settings › Presence opens that screen and shows whether it is chosen), the
+system's assist gesture (long press on home, a bottom-corner swipe, `ACTION_ASSIST`; also `VOICE_COMMAND`) starts
+`AssistActivity`. It runs in its own task (`taskAffinity .assist`, no history), starts `MainActivity` with the sealed
+`listen` extra and finishes, so the app opens listening over any app. No voice-interaction service, no always-on
+microphone, no wake word.
+
 ## Failure modes
 
 - Gateway down or restarting: reconnect every 1 s; presence OFFLINE; `send` drops text.

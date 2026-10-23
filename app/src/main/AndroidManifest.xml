@@ -110,6 +110,21 @@
             android:name=".NewsReceiver"
             android:exported="false" />
 
+        <!-- The system's assist gesture, once the owner chooses the app as the digital assistant: opens it listening. -->
+        <activity
+            android:name=".AssistActivity"
+            android:exported="true"
+            android:taskAffinity=".assist"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <action android:name="android.intent.action.VOICE_COMMAND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".CallActivity"
             android:exported="false"
