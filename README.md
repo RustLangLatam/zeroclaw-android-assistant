@@ -68,18 +68,19 @@ Keystore key.
 11. [Calendar](#calendar)
 12. [Reminders](#reminders)
 13. [Contacts, photos and files](#contacts-photos-and-files)
-14. [News and cards](#news-and-cards)
-15. [Memory](#memory)
-16. [Offline](#offline)
-17. [Cost](#cost)
-18. [Security and privacy](#security-and-privacy)
-19. [Architecture](#architecture)
-20. [Versatility](#versatility)
-21. [Roadmap](#roadmap)
-22. [Limitations](#limitations)
-23. [Build and run](#build-and-run)
-24. [Documentation](#documentation)
-25. [License](#license)
+14. [Sharing, lists and calls](#sharing-lists-and-calls)
+15. [News and cards](#news-and-cards)
+16. [Memory](#memory)
+17. [Offline](#offline)
+18. [Cost](#cost)
+19. [Security and privacy](#security-and-privacy)
+20. [Architecture](#architecture)
+21. [Versatility](#versatility)
+22. [Roadmap](#roadmap)
+23. [Limitations](#limitations)
+24. [Build and run](#build-and-run)
+25. [Documentation](#documentation)
+26. [License](#license)
 
 ---
 
@@ -99,32 +100,33 @@ Three principles shape the design ([vision](docs/product/vision.md)):
 ## Who it is for
 
 An ordinary phone owner, not a power user: nothing to install besides the app, no terminal, no scripts, no
-configuration files. Four everyday profiles guide what gets built; each line below works today unless it links to
-its issue.
+configuration files. Four everyday profiles guide what gets built; everything below works today.
 
 **A parent short on time**
 - "Tell Ana I'll be late" without opening the messaging app.
 - Family messages answered when the owner cannot, within the owner's rules, with an undo window.
-- Medicine reminders that insist until acknowledged. Every 8 hours or on set weekdays: [#13](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/13).
-- A photo of a school circular turned into a reminder: [#15](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/15). A shopping list by voice: [#14](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/14).
+- Medicine every 8 hours, the gym on Mondays, Wednesdays and Fridays, a bill on the 5th of each month; reminders that
+  insist until acknowledged, and "did I take it?" answered.
+- A photo of a school circular or a bill shared with the assistant becomes a reminder, on a tap.
+- A shopping list by voice, shown on Home.
 
 **An older person**
-- Speaking without touching anything; answers read aloud.
+- Speaking without touching anything, or holding the home button; answers read aloud.
+- Simple mode: larger text, everything aloud, slower and briefer.
 - Medicines that ring full screen, like a call, until acknowledged.
+- A warning when a message looks like a scam; "call my daughter" opens the dialer with her number.
 - Basic answers without internet: reminders, alarms, today's calendar, weather, opening an app.
-- A warning when a message looks like a scam: [#16](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/16). "Call my daughter" opening the dialer: [#18](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/18). A
-  simple mode with large text: [#23](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/23).
 
 **A small-business owner**
 - Important email separated from the noise; a reply to a client drafted and sent only after the owner approves with
   the screen lock.
+- "What do I still have to answer?"; bills and parcels found in email and offered as reminders.
 - A calendar that refuses clashes and finds free time.
-- "What do I still have to answer?": [#12](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/12). Bills and parcels from email: [#20](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/20).
 
 **A commuter**
-- Music and media by voice; the phone's controls by voice (volume, brightness, do-not-disturb).
-- "Driving, I'll write later" sent to family and work, never to strangers: [#11](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/11). A notice before an
-  appointment with the way there: [#21](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/21).
+- "I'm driving": do-not-disturb, and family and work get one fixed reply; strangers never.
+- "Time to leave" before an appointment with an address, opening the map; a low-battery notice before it.
+- Music, media and the phone's controls by voice; a morning briefing at 8.
 
 ## Presence Mark
 
@@ -218,6 +220,15 @@ with two tools only (`take_message`, `availability`); message content is data, n
 recorded in **Activity** (*right*) ([access model](docs/specs/access-model.md),
 [notification channel](docs/specs/notification-channel.md)).
 
+- **Busy, meeting or driving mode.** "I'm in a meeting until 11": do-not-disturb on, and each family or work contact
+  who writes gets one fixed reply, written by the app, not the model ("Milton can't answer until 11:00 and will write
+  to you later"); strangers never; it ends on its own.
+- **What is still unanswered.** Family and work messages nobody answered, whose chat the owner has not opened, are
+  pointed out after 4 hours (by voice), once a day per person; "what do I still have to answer?" lists them.
+- **Possible scams.** A message or email asking for codes or details, or money with urgency, plus a link or a phone
+  number, is pointed out in seconds with its reasons ("looks like"); the assistant never answers it or acts.
+- **Approvals not answered in time** are kept: "N messages wait for your decision", with *Answer now* in Activity.
+
 ## Rules
 
 <p align="center">
@@ -245,6 +256,9 @@ Kotlin with unit tests ([docs/specs/policy-engine.md](docs/specs/policy-engine.m
   ZeroClaw's email channel in observer mode. Mark read and archive run with notification; delete and send require
   approval with the credential, and the email is shown as a card before sending
   ([ADR-0026](docs/adr/0026-google-email-through-zeroclaws-email-channel.md), [spec](docs/specs/email.md)).
+- **Bills and parcels.** A bill with a due date or a parcel with a delivery date in an email is offered as a reminder
+  (two days before the bill, on the parcel's day) with a quiet notice; nothing is created until the owner taps.
+- **Connecting an account** asks for the owner's credential (it widens what the assistant reads); disconnecting does not.
 - *Planned:* Outlook (requires OAuth), Telegram, a dedicated WhatsApp account.
 
 ## Calendar
@@ -267,6 +281,15 @@ screen over the lock screen and through do-not-disturb, repeated every 5 minutes
 decided in code ([docs/specs/reminders.md](docs/specs/reminders.md)). Alarms and routines ("every Sunday at nine,
 summarize my week", run as ZeroClaw cron jobs) are also set by voice.
 
+- **Repetition.** Daily, every N hours ("the pill every 8 hours"), on weekdays ("Monday, Wednesday and Friday at 7")
+  or monthly ("the 5th of every month"), keeping the hour across clock changes; "did I take the 2 o'clock one?" is
+  answered from the confirmations.
+- **Birthdays** from the phone's contacts: a notice the day before, with a card to write something (proposed, never
+  sent on its own) or be reminded.
+- **Before an appointment** with an address: "time to leave" 30 minutes before (by voice), opening the maps app; with
+  the battery at 20 % or less, a notice to charge it first.
+- **The morning briefing** is offered once in the first week; "yes" creates the routine at 8.
+
 ## Contacts, photos and files
 
 <p align="center">
@@ -286,6 +309,19 @@ loan budget document?" — two files found in Downloads, each opens in its app.<
   best first with their location; a tap opens the file in its app.
 - **Apps and device.** Open apps, play a search in a media app, media keys; brightness, volume, flashlight,
   do-not-disturb, rotation, and system panels for the rest ([phone abilities](docs/specs/phone-abilities.md)).
+
+## Sharing, lists and calls
+
+- **Share with Ksandra.** From the gallery, a file manager or an email app, a picture or a PDF is read on the phone
+  (on-device text recognition); the due date, amount or appointment time is found in code and offered as a card:
+  *Remind me on 26 Oct*, *Add it to my calendar*, *Read it to me*, *Ask Ksandra*. The picture never leaves the phone;
+  the text goes to the model only on *Ask*.
+- **Lists by voice.** "Add milk and bread to the shopping list", "I already bought the bread", "what do I need to
+  buy?"; kept in ZeroClaw's memory and shown in a Home card.
+- **"Call Ana"** opens the dialer with her number; the owner presses call. The app never places a call (it has no
+  `CALL_PHONE` permission; a test checks it).
+- **The assist gesture.** Once chosen as the digital assistant app, holding home (or the corner swipe) opens the
+  assistant listening over any app; no wake word, no always-on microphone.
 
 ## News and cards
 
@@ -337,6 +373,10 @@ Model use this month, today and by agent (owner, replies to others, briefings), 
 when the price is configured (`zeroclaw.inputPerMTok`, `zeroclaw.outputPerMTok`); natural voice minutes and their
 ceiling. Also available by voice ("how much have you spent?").
 
+A **monthly budget** for the model ("don't spend more than 5 dollars a month", or Settings › What I cost): past it,
+no model call starts until the next month; the basics handled in code keep working; notices at 80 % and 100 %. The
+model's price per million tokens can be entered in Connectors › Services.
+
 ## Security and privacy
 
 <p align="center"><img src="docs/images/privacy.jpg" width="230" alt="Permissions and privacy: what leaves the phone"></p>
@@ -348,8 +388,11 @@ Details in [docs/architecture/security.md](docs/architecture/security.md) and
   daily limit ([ADR-0003](docs/adr/0003-permissions-enforced-in-code.md)).
 - **Separate endpoints per principal.** The owner's agent and the third-party agent use separate MCP endpoints
   (`/mcp/owner`, `/mcp/third_party`) with bearer keys, served on `127.0.0.1` only.
-- **Device credential.** Strong approvals, widening a rule, contact groups and resuming require biometrics or the
-  screen lock. Without a screen lock all of these are refused; narrowing never needs it.
+- **Device credential.** Strong approvals, widening a rule, contact groups, connecting an email account, replacing
+  service keys and resuming require biometrics or the screen lock. Without a screen lock all of these are refused;
+  narrowing never needs it.
+- **No keys in the APK.** The owner enters the model, search and voice keys in Connectors › Services; they stay
+  encrypted on the phone ([ADR-0030](docs/adr/0030-service-keys-entered-by-the-owner.md)).
 - **Undo window and kill switch.** Outward actions wait 10 to 120 s (default 30); "pause" stops everything
   ([ADR-0006](docs/adr/0006-kill-switch-in-the-app.md)).
 - **Injection awareness.** After a turn reads other people's text (a message, an email, a web page, file names), the
@@ -364,6 +407,10 @@ Details in [docs/architecture/security.md](docs/architecture/security.md) and
   request and the context needed to answer; to the news feed, followed topics; to the weather service, an approximate
   location; to the speech provider (if enabled), the text to be spoken. Photos, files and contacts are not sent on
   their own ([storage.md](docs/architecture/storage.md#what-leaves-the-phone)).
+
+**Reliability.** The assistant starts by itself after a reboot or an update; a hung engine is detected and restarted
+within about two minutes; a question with no answer for 25 seconds says so; losing a permission (notification access,
+battery exemption) is reported within seconds with a way back.
 
 Vulnerabilities are reported privately as described in [SECURITY.md](SECURITY.md).
 
@@ -414,16 +461,10 @@ flowchart LR
 Tracked in GitHub issues, in phases. Each issue states the problem, the approach, how it fits the
 [access model](docs/specs/access-model.md), how it is tested on the emulator and when it is done.
 
-- **[Phase A: robustness and trust](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/1)** (current): start after a reboot, a gateway watchdog and no silent turns,
-  a health status with lost-permission notices, expired approvals kept for the owner, fail closed without a screen
-  lock, API keys out of the APK, a monthly model budget by voice, battery and memory measured, replies after
-  connectivity returns.
-- **[Phase B: everyday value](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/2)**: recurring reminders, busy or driving mode, what is still unanswered, scam
-  warnings, lists by voice, "call Ana" through the dialer, the system assist gesture, sharing a photo or PDF with the
-  assistant, birthdays, parcels and bills from email, a notice before appointments, the morning briefing, simple
-  mode.
+- **[Phase A: robustness and trust](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/1)**: done, except measuring battery and memory on a real phone (in progress).
+- **[Phase B: everyday value](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/2)**: done (all 13 items).
 - **[Phase C and what is rejected](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/24)**: later features (owner's Telegram bot, encrypted backup, search by
-  meaning, wake word, real travel time) and what stays out of scope because it breaks the access model or is
+  meaning, wake word, real travel time, Outlook) and what stays out of scope because it breaks the access model or is
   expert-only (Accessibility automation of other apps, shell, arbitrary MCP servers, payments).
 
 ## Limitations
@@ -434,7 +475,8 @@ Tracked in GitHub issues, in phases. Each issue states the problem, the approach
   app press send. Replies to recent conversations are sent through the notification.
 - Outlook accounts require OAuth, not yet supported.
 - Without internet, conversation is slower and less capable; the basics still work.
-- Battery and memory use across a range of devices is not yet measured.
+- Battery and memory use is being measured on one mid-range phone; other devices are not yet measured.
+- "Time to leave" uses a fixed margin, not real travel time (that would send addresses to a routing service).
 
 ## Build and run
 

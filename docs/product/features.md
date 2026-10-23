@@ -172,9 +172,9 @@ never claims more than the policy allows.
 
 ## Known limits
 
-- The model key is compiled into the APK (`local.properties` at build time); the APK must not be
-  shared.
+- Release APKs contain no keys; debug builds contain the developer's `local.properties` keys and must not be shared.
 - A message to a contact without a recent conversation is written in WhatsApp for the owner to send;
   Android lets no app press send.
 - Without internet, conversation is slower and less capable; the basics still work.
-- Battery and memory use on a range of devices is not yet measured.
+- Battery and memory use is being measured on one mid-range phone; other devices are not yet measured.
+- "Time to leave" uses a fixed margin, not real travel time.

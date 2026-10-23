@@ -1047,4 +1047,6 @@
     <string name="setting_simple_mode">modo sencillo</string>
     <string name="simple_on">Modo sencillo activado: letra más grande, te lo digo todo en voz alta, despacio y breve. Di «modo normal» para volver.</string>
     <string name="simple_off">De vuelta al modo normal.</string>
+    <string name="mainactivity_connect_x">Leer todo el correo de %1$s</string>
+    <string name="mainactivity_not_confirmed_nothing_connected">No confirmado: no se conectó nada.</string>
 </resources>
