@@ -1038,4 +1038,10 @@
     <string name="appointments_leave">Es hora de salir hacia %1$s (%2$s a las %3$s). Toca para abrir el mapa.</string>
     <string name="appointments_battery_title">Batería baja</string>
     <string name="appointments_battery">Tienes la batería al %1$d %% y %2$s a las %3$s: cárgala antes de salir.</string>
+    <string name="offers_morning_title">Tu día, cada mañana</string>
+    <string name="offers_morning_body">¿Quieres que te cuente tu día cada mañana a las 8? Tus citas, recordatorios, el tiempo y lo que te espera.</string>
+    <string name="offers_morning_yes">Sí, a las 8</string>
+    <string name="offers_morning_no">No, gracias</string>
+    <string name="offers_morning_what">Cuéntame mi día: citas, recordatorios, el tiempo y lo que me espera</string>
+    <string name="offers_morning_done">Hecho: cada mañana a las 8 te cuento tu día.</string>
 </resources>

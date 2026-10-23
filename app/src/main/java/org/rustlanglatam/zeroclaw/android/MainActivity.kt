@@ -356,6 +356,7 @@ class MainActivity : ComponentActivity() {
         note = { text -> add(Line(Line.Who.NOTE, text)); Chime.play(this) }
         prompt = { pending -> runOnUiThread { Ui.pending = pending; Gestures.play(Gesture.EXPECT); if (Guard.voice) speak(Phrases.approval(Guard.warmth, pending.act.title) ?: return@runOnUiThread) } }
         Floating.shown(this, true)
+        Offers.morning(this) { said -> runOnUiThread { remark(said) } }
         MailNotice.onImportant = { mail -> runOnUiThread { remark(Phrases.mail(Guard.warmth, mail.from.substringBefore(' '))) } }
         PhoneReminders.onDue = { r -> runOnUiThread { remark(t(R.string.mainactivity_x_a_reminder_x, Policy.owner, r.text)) } }
         PhoneNews.onBriefing = { b -> runOnUiThread { remark(b.text) } }
@@ -462,6 +463,8 @@ class MainActivity : ComponentActivity() {
         intent.getStringExtra("palette")?.let { setPalette(Palettes.of(it)) }
         // The birthday card for a contact (`--es birthdayCard Ana`), as the day-before notice opens it.
         intent.getStringExtra("birthdayCard")?.let { name -> Birthdays.offer(name) { prompt -> runOnUiThread { send(prompt, byVoice = false) } } }
+        // The morning-briefing offer, whatever the hour (`--ez offerMorning true`).
+        if (intent.getBooleanExtra("offerMorning", false)) Offers.showMorning(this) { said -> runOnUiThread { remark(said) } }
         // Busy mode for N minutes (`--ei busy 30`); 0 ends it.
         if (intent.hasExtra("busy")) intent.getIntExtra("busy", 0).let { if (it > 0) Busy.start(this, it.toLong(), Busy.Reason.BUSY) else Busy.end(this) }
         // Schedules a high-level reminder three seconds ahead to exercise the full-screen reminder call.
