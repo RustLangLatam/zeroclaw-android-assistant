@@ -226,6 +226,8 @@ never: [otp, passwords, banking_apps, health, forward_private]
   work group only). The third-party agent's answers go out as `NOTIFICATION_REPLY` (see
   [Notification channel](#notification-channel)). Personal data is never readable by the
   third-party agent, whatever the rules say.
+- Connecting an email account (Connectors) needs the device credential, after the server accepts it; disconnecting
+  narrows and does not. `connect_email` by voice only opens the form.
 - Shared pictures and documents (`ShareActivity`): read on the phone; what was found becomes a card whose actions
   run only on the owner's tap through the owner's tools; the text reaches the model only when the owner taps *Ask*.
 - Busy mode (`set_busy`, owner only; `Busy.kt`): until its end, family and work contacts get one fixed reply each,

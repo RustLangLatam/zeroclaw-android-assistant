@@ -1047,4 +1047,6 @@
     <string name="setting_simple_mode">simple mode</string>
     <string name="simple_on">Simple mode on: bigger letters, I speak everything, slowly and briefly. Say "normal mode" to go back.</string>
     <string name="simple_off">Back to normal mode.</string>
+    <string name="mainactivity_connect_x">Read all the email of %1$s</string>
+    <string name="mainactivity_not_confirmed_nothing_connected">Not confirmed: nothing was connected.</string>
 </resources>

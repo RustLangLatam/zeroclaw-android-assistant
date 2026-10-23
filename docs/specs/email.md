@@ -98,7 +98,7 @@ before a bill or on the parcel's day, *Read it to me*, *Ask Ksandra*; nothing is
 |---|---|---|---|---|
 | Email from notifications (`Mailbox.reading`) | — | Settings › Messages › Read your email (`setMail`) | `set_preference read_mail` (CHANNEL when turned on) | on |
 | Which notifications count as email | constant `Mailbox.EMAIL_APPS` plus `CATEGORY_EMAIL`; needs notification access ([notification-channel.md](notification-channel.md)) | — | — | — |
-| Connected accounts | — | Settings › Connectors › Email (`Connectors.kt`, `connectEmail`); the password is typed there | `connect_email` opens that screen | none |
+| Connected accounts | — | Settings › Connectors › Email (`Connectors.kt`, `connectEmail`); the password is typed there; connecting asks for the device credential after the server check (it widens what the assistant reads; refused without a screen lock), disconnecting does not | `connect_email` opens that screen | none |
 | Importance keywords | `assets/lexicon.json` (`mail.bulk`, `mail.urgent`) | — | — | — |
 | Limits | constants: 100 mails kept, 1000 seen keys, 15 min merge window, 2000-character bodies over IMAP, 50 UIDs per call, IDLE socket 25 min, backoff 5 s–5 min | | | |
 

@@ -956,22 +956,27 @@ class MainActivity : ComponentActivity() {
 
     /**
      * Connects one of the owner's email accounts, or disconnects it when [remove] is set. A new account is first
-     * verified against its server, then stored sealed on the phone; ZeroClaw is reloaded with it and its inbox watched.
-     * [done] receives the failure reason, or `null` on success.
+     * verified against its server, then, since it widens what the assistant reads, confirmed with the owner's credential
+     * (refused without a screen lock); it is stored sealed on the phone, ZeroClaw is reloaded with it and its inbox
+     * watched. Disconnecting narrows and needs no credential. [done] receives the failure reason, or `null` on success.
      */
     fun connectEmail(account: EmailAccounts.Account, remove: Boolean = false, done: (String?) -> Unit) = thread {
         val problem = if (remove) null else PhoneEmail.check(account)
         runOnUiThread {
-            if (problem == null) {
-                EmailAccounts.save(account, remove)
-                AssistantService.reload?.invoke()
-                PhoneEmail.watch(applicationContext)
-                Ui.connector = null
-                remark(if (remove) t(R.string.mainactivity_done_i_no_longer_read_x, account.address)
-                    else t(R.string.mainactivity_done_i_read_all_your_email, account.address))
-            }
-            done(problem)
+            if (problem != null) return@runOnUiThread done(problem)
+            if (remove) saveEmail(account, remove = true, done)
+            else confirmOwner(t(R.string.mainactivity_connect_x, account.address)) { ok -> if (ok) saveEmail(account, remove = false, done) else done(t(R.string.mainactivity_not_confirmed_nothing_connected)) }
         }
+    }
+
+    private fun saveEmail(account: EmailAccounts.Account, remove: Boolean, done: (String?) -> Unit) {
+        EmailAccounts.save(account, remove)
+        AssistantService.reload?.invoke()
+        PhoneEmail.watch(applicationContext)
+        Ui.connector = null
+        remark(if (remove) t(R.string.mainactivity_done_i_no_longer_read_x, account.address)
+            else t(R.string.mainactivity_done_i_read_all_your_email, account.address))
+        done(null)
     }
 
     /**
