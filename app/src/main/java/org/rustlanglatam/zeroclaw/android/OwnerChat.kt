@@ -175,8 +175,20 @@ object OwnerChat {
         if (image != null) {
             asked = null
             Turns.scribe(app, text, image) { said ->
-                if (said.isNullOrBlank()) send("$text\n\n$NO_VISION").also { Guard.heardOthers = true }
-                else { aside = said; Ui.thinking = false; Ui.add(Line(Line.Who.ASSISTANT, said)); onAnswer?.invoke(said) }
+                val why = photoFailure(Turns.scribeError, Keys.visionReady)
+                when {
+                    !said.isNullOrBlank() -> { aside = said; Ui.thinking = false; Ui.add(Line(Line.Who.ASSISTANT, said)); onAnswer?.invoke(said) }
+                    // The photos model set by the owner failed: say why and offer to fix it, rather than guess from labels.
+                    why != null -> {
+                        val note = t(why, Keys[Keys.Key.VISION_MODEL])
+                        Ui.thinking = false
+                        Ui.add(Line(Line.Who.NOTE, note))
+                        onAnswer?.invoke(note)
+                        Cards.show(t(R.string.photo_model_failed_title), note, listOf(t(R.string.photo_model_change)),
+                            mapOf(t(R.string.photo_model_change) to { Sections.open("photos_model") }))
+                    }
+                    else -> send("$text\n\n$NO_VISION").also { Guard.heardOthers = true }
+                }
             }
             return true
         }
@@ -195,6 +207,17 @@ object OwnerChat {
         if (!modelReady || Regex("provider|api.?key|unauthori[sz]ed|authenticat|\\b40[13]\\b", RegexOption.IGNORE_CASE).containsMatchIn(error))
             R.string.ownerchat_i_couldn_t_reach_my_model
         else R.string.ownerchat_i_couldn_t_answer_this_time
+
+    /**
+     * Why the photos model the owner set failed, from the daemon's [error]: the model no longer offered, or the key
+     * refused; `null` when no photos model is set ([vision]) or the cause is another (then the labels explain it).
+     */
+    fun photoFailure(error: String?, vision: Boolean): Int? = when {
+        !vision || error == null -> null
+        Regex("""\b404\b|not.?found|no longer available|does not exist|not supported for""", RegexOption.IGNORE_CASE).containsMatchIn(error) -> R.string.photo_model_gone_x
+        Regex("""\b40[13]\b|api.?key|unauthori[sz]ed|permission""", RegexOption.IGNORE_CASE).containsMatchIn(error) -> R.string.photo_key_refused_x
+        else -> null
+    }
 
     /** The scribe's words on the last photo, for the owner's next message ([PHOTO_MARK]). */
     @Volatile private var aside: String? = null

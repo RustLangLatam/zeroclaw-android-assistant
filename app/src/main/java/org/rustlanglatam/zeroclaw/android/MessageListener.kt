@@ -306,6 +306,9 @@ object Turns {
 
     private val one = Semaphore(1)
 
+    /** The daemon's error for the last failed [scribe] turn; `null` after one that did not fail. */
+    @Volatile var scribeError: String? = null
+
     /**
      * Hands [text] from [sender] to the `third_party` agent in a new session; [done] receives the answer, or
      * `null` on failure or timeout. The message is framed as data: the agent's instructions and tools decide
@@ -348,6 +351,7 @@ object Turns {
      * is attached as ZeroClaw's `[IMAGE:…]` marker; a model that cannot see pictures hands it to the one set for them.
      */
     fun scribe(context: Context, prompt: String, image: String? = null, done: (String?) -> Unit) {
+        scribeError = null
         // Past the owner's monthly budget the caller uses its own plain text.
         if (Budget.reached()) return done(null)
         val finished = java.util.concurrent.atomic.AtomicBoolean()
@@ -356,7 +360,7 @@ object Turns {
             when (frame.type) {
                 FrameType.SESSION_START -> chat.send(Guard.inert(prompt) + image?.let { "\n[IMAGE:$it]" }.orEmpty())
                 FrameType.DONE -> { chat.close(); finish(frame.done?.fullResponse.orEmpty()) }
-                FrameType.ERROR -> { Log.w(AssistantService.TAG, "scribe turn failed: ${frame.message}"); chat.close(); finish(null) }
+                FrameType.ERROR -> { Log.w(AssistantService.TAG, "scribe turn failed: ${frame.message}"); scribeError = frame.message; chat.close(); finish(null) }
             }
         }
         // On timeout the caller (a briefing, the catch-up) falls back to its own text.
