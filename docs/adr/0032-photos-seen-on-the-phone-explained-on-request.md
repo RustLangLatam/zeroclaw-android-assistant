@@ -27,7 +27,11 @@ loads any marker it finds, whoever wrote it.
 
 Option 2. The labels, faces and text come from the on-device models the photo search already uses (ML Kit, bundled),
 so classifying costs nothing and nothing leaves the phone. *Explain it* sends the photo, at most 1280 px, with what the
-phone found; a model that cannot see pictures gets the same message without it and explains from the labels and text.
+phone found, to the tool-less `scribe` agent in a session of its own. When the main model cannot see pictures, ZeroClaw
+hands that turn to the model the owner set for pictures (`[multimodal] vision_model_provider`, Connectors › Services ›
+Photos); every other turn stays on the main model. The owner's session never holds the picture: ZeroClaw keeps it in
+the history, and every later turn there went to the picture model. The owner's agent hears the scribe's answer with
+the next message. If no model could look at the photo, the owner's agent explains from the labels and text.
 The app takes the photo through the camera app (`ACTION_IMAGE_CAPTURE`), so it holds no camera permission and the
 owner always presses the shutter.
 
@@ -38,5 +42,7 @@ third-party turns, scribe prompts, tool results and the owner's chat text. Only 
 
 - Good: photos are searchable by content and text with no data sent; the cloud sees a photo only when the owner taps.
 - Good: a message cannot make the daemon attach one of the owner's files to a stranger's turn.
-- Bad / cost: on-device labels are coarse and in English; an explanation by a model without vision is limited to them.
-- Follow-ups: search by the words read in a photo, not just its kind; a vision model chosen just for explanations.
+- Good: what the photo shows reaches a model with no tools; a sign in a photo cannot trigger an action.
+- Bad / cost: on-device labels are coarse and in English; without a model that sees pictures, an explanation is
+  limited to them. A second model means a second key and price.
+- Follow-up: search by the words read in a photo, not just its kind.

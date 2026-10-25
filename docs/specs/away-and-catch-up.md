@@ -37,7 +37,7 @@ was missed. Not for: firing missed reminders (that is `PhoneReminders.reschedule
 | `CatchUp.onBack` | `(String) -> Unit`, speaks | set in `MainActivity.onStart`, cleared in `onStop` |
 | `CatchUp.last`, `told`, `coming` | state read by `MainActivity` and `panorama` | |
 | `Absence.ask(owner, away, events)` | prompt for the `scribe` agent (English, asks for an answer in `Language.current`) | `run` |
-| `Turns.scribe(context, prompt, done)` | own new session of `scribe`; `done(text or null)`; timeout `OWNER_MS = 120 000` ms | `run` |
+| `Turns.scribe(context, prompt, image, done)` | own new session of `scribe`, with an optional picture; `done(text or null)`; timeout `OWNER_MS = 120 000` ms | `run` |
 | `MessageListener.retry` | answers an entry again (status `retrying`) | `missed` |
 | Notifications | id 9500; channels `back-quiet` (LOW) and `back` (DEFAULT) via `Chime.channel`; tap opens `MainActivity` | `tell` |
 

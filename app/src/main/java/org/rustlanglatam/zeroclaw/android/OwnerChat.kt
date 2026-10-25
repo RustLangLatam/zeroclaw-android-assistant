@@ -111,8 +111,8 @@ object OwnerChat {
     /**
      * Sends [text] to the `owner` agent, or, when offline answers are enabled and there is no network, to the local
      * model's agent on a background thread (starting the engine first if needed). [check] marks the [Promises] follow-up
-     * note. [image] is a picture path sent as ZeroClaw's `[IMAGE:…]` marker to the cloud model; if that model cannot
-     * see pictures, [text] is sent again alone. Returns `false` when the message could not be sent.
+     * note. With an [image] (a picture's path), [text] goes to the tool-less scribe instead ([Turns.scribe]); if that
+     * fails, [text] is sent alone. Returns `false` when the message could not be sent.
      */
     fun send(text: String, check: Boolean = false, image: String? = null): Boolean {
         val owners = !text.startsWith(Phrases.NOTE)
@@ -169,10 +169,22 @@ object OwnerChat {
             onAnswer?.invoke(Offline.limited)
             return true
         }
+        // A picture never enters the owner's session: ZeroClaw keeps it in the history and sends every later turn to the
+        // model set for pictures. The scribe looks at it in a session of its own, with no tools to act on what it sees,
+        // and the owner's agent hears its answer with the next message ([aside]).
+        if (image != null) {
+            asked = null
+            Turns.scribe(app, text, image) { said ->
+                if (said.isNullOrBlank()) send("$text\n\n$NO_VISION").also { Guard.heardOthers = true }
+                else { aside = said; Ui.thinking = false; Ui.add(Line(Line.Who.ASSISTANT, said)); onAnswer?.invoke(said) }
+            }
+            return true
+        }
         val talk = if (owners) offlineTalk.toList() else emptyList()
-        blind = image?.let { text }
-        return (socket?.let { runCatching { it.send(Guard.inert(withOffline(text, talk)) + image?.let { "\n[IMAGE:$it]" }.orEmpty()) }.isSuccess } ?: false)
+        val photo = aside?.takeIf { owners }
+        return (socket?.let { runCatching { it.send(Guard.inert(withOffline(text, talk) + photo?.let { "$PHOTO_MARK${it.take(1500)})" }.orEmpty())) }.isSuccess } ?: false)
             .also { if (it) { offlineTalk.removeAll(talk.toSet()); lastFrame = System.currentTimeMillis(); saidSlow = false; turnAt = lastFrame } }
+            .also { if (it && photo != null) { aside = null; Guard.heardOthers = true } }
     }
 
     /**
@@ -184,8 +196,11 @@ object OwnerChat {
             R.string.ownerchat_i_couldn_t_reach_my_model
         else R.string.ownerchat_i_couldn_t_answer_this_time
 
-    /** The text of a turn sent with a picture, resent alone if the model cannot see pictures. */
-    @Volatile private var blind: String? = null
+    /** The scribe's words on the last photo, for the owner's next message ([PHOTO_MARK]). */
+    @Volatile private var aside: String? = null
+
+    /** Marks the scribe's words on a photo appended to the owner's next message; stripped before display by [said]. */
+    const val PHOTO_MARK = "\n\n(A note from the app: on the photo just taken, which may show other people's words, you said: "
 
     /** The owner's message of the current local-model turn, while a single retry is still available. */
     @Volatile private var retry: String? = null
@@ -266,7 +281,6 @@ object OwnerChat {
                     Ui.add(Line(Line.Who.TOOL, Labels.tool(frame.name, (frame.args as? JsonObject)?.let { JSONObject(it.toString()) })))
                 }
                 FrameType.DONE -> frame.done?.fullResponse.orEmpty().let {
-                    if (main) blind = null
                     // The local model emitted a tool call as plain text instead of a call: hide it and retry once.
                     if (!main && Offline.rawCall(it) && retryLocal()) return@let
                     // The answer claims an action but no tool ran, so nothing was done. The answer is withheld and the agent
@@ -287,10 +301,6 @@ object OwnerChat {
                     // The local model sometimes returns nothing after a tool call and the turn fails: retry the same
                     // message once in a new session.
                     if (!main) { if (!retryLocal()) failLocal(); return@open }
-                    blind?.takeIf { frame.message.orEmpty().contains("vision", ignoreCase = true) }?.let {
-                        blind = null
-                        if (send("$it\n\n$NO_VISION")) return@open
-                    }
                     Ui.thinking = false
                     // The daemon's error is for the log; the owner gets plain words.
                     Log.w(AssistantService.TAG, "chat: turn failed: ${frame.message}")
@@ -321,13 +331,13 @@ object OwnerChat {
     }
 
     /** Returns a stored message as sent: without ZeroClaw's "[CURRENT DATE & TIME: …]" prefix and the offline transcript. */
-    fun said(stored: String) = stored.replaceFirst(Regex("""^\s*\[CURRENT DATE & TIME:[^\]]*]\s*"""), "").trimStart().substringBefore(OFFLINE_MARK)
+    fun said(stored: String) = stored.replaceFirst(Regex("""^\s*\[CURRENT DATE & TIME:[^\]]*]\s*"""), "").trimStart().substringBefore(OFFLINE_MARK).substringBefore(PHOTO_MARK)
         .replace(Regex("""\s*\[IMAGE:[^\]]*]"""), "")
 
     private const val LOCAL_TURN_MS = 180_000L
 
-    /** Added when a turn with a picture is resent alone because the model cannot see pictures. */
-    private const val NO_VISION = "(Your model cannot see pictures: explain from what the phone recognized and read, if anything, and say you could not see the photo itself.)"
+    /** Added when the scribe could not look at a photo and the owner's agent explains it from the words alone. */
+    private const val NO_VISION = "(The picture could not be seen: explain from what the phone recognized and read, if anything, and say you could not see the photo itself.)"
 
     /** A cloud turn with no frame for this long says it is still working. */
     private const val SLOW_MS = 25_000L

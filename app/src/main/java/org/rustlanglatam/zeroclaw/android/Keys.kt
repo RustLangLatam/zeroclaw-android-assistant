@@ -19,6 +19,10 @@ object Keys {
         /** The model's price, US$ per million input and output tokens; the build's applies only to the build's model. */
         MODEL_INPUT_PER_MTOK({ BuildConfig.MODEL_INPUT_PER_MTOK.takeIf { Keys[MODEL] == BuildConfig.MODEL }.orEmpty() }),
         MODEL_OUTPUT_PER_MTOK({ BuildConfig.MODEL_OUTPUT_PER_MTOK.takeIf { Keys[MODEL] == BuildConfig.MODEL }.orEmpty() }),
+        /** A model that can see pictures, used only for messages with a photo when the main model cannot see them. */
+        VISION_PROVIDER({ BuildConfig.VISION_PROVIDER }),
+        VISION_MODEL({ BuildConfig.VISION_MODEL }),
+        VISION_KEY({ BuildConfig.VISION_API_KEY }, secret = true),
         SEARCH_PROVIDER({ BuildConfig.SEARCH_PROVIDER }),
         SEARCH_KEY({ BuildConfig.SEARCH_KEY }, secret = true),
         YOUTUBE_KEY({ BuildConfig.YOUTUBE_KEY }, secret = true),
@@ -47,6 +51,9 @@ object Keys {
     /** ZeroClaw's provider family for any compatible gateway, which needs [Key.MODEL_URL]. */
     const val CUSTOM = "custom"
 
+    /** Whether a model that can see pictures is set. */
+    val visionReady get() = listOf(Key.VISION_PROVIDER, Key.VISION_MODEL, Key.VISION_KEY).none { this[it].isBlank() }
+
     /** Number of saves so far; the daemon's config is rewritten when it differs from the one it was written with. */
     val version get() = app?.let { AssistantService.prefs(it).getInt(VERSION, 0) } ?: 0
 
@@ -59,7 +66,7 @@ object Keys {
         if (v.isEmpty()) return true
         if (v.length > 512 || v.any { it < ' ' || it == '"' || it == '\\' || it.code > 126 }) return false
         return when (key) {
-            Key.MODEL_PROVIDER, Key.SEARCH_PROVIDER -> v.matches(Regex("[A-Za-z0-9_-]+"))
+            Key.MODEL_PROVIDER, Key.VISION_PROVIDER, Key.SEARCH_PROVIDER -> v.matches(Regex("[A-Za-z0-9_-]+"))
             Key.VOICE_URL -> v.startsWith("wss://")
             // Keys travel to this URL: encrypted, except to a gateway on this phone.
             Key.MODEL_URL -> v.startsWith("https://") || Regex("http://(127\\.0\\.0\\.1|localhost)(:\\d+)?(/.*)?").matches(v)

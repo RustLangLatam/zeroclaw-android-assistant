@@ -41,6 +41,9 @@ object Connectors {
             listOf(Keys.Key.MODEL_PROVIDER to R.string.connectors_provider, Keys.Key.MODEL to R.string.connectors_model_name,
                 Keys.Key.MODEL_URL to R.string.connectors_server_url, Keys.Key.MODEL_KEY to R.string.connectors_api_key),
             listOf(Keys.Key.MODEL_INPUT_PER_MTOK to R.string.connectors_input_price, Keys.Key.MODEL_OUTPUT_PER_MTOK to R.string.connectors_output_price)),
+        Triple(R.string.connectors_photos,
+            listOf(Keys.Key.VISION_PROVIDER to R.string.connectors_provider, Keys.Key.VISION_MODEL to R.string.connectors_model_name,
+                Keys.Key.VISION_KEY to R.string.connectors_api_key), emptyList()),
         Triple(R.string.connectors_web_search,
             listOf(Keys.Key.SEARCH_PROVIDER to R.string.connectors_provider, Keys.Key.SEARCH_KEY to R.string.connectors_api_key_or_url), emptyList()),
         Triple(R.string.connectors_videos, listOf(Keys.Key.YOUTUBE_KEY to R.string.connectors_api_key), emptyList()),
@@ -257,6 +260,8 @@ private fun ServicesForm(ui: MainActivity) {
                     ModelCatalog.perMillion(p.completion)?.let { values[Keys.Key.MODEL_OUTPUT_PER_MTOK] = it }
                 }
             }
+            Keys.Key.VISION_PROVIDER -> Combo(t(label), value(key), ModelCatalog.label(value(key)),
+                providers?.filter { it.name != Keys.CUSTOM }?.let { ModelCatalog.ordered(it, value(key)) }, onPick = change)
             Keys.Key.MODEL_URL -> if (provider == Keys.CUSTOM || value(key).isNotBlank()) Field(value(key), t(label), keyboard = KeyboardType.Uri) { change(it.trim()) } else return
             Keys.Key.VOICE_URL -> {
                 val options = voices.map { it.url to it.name } + (OWN_URL to t(R.string.connectors_other_my_own_url))
@@ -278,6 +283,7 @@ private fun ServicesForm(ui: MainActivity) {
                 // A key says whose it is: the model provider's name, or the voice service's host.
                 val whose = when (key) {
                     Keys.Key.MODEL_KEY -> provider.takeIf { it.isNotBlank() }?.let(ModelCatalog::label)
+                    Keys.Key.VISION_KEY -> value(Keys.Key.VISION_PROVIDER).takeIf { it.isNotBlank() }?.let(ModelCatalog::label)
                     Keys.Key.VOICE_KEY -> voiceService?.name ?: voiceHost(value(Keys.Key.VOICE_URL))
                     else -> null
                 }
