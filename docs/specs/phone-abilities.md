@@ -107,7 +107,8 @@ in Connectors › Services › Photos (`VISION_PROVIDER`, `VISION_MODEL`, `VISIO
 `local.properties`), written as `[multimodal] vision_model_provider` when all three are set (`Keys.visionReady`). The
 answer is shown and spoken, and appended to the owner's next message (`OwnerChat.PHOTO_MARK`, stripped from the chat)
 so the owner's agent can act on it, e.g. set the reminder it proposed. The picture never enters the owner's session:
-ZeroClaw keeps it in the history and sent every later turn there to the photos model. When the scribe turn fails (no
+ZeroClaw keeps it in the history and sent every later turn there to the photos model; a resumed owner session that
+holds a picture (sent by an earlier version) is replaced by a new one (`OwnerChat.history`). When the scribe turn fails (no
 model sees pictures, a wrong key), the owner's agent gets the message without the picture and explains from the labels
 and the text. In local mode the picture is never attached.
 

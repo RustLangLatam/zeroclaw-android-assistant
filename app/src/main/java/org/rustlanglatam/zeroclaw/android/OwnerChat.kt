@@ -271,7 +271,7 @@ object OwnerChat {
                 FrameType.SESSION_START -> {
                     frame.sessionId.takeIf { it.isNotEmpty() }?.let { id ->
                         prefs.edit().putString(key, id).apply()
-                        if (main && frame.resumed && Ui.chat.isEmpty()) history(context, id)
+                        if (main && frame.resumed) history(context, id, restore = Ui.chat.isEmpty())
                     }
                     if (main) { socket = chat; Ui.ready = true } else local = chat
                 }
@@ -304,18 +304,31 @@ object OwnerChat {
                     Ui.thinking = false
                     // The daemon's error is for the log; the owner gets plain words.
                     Log.w(AssistantService.TAG, "chat: turn failed: ${frame.message}")
-                    Ui.add(Line(Line.Who.NOTE, t(failure(frame.message.orEmpty(), Keys.modelReady))))
+                    val note = t(failure(frame.message.orEmpty(), Keys.modelReady))
+                    Ui.add(Line(Line.Who.NOTE, note))
+                    // Said aloud too: an owner talking by voice otherwise hears nothing.
+                    onAnswer?.invoke(note)
                     onError?.invoke()
                 }
             }
         }
     }
 
-    /** Restores the last [HISTORY] lines from ZeroClaw's session when the app restarts with an empty chat. */
-    private fun history(context: Context, session: String) = thread {
+    /**
+     * Checks a resumed session and, when the chat is empty ([restore]), restores its last [HISTORY] lines. A session
+     * holding a picture (sent into it by an earlier version) is left for a new one: ZeroClaw would send every later turn
+     * there to the model set for pictures.
+     */
+    private fun history(context: Context, session: String, restore: Boolean) = thread {
         val token = AssistantService.token(context) ?: return@thread
-        val lines = runCatching { runBlocking { AssistantService.client(token).sessions.messages(session) } }
+        val messages = runCatching { runBlocking { AssistantService.client(token).sessions.messages(session) } }
             .onFailure { Log.w(AssistantService.TAG, "chat history: ${it.message}") }.getOrNull().orEmpty()
+        if (messages.any { "[IMAGE:" in it.content }) {
+            Log.w(AssistantService.TAG, "chat: the session holds a picture; a new session")
+            return@thread fresh(context)
+        }
+        if (!restore) return@thread
+        val lines = messages
             .mapNotNull { m ->
                 when (m.role) {
                     // Restored as the owner wrote it (without the timestamp prefix ZeroClaw stores); app-generated notes

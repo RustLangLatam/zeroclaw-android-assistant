@@ -31,7 +31,8 @@ was never holds back another's save. The key is the only field left empty, shown
 stops counting when its provider changes; a saved key shows as saved, with *Change*. Saving waits until nothing is
 marked, then checks each key entered now with its provider (`KeyCheck`: one authenticated read of the provider's model
 list, at the `check` address the same files give). A refused key (400, 401, 403) is discarded with the rest of its
-group's changes and the owner is told; a key that cannot be checked (offline, no entry) is saved. Saved keys are not
+group's changes and the owner is told; so is a chosen model missing from the list the provider returns for that key
+(retired, or not offered to this account: a recommended model was retired for new accounts); a key that cannot be checked (offline, no entry) is saved. Saved keys are not
 checked again. A group whose saved
 settings are complete shows "Active" beside its title.
 

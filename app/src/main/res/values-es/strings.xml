@@ -967,6 +967,7 @@
     <string name="connectors_models">Modelos de IA</string>
     <string name="connectors_apps">Integraciones</string>
     <string name="connectors_not_set">Sin configurar</string>
+    <string name="connectors_model_not_offered_x">La clave funciona, pero su proveedor ya no le ofrece %1$s: elige otro modelo y guarda de nuevo.</string>
     <string name="connectors_x_empty">%1$s: vacía, hace falta</string>
     <string name="connectors_fill_the_marked">Completa los campos marcados en rojo.</string>
     <string name="connectors_x_saved_leave_empty">%1$s guardada (déjala vacía para mantenerla)</string>

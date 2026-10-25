@@ -967,6 +967,7 @@
     <string name="connectors_models">AI models</string>
     <string name="connectors_apps">Integrations</string>
     <string name="connectors_not_set">Not set</string>
+    <string name="connectors_model_not_offered_x">The key works, but its provider no longer offers %1$s to it: choose another model and save again.</string>
     <string name="connectors_x_empty">%1$s: empty, needed</string>
     <string name="connectors_fill_the_marked">Fill in the fields marked in red.</string>
     <string name="connectors_x_saved_leave_empty">%1$s saved (leave empty to keep it)</string>

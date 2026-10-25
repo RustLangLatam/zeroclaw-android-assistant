@@ -58,4 +58,10 @@ class ModelCatalogTest {
         assertTrue(Keys.Key.MODEL_URL in Connectors.required { if (it == Keys.Key.MODEL_PROVIDER) Keys.CUSTOM else "" })
         assertEquals(emptyList<Keys.Key>(), Connectors.required { "" })
     }
+
+    @Test fun aProvidersModelListIsReadInBothShapes() {
+        assertEquals(setOf("a-1", "b-2"), KeyCheck.ids("""{"object":"list","data":[{"id":"a-1"},{"id":"b-2"}]}"""))
+        assertEquals(setOf("g-3-flash"), KeyCheck.ids("""{"models":[{"name":"models/g-3-flash"}]}"""))
+        assertEquals(emptySet<String>(), KeyCheck.ids("not json"))
+    }
 }

@@ -36,6 +36,15 @@ object Connectors {
     /** Value of [Ui.connector] that opens the integrations form (other apps and services: web search, videos). */
     const val APPS = "apps"
 
+    /** Prefix of [Ui.connector] values that open one group of the services alone: `group:<key>` ([GROUP_KEYS]). */
+    const val GROUP = "group:"
+
+    /** The section keys of each services group, as opened from Connectors, by voice or by the agent (`open_section`). */
+    val GROUP_KEYS = mapOf(
+        "language_model" to R.string.connectors_model, "photos_model" to R.string.connectors_photos, "natural_voice" to R.string.connectors_natural_voice,
+        "web_search" to R.string.connectors_web_search, "videos" to R.string.connectors_videos,
+    )
+
     /** The groups of the models form (the assistant's own thinking, sight and voice); the rest are integrations. */
     val MODEL_GROUPS = setOf(R.string.connectors_model, R.string.connectors_photos, R.string.connectors_natural_voice)
 
@@ -145,7 +154,14 @@ object ModelCatalog {
  * Keys already saved are not checked again.
  */
 object KeyCheck {
-    enum class Result { VALID, INVALID, UNKNOWN }
+    enum class Result { VALID, INVALID, NO_MODEL, UNKNOWN }
+
+    /** The model ids in a provider's model list ([body]): `data[].id`, or `models[].name` without its `models/` prefix. */
+    fun ids(body: String): Set<String> = runCatching {
+        val o = org.json.JSONObject(body)
+        val a = o.optJSONArray("data") ?: o.optJSONArray("models") ?: return@runCatching emptySet<String>()
+        (0 until a.length()).mapNotNull { a.optJSONObject(it) }.map { (it.optString("id").ifBlank { it.optString("name") }).removePrefix("models/") }.toSet()
+    }.getOrDefault(emptySet())
 
     /** The `check` entry for [key] given the form's [value]s: its provider's, or its voice service's; `null` when none. */
     private fun spec(context: android.content.Context, key: Keys.Key, value: (Keys.Key) -> String): org.json.JSONObject? = runCatching {
@@ -164,9 +180,11 @@ object KeyCheck {
 
     /**
      * Checks [secret] for [key]: [Result.VALID] on success, [Result.INVALID] when the provider refuses it (400, 401,
-     * 403), [Result.UNKNOWN] when it cannot tell (no entry, offline, another error). Blocking; call off the main thread.
+     * 403), [Result.NO_MODEL] when the key works but the provider's list for it lacks the chosen [model] (retired, or
+     * not offered to this account), [Result.UNKNOWN] when it cannot tell (no entry, offline, another error). Blocking;
+     * call off the main thread.
      */
-    fun check(context: android.content.Context, key: Keys.Key, secret: String, value: (Keys.Key) -> String): Result {
+    fun check(context: android.content.Context, key: Keys.Key, secret: String, value: (Keys.Key) -> String, model: String? = null): Result {
         val spec = spec(context, key, value) ?: return Result.UNKNOWN
         val url = spec.optString("url").takeIf { it.startsWith("https://") } ?: return Result.UNKNOWN
         return runCatching {
@@ -176,8 +194,13 @@ object KeyCheck {
             if (auth == "bearer") c.setRequestProperty("Authorization", "Bearer ${secret.trim()}") else c.setRequestProperty(auth, secret.trim())
             spec.optJSONObject("headers")?.let { h -> h.keys().forEach { c.setRequestProperty(it, h.getString(it)) } }
             val code = c.responseCode
+            val listed = if (code in 200..299 && model != null) ids(c.inputStream.bufferedReader().use { it.readText() }) else emptySet()
             c.disconnect()
-            when (code) { in 200..299 -> Result.VALID; 400, 401, 403 -> Result.INVALID; else -> Result.UNKNOWN }
+            when {
+                code in 200..299 -> if (model.isNullOrBlank() || listed.isEmpty() || model in listed) Result.VALID else Result.NO_MODEL
+                code == 400 || code == 401 || code == 403 -> Result.INVALID
+                else -> Result.UNKNOWN
+            }
         }.getOrDefault(Result.UNKNOWN)
     }
 }
@@ -203,17 +226,16 @@ fun ConnectorsPlace(ui: MainActivity, onBack: () -> Unit) {
             val model = if (Keys.modelReady) "${ModelCatalog.label(Keys[Keys.Key.MODEL_PROVIDER])} · ${Keys[Keys.Key.MODEL]}" else if (Offline.wanted && Offline.ready) t(R.string.connectors_not_set_local_mode) else t(R.string.connectors_not_set_i_can_t_think)
             val photos = if (Keys.visionReady) "${ModelCatalog.label(Keys[Keys.Key.VISION_PROVIDER])} · ${Keys[Keys.Key.VISION_MODEL]}" else t(R.string.connectors_not_set)
             val voice = if (Connectors.active(R.string.connectors_natural_voice)) Keys[Keys.Key.VOICE_NAME].replaceFirstChar(Char::uppercase) else t(R.string.connectors_not_set)
-            val models = { Ui.connector = Connectors.SERVICES }
+            fun open(key: String) = { Ui.connector = Connectors.GROUP + key }
             Panel {
-                Item(t(R.string.connectors_model), model, onClick = models) { Chevron() }
-                Item(t(R.string.connectors_photos), photos, onClick = models) { Chevron() }
-                Item(t(R.string.connectors_natural_voice), voice, divider = false, onClick = models) { Chevron() }
+                Item(t(R.string.connectors_model), model, onClick = open("language_model")) { Chevron() }
+                Item(t(R.string.connectors_photos), photos, onClick = open("photos_model")) { Chevron() }
+                Item(t(R.string.connectors_natural_voice), voice, divider = false, onClick = open("natural_voice")) { Chevron() }
             }
             SectionLabel(t(R.string.connectors_apps))
-            val apps = { Ui.connector = Connectors.APPS }
             Panel {
-                Item(t(R.string.connectors_web_search), Keys[Keys.Key.SEARCH_PROVIDER].ifBlank { t(R.string.connectors_not_set) }, onClick = apps) { Chevron() }
-                Item(t(R.string.connectors_videos), t(if (Keys[Keys.Key.YOUTUBE_KEY].isNotBlank()) R.string.connectors_key_saved else R.string.connectors_not_set), divider = false, onClick = apps) { Chevron() }
+                Item(t(R.string.connectors_web_search), Keys[Keys.Key.SEARCH_PROVIDER].ifBlank { t(R.string.connectors_not_set) }, onClick = open("web_search")) { Chevron() }
+                Item(t(R.string.connectors_videos), t(if (Keys[Keys.Key.YOUTUBE_KEY].isNotBlank()) R.string.connectors_key_saved else R.string.connectors_not_set), divider = false, onClick = open("videos")) { Chevron() }
             }
             SectionLabel(t(R.string.connectors_email))
             Panel {
@@ -250,8 +272,9 @@ fun ConnectorSheet(ui: MainActivity, which: String) {
                 }
             }
         }
-        which == Connectors.SERVICES -> ServicesForm(ui, models = true)
-        which == Connectors.APPS -> ServicesForm(ui, models = false)
+        which == Connectors.SERVICES -> ServicesForm(ui, Connectors.MODEL_GROUPS.toList(), R.string.connectors_models)
+        which == Connectors.APPS -> ServicesForm(ui, Connectors.GROUPS.map { it.first } - Connectors.MODEL_GROUPS, R.string.connectors_apps)
+        which.startsWith(Connectors.GROUP) -> Connectors.GROUP_KEYS[which.removePrefix(Connectors.GROUP)]?.let { ServicesForm(ui, listOf(it), it) }
         which.startsWith("account:") -> EmailAccounts.accounts.firstOrNull { it.alias == which.removePrefix("account:") }?.let { a ->
             Sheet(close) {
                 Text(a.provider.label, style = MaterialTheme.typography.displaySmall)
@@ -322,7 +345,7 @@ private fun EmailForm(ui: MainActivity, provider: EmailAccounts.Provider) {
  * from the catalog when the provider publishes them. Saving applies only what changed ([MainActivity.saveKeys]).
  */
 @Composable
-private fun ServicesForm(ui: MainActivity, models: Boolean) {
+private fun ServicesForm(ui: MainActivity, groups: List<Int>, title: Int) {
     val values = remember { androidx.compose.runtime.mutableStateMapOf<Keys.Key, String>() }
     var busy by remember { mutableStateOf(false) }
     var problem by remember { mutableStateOf<String?>(null) }
@@ -438,15 +461,17 @@ private fun ServicesForm(ui: MainActivity, models: Boolean) {
         Spacer(Modifier.height(10.dp))
     }
     Sheet({ if (!busy) Ui.connector = null }) {
-        Text(t(if (models) R.string.connectors_models else R.string.connectors_apps), style = MaterialTheme.typography.displaySmall)
+        Text(t(title), style = MaterialTheme.typography.displaySmall)
         Spacer(Modifier.height(8.dp))
         Text(t(R.string.connectors_services_explained), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
-        Connectors.GROUPS.filter { (it.first in Connectors.MODEL_GROUPS) == models }.forEach { (title, shown, more) ->
+        Connectors.GROUPS.filter { it.first in groups }.forEach { (title, shown, more) ->
             // A group whose saved settings are complete is the one in use: marked so at a glance.
             androidx.compose.foundation.layout.Row(Modifier.padding(top = 30.dp, bottom = 12.dp, start = 6.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Eyebrow(t(title))
+                // A form of one group already carries its name as the title.
+                if (groups.size > 1) Eyebrow(t(title))
                 if (Connectors.active(title)) {
-                    Spacer(Modifier.width(12.dp)); Light(Ink.ok); Spacer(Modifier.width(6.dp))
+                    if (groups.size > 1) Spacer(Modifier.width(12.dp))
+                    Light(Ink.ok); Spacer(Modifier.width(6.dp))
                     Eyebrow(t(R.string.connectors_active), color = Ink.ok)
                 }
             }
@@ -471,16 +496,25 @@ private fun ServicesForm(ui: MainActivity, models: Boolean) {
             kotlin.concurrent.thread(name = "key-check") {
                 // Only keys entered now are checked; one refused is dropped with the rest of its group's changes, so a
                 // new provider is never saved with the old provider's key.
-                val refused = changed.keys.filter { it.secret && it in Connectors.KEY_OF }
-                    .filter { KeyCheck.check(context, it, changed.getValue(it), snapshot::getValue) == KeyCheck.Result.INVALID }
+                // The model chosen with each key: checked against the provider's own list for that key.
+                val modelOf = mapOf(Keys.Key.MODEL_KEY to Keys.Key.MODEL, Keys.Key.VISION_KEY to Keys.Key.VISION_MODEL)
+                val results = changed.keys.filter { it.secret && it in Connectors.KEY_OF }
+                    .associateWith { KeyCheck.check(context, it, changed.getValue(it), snapshot::getValue, modelOf[it]?.let(snapshot::getValue)) }
+                val refused = results.filterValues { it == KeyCheck.Result.INVALID || it == KeyCheck.Result.NO_MODEL }.keys.toList()
+                val noModel = results.filterValues { it == KeyCheck.Result.NO_MODEL }.keys.mapNotNull { modelOf[it]?.let(snapshot::getValue) }
                 val dropped = Connectors.GROUPS.map { (_, shown, more) -> (shown + more).map { it.first } }.filter { g -> g.any { it in refused } }.flatten().toSet()
                 val keep = changed.filterKeys { it !in dropped }
                 val whose = refused.joinToString(", ") { k -> ModelCatalog.label(snapshot.getValue(Connectors.KEY_OF.getValue(k))).let { if (k == Keys.Key.VOICE_KEY) CloudVoice.providerOf(it, voices)?.name ?: voiceHost(it) ?: it else it } }
                 ui.runOnUiThread {
                     checking = false
-                    refused.forEach { values.remove(it) }
-                    val note = if (refused.isEmpty()) null else t(R.string.connectors_key_refused_x, whose)
-                    if (keep.isEmpty()) { busy = false; problem = t(R.string.connectors_key_refused_only_x, whose); return@runOnUiThread }
+                    // A refused key is cleared; a model not offered is cleared instead, so the owner picks another.
+                    results.forEach { (k, r) -> if (r == KeyCheck.Result.INVALID) values.remove(k) else if (r == KeyCheck.Result.NO_MODEL) modelOf[k]?.let { values[it] = "" } }
+                    val note = when {
+                        noModel.isNotEmpty() -> t(R.string.connectors_model_not_offered_x, noModel.joinToString(", "))
+                        refused.isEmpty() -> null
+                        else -> t(R.string.connectors_key_refused_x, whose)
+                    }
+                    if (keep.isEmpty()) { busy = false; problem = if (noModel.isNotEmpty()) note else t(R.string.connectors_key_refused_only_x, whose); return@runOnUiThread }
                     ui.saveKeys(keep) { error -> busy = false; problem = error ?: note; if (error == null && note != null) ui.remark(note) }
                 }
             }

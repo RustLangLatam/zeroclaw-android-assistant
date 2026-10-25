@@ -3,7 +3,7 @@ package org.rustlanglatam.zeroclaw.android
 import java.text.Normalizer
 
 /** Interface actions the owner can trigger by voice or text instead of a menu. */
-enum class Command { MENU, CLOSE, HOME, TALK, ACTIVITY, CONTROL, RULES, MEMORY, PHOTOS, FILES, PAUSE, RESUME, WIDGETS, NEWS, APP_MODE, ASSISTANT_MODE, SIMPLE_MODE, NORMAL_MODE }
+enum class Command { MENU, CLOSE, HOME, TALK, ACTIVITY, CONTROL, RULES, MEMORY, PHOTOS, FILES, PAUSE, RESUME, WIDGETS, NEWS, APP_MODE, ASSISTANT_MODE, SIMPLE_MODE, NORMAL_MODE, MODELS, INTEGRATIONS, THEMES }
 
 /**
  * Recognizes short spoken or written commands that the app handles itself (show the menu, open
@@ -19,6 +19,9 @@ object Commands {
 
     private val nouns = listOf(
         Command.MENU to Lexicon["commands.noun.menu"],
+        Command.MODELS to Lexicon["commands.noun.models"],
+        Command.INTEGRATIONS to Lexicon["commands.noun.integrations"],
+        Command.THEMES to Lexicon["commands.noun.themes"],
         Command.ACTIVITY to Lexicon["commands.noun.activity"],
         Command.CONTROL to Lexicon["commands.noun.control"],
         Command.RULES to Lexicon["commands.noun.rules"],

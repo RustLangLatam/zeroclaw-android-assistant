@@ -616,6 +616,9 @@ class MainActivity : ComponentActivity() {
             Command.PHOTOS -> go(Place.PHOTOS)
             Command.FILES -> go(Place.FILES)
             Command.NEWS -> go(Place.NEWS)
+            Command.MODELS -> Sections.open("models")
+            Command.INTEGRATIONS -> Sections.open("integrations")
+            Command.THEMES -> Sections.open("color")
             Command.WIDGETS -> { go(Place.HOME); Ui.arranging = true }
             Command.PAUSE -> { Ui.menu = false; setStopped(true); if (byVoice) speak(t(R.string.mainactivity_all_right_i_ll_stay_paused)) }
             Command.RESUME -> { Ui.menu = false; setStopped(false) }

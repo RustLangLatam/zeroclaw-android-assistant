@@ -169,7 +169,7 @@ object Sections {
     val ANCHORS = listOf("presence", "color", "people", "messages", "voice", "offline", "cost", "privacy")
     val SHEETS = listOf("name", "family", "work", "apps")
 
-    val keys get() = places.keys + ANCHORS + SHEETS + listOf("add_email", "phone_permissions")
+    val keys get() = places.keys + ANCHORS + SHEETS + Connectors.GROUP_KEYS.keys + listOf("models", "integrations", "add_email", "phone_permissions")
 
     /** Navigates to the section named by [key]; returns `false` if the key is unknown. */
     fun open(key: String): Boolean {
@@ -178,9 +178,11 @@ object Sections {
         when {
             k in places -> Ui.place = places.getValue(k)
             k in ANCHORS || k in SHEETS -> { Ui.place = Place.CONTROL; Ui.section = k }
+            k == "themes" || k == "theme" || k == "palette" -> { Ui.place = Place.CONTROL; Ui.section = "color" }
             k == "add_email" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.PICK }
-            k == "services" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES }
+            k == "services" || k == "models" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES }
             k == "integrations" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.APPS }
+            k in Connectors.GROUP_KEYS -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.GROUP + k }
             k == "phone_permissions" -> Ui.draft = Draft.current().apply { step = 1 }
             else -> return false
         }
