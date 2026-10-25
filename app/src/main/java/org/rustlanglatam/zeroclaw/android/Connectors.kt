@@ -34,7 +34,7 @@ object Connectors {
 
     /**
      * The services form's groups: a title, the settings shown, and those under "Advanced" (prefilled, rarely changed),
-     * each with its field label. The model's provider and name and the voice's name are chosen from lists.
+     * each with its field label. The model's provider and name and the voice service and voice are chosen from lists.
      */
     val GROUPS = listOf(
         Triple(R.string.connectors_model,
@@ -45,9 +45,9 @@ object Connectors {
             listOf(Keys.Key.SEARCH_PROVIDER to R.string.connectors_provider, Keys.Key.SEARCH_KEY to R.string.connectors_api_key_or_url), emptyList()),
         Triple(R.string.connectors_videos, listOf(Keys.Key.YOUTUBE_KEY to R.string.connectors_api_key), emptyList()),
         Triple(R.string.connectors_natural_voice,
-            listOf(Keys.Key.VOICE_NAME to R.string.connectors_voice_name, Keys.Key.VOICE_KEY to R.string.connectors_api_key),
-            listOf(Keys.Key.VOICE_URL to R.string.connectors_websocket_url, Keys.Key.VOICE_MODEL to R.string.connectors_model_name,
-                Keys.Key.VOICE_PER_MINUTE to R.string.connectors_usd_per_minute)),
+            listOf(Keys.Key.VOICE_URL to R.string.connectors_voice_provider, Keys.Key.VOICE_NAME to R.string.connectors_voice_name,
+                Keys.Key.VOICE_KEY to R.string.connectors_api_key),
+            listOf(Keys.Key.VOICE_MODEL to R.string.connectors_model_name, Keys.Key.VOICE_PER_MINUTE to R.string.connectors_usd_per_minute)),
     )
 }
 
@@ -212,9 +212,9 @@ private fun EmailForm(ui: MainActivity, provider: EmailAccounts.Provider) {
 
 /**
  * Shows the services form: each group's settings, prefilled with the current value; a key is never shown back, and
- * left empty it keeps the one saved. The model's provider and name come from ZeroClaw's catalog and the voice from
- * [CloudVoice.VOICES], each with a search and "use what I typed"; prices come from the catalog when the provider
- * publishes them. Saving applies only what changed ([MainActivity.saveKeys]).
+ * left empty it keeps the one saved. The model's provider and name come from ZeroClaw's catalog, the voice service
+ * and voice from `assets/voices.json` ([CloudVoice.providers]) or the owner's own URL, each with a search; prices come
+ * from the catalog when the provider publishes them. Saving applies only what changed ([MainActivity.saveKeys]).
  */
 @Composable
 private fun ServicesForm(ui: MainActivity) {
@@ -228,6 +228,10 @@ private fun ServicesForm(ui: MainActivity) {
     var providers by remember { mutableStateOf(ModelCatalog.providers) }
     var catalog by remember { mutableStateOf<io.github.rustlanglatam.zeroclaw.CatalogModels?>(null) }
     var loading by remember { mutableStateOf(true) }
+    val voices = remember { CloudVoice.providers(context) }
+    val voiceService = CloudVoice.providerOf(value(Keys.Key.VOICE_URL), voices)
+    // A service not listed is entered by its URL; chosen as "Other", or already saved that way.
+    var ownVoiceUrl by remember { mutableStateOf(voiceService == null && Keys[Keys.Key.VOICE_URL].isNotBlank()) }
     androidx.compose.runtime.LaunchedEffect(Unit) {
         providers = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.load(context) }
         if (providers == null) loading = false
@@ -254,13 +258,27 @@ private fun ServicesForm(ui: MainActivity) {
                 }
             }
             Keys.Key.MODEL_URL -> if (provider == Keys.CUSTOM || value(key).isNotBlank()) Field(value(key), t(label), keyboard = KeyboardType.Uri) { change(it.trim()) } else return
-            Keys.Key.VOICE_NAME -> Combo(t(label), value(key), value(key), CloudVoice.VOICES.map { it to it.replaceFirstChar(Char::uppercase) }, onPick = change)
+            Keys.Key.VOICE_URL -> {
+                val options = voices.map { it.url to it.name } + (OWN_URL to t(R.string.connectors_other_my_own_url))
+                val shown = when { ownVoiceUrl -> t(R.string.connectors_other_my_own_url); else -> voiceService?.name.orEmpty() }
+                Combo(t(label), if (ownVoiceUrl) OWN_URL else value(key), shown, options, other = false) { v ->
+                    ownVoiceUrl = v == OWN_URL
+                    CloudVoice.providerOf(v, voices)?.let { p ->
+                        // A listed service brings its model, price and, if the current one isn't its, its first voice.
+                        change(p.url); values[Keys.Key.VOICE_MODEL] = p.model; values[Keys.Key.VOICE_PER_MINUTE] = p.perMinute
+                        if (value(Keys.Key.VOICE_NAME) !in p.voices) values[Keys.Key.VOICE_NAME] = p.voices.first()
+                    } ?: change("")
+                }
+                if (ownVoiceUrl) { Spacer(Modifier.height(10.dp)); Field(value(key), t(R.string.connectors_websocket_url), keyboard = KeyboardType.Uri) { change(it.trim()) } }
+            }
+            Keys.Key.VOICE_NAME -> Combo(t(label), value(key), value(key).replaceFirstChar(Char::uppercase),
+                voiceService?.voices?.map { it to it.replaceFirstChar(Char::uppercase) }, onPick = change)
             else -> {
                 val shown = values[key] ?: if (key.secret) "" else Keys[key]
                 // A key says whose it is: the model provider's name, or the voice service's host.
                 val whose = when (key) {
                     Keys.Key.MODEL_KEY -> provider.takeIf { it.isNotBlank() }?.let(ModelCatalog::label)
-                    Keys.Key.VOICE_KEY -> voiceHost(value(Keys.Key.VOICE_URL))
+                    Keys.Key.VOICE_KEY -> voiceService?.name ?: voiceHost(value(Keys.Key.VOICE_URL))
                     else -> null
                 }
                 val named = whose?.let { t(R.string.connectors_api_key_of_x, it) } ?: t(label)
@@ -276,11 +294,6 @@ private fun ServicesForm(ui: MainActivity) {
         Text(t(R.string.connectors_services_explained), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
         Connectors.GROUPS.forEach { (title, shown, more) ->
             SectionLabel(t(title))
-            // The voice service is set by its URL (under Advanced): say which one it is, so its key makes sense.
-            if (title == R.string.connectors_natural_voice) {
-                Text(voiceHost(value(Keys.Key.VOICE_URL))?.let { t(R.string.connectors_voice_service_x, it) } ?: t(R.string.connectors_no_voice_service),
-                    Modifier.padding(start = 6.dp, bottom = 12.dp), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
-            }
             shown.forEach { (key, label) -> Setting(key, label) }
             if (more.isNotEmpty()) {
                 val open = title in advanced
@@ -303,11 +316,11 @@ private fun ServicesForm(ui: MainActivity) {
 
 /**
  * A choice from [options] (value to label), shown as a row with [label] and the current [shown] text; tapping it opens
- * a search and the matching options, plus "use what I typed" for a value not listed. While [loading], a row saying
+ * a search and the matching options, plus "use what I typed" for a value not listed when [other]. While [loading], a row saying
  * so; with no options (the catalog can't be reached), a plain text field.
  */
 @Composable
-private fun Combo(label: String, value: String, shown: String, options: List<Pair<String, String>>?, loading: Boolean = false, onPick: (String) -> Unit) {
+private fun Combo(label: String, value: String, shown: String, options: List<Pair<String, String>>?, loading: Boolean = false, other: Boolean = true, onPick: (String) -> Unit) {
     if (loading) return Panel { Item(label, t(R.string.connectors_loading), divider = false) }
     if (options == null) return Field(value, label, keyboard = KeyboardType.Uri) { onPick(it.trim()) }
     var open by remember { mutableStateOf(false) }
@@ -325,13 +338,16 @@ private fun Combo(label: String, value: String, shown: String, options: List<Pai
             }
             if (matches.size > MAX_SHOWN) Text(t(R.string.connectors_x_more_type_to_search, matches.size - MAX_SHOWN),
                 Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
-            if (q.isNotEmpty() && options.none { it.first == q }) Item(t(R.string.connectors_use_x, q), divider = false, onClick = { onPick(q); open = false })
+            if (other && q.isNotEmpty() && options.none { it.first == q }) Item(t(R.string.connectors_use_x, q), divider = false, onClick = { onPick(q); open = false })
         }
     }
 }
 
 /** Returns the host of the voice service's [url] (`wss://host/...`), or `null` when none is set. */
 fun voiceHost(url: String) = runCatching { java.net.URI(url.trim()).host }.getOrNull()?.takeIf { it.isNotBlank() }
+
+/** The voice provider option for a service entered by its URL. */
+private const val OWN_URL = "own-url"
 
 /** Options listed at once in a [Combo]; the search narrows the rest. */
 private const val MAX_SHOWN = 30

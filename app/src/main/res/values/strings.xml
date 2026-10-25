@@ -1065,6 +1065,6 @@
     <string name="connectors_x_more_type_to_search">%1$d more: type to search</string>
     <string name="connectors_loading">Loading…</string>
     <string name="connectors_api_key_of_x">API key of %1$s</string>
-    <string name="connectors_voice_service_x">Service: %1$s. Its key goes below; change the service under Advanced.</string>
-    <string name="connectors_no_voice_service">No voice service yet: set its URL under Advanced.</string>
+    <string name="connectors_voice_provider">Voice provider</string>
+    <string name="connectors_other_my_own_url">Other (my own URL)</string>
 </resources>
