@@ -80,6 +80,7 @@ data class Act(val log: String, val title: String, val detail: String? = null, v
         fun busy(minutes: Long) = Act("busy mode for $minutes min", t(R.string.act_busy_mode_for_x_min, minutes))
         fun unanswered() = Act("list unanswered", t(R.string.act_see_what_is_unanswered))
         fun birthdays() = Act("list birthdays", t(R.string.act_see_upcoming_birthdays))
+        fun takePhoto() = Act("take a photo", t(R.string.act_take_a_photo))
         fun dial(name: String) = Act("dialer for $name", t(R.string.act_open_the_dialer_for_x, name))
         fun list(name: String) = Act("list $name", t(R.string.act_change_the_x_list, name))
         fun availability(hour: Int, from: String) = Act("availability at $hour:00 for $from", t(R.string.act_tell_x_whether_you_re_free, from, hour))

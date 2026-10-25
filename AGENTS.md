@@ -77,7 +77,7 @@ references its issue (`Closes #N`) and updates the specs it changes.
 | `app/.../Connectors.kt` | Connectors screen: services (model, search, videos, voice keys) and connected accounts by kind, each with its form |
 | `app/.../Keys.kt` | service settings and keys entered by the owner, encrypted on the phone; the build's values as fallback (ADR-0030) |
 | `app/.../Agenda.kt` | clashes and free time before any commitment |
-| `app/.../Photos.kt`, `PhoneGallery.kt` | photo search: dates from MediaStore, on-device labels and faces |
+| `app/.../Photos.kt`, `PhoneGallery.kt`, `PhotoActivity.kt` | photo search: dates from MediaStore, on-device labels and faces; taking a photo, labeled and its text read on the phone |
 | `app/.../Files.kt`, `PhoneFiles.kt` | file search: Downloads, Documents, WhatsApp, Telegram, plus emails and messages |
 | `app/.../Health.kt` | permissions the assistant needs in the background, checked every minute; a notice when one is lost |
 | `app/.../Absence.kt`, `CatchUp.kt` | away and back: the cause (phone off, app closed, offline) and a prioritized summary |

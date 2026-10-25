@@ -111,9 +111,10 @@ object OwnerChat {
     /**
      * Sends [text] to the `owner` agent, or, when offline answers are enabled and there is no network, to the local
      * model's agent on a background thread (starting the engine first if needed). [check] marks the [Promises] follow-up
-     * note. Returns `false` when the message could not be sent.
+     * note. [image] is a picture path sent as ZeroClaw's `[IMAGE:…]` marker to the cloud model; if that model cannot
+     * see pictures, [text] is sent again alone. Returns `false` when the message could not be sent.
      */
-    fun send(text: String, check: Boolean = false): Boolean {
+    fun send(text: String, check: Boolean = false, image: String? = null): Boolean {
         val owners = !text.startsWith(Phrases.NOTE)
         if (owners) { asked = text; tools = 0; lastWords = text }
         // Offline or in local mode, app-generated notes (a greeting, a catch-up) are dropped: only the owner's messages
@@ -134,7 +135,7 @@ object OwnerChat {
                     return@thread
                 }
                 if (owners) retry = text
-                val ok = Offline.ensure(app) && (local ?: openLocal())?.let { runCatching { it.send(Offline.toSmall(text)) }.isSuccess } == true
+                val ok = Offline.ensure(app) && (local ?: openLocal())?.let { runCatching { it.send(Offline.toSmall(Guard.inert(text))) }.isSuccess } == true
                 if (ok) {
                     val since = localSince
                     // A turn that exceeds [LOCAL_TURN_MS] is reported, not retried: the engine is still busy with it.
@@ -169,7 +170,8 @@ object OwnerChat {
             return true
         }
         val talk = if (owners) offlineTalk.toList() else emptyList()
-        return (socket?.let { runCatching { it.send(withOffline(text, talk)) }.isSuccess } ?: false)
+        blind = image?.let { text }
+        return (socket?.let { runCatching { it.send(Guard.inert(withOffline(text, talk)) + image?.let { "\n[IMAGE:$it]" }.orEmpty()) }.isSuccess } ?: false)
             .also { if (it) { offlineTalk.removeAll(talk.toSet()); lastFrame = System.currentTimeMillis(); saidSlow = false; turnAt = lastFrame } }
     }
 
@@ -181,6 +183,8 @@ object OwnerChat {
         if (!modelReady || Regex("provider|api.?key|unauthori[sz]ed|authenticat|\\b40[13]\\b", RegexOption.IGNORE_CASE).containsMatchIn(error))
             R.string.ownerchat_i_couldn_t_reach_my_model
         else R.string.ownerchat_i_couldn_t_answer_this_time
+    /** The text of a turn sent with a picture, resent alone if the model cannot see pictures. */
+    @Volatile private var blind: String? = null
 
     /** The owner's message of the current local-model turn, while a single retry is still available. */
     @Volatile private var retry: String? = null
@@ -261,6 +265,7 @@ object OwnerChat {
                     Ui.add(Line(Line.Who.TOOL, Labels.tool(frame.name, (frame.args as? JsonObject)?.let { JSONObject(it.toString()) })))
                 }
                 FrameType.DONE -> frame.done?.fullResponse.orEmpty().let {
+                    if (main) blind = null
                     // The local model emitted a tool call as plain text instead of a call: hide it and retry once.
                     if (!main && Offline.rawCall(it) && retryLocal()) return@let
                     // The answer claims an action but no tool ran, so nothing was done. The answer is withheld and the agent
@@ -281,6 +286,10 @@ object OwnerChat {
                     // The local model sometimes returns nothing after a tool call and the turn fails: retry the same
                     // message once in a new session.
                     if (!main) { if (!retryLocal()) failLocal(); return@open }
+                    blind?.takeIf { frame.message.orEmpty().contains("vision", ignoreCase = true) }?.let {
+                        blind = null
+                        if (send("$it\n\n$NO_VISION")) return@open
+                    }
                     Ui.thinking = false
                     // The daemon's error is for the log; the owner gets plain words.
                     Log.w(AssistantService.TAG, "chat: turn failed: ${frame.message}")
@@ -312,8 +321,12 @@ object OwnerChat {
 
     /** Returns a stored message as sent: without ZeroClaw's "[CURRENT DATE & TIME: …]" prefix and the offline transcript. */
     fun said(stored: String) = stored.replaceFirst(Regex("""^\s*\[CURRENT DATE & TIME:[^\]]*]\s*"""), "").trimStart().substringBefore(OFFLINE_MARK)
+        .replace(Regex("""\s*\[IMAGE:[^\]]*]"""), "")
 
     private const val LOCAL_TURN_MS = 180_000L
+
+    /** Added when a turn with a picture is resent alone because the model cannot see pictures. */
+    private const val NO_VISION = "(Your model cannot see pictures: explain from what the phone recognized and read, if anything, and say you could not see the photo itself.)"
 
     /** A cloud turn with no frame for this long says it is still working. */
     private const val SLOW_MS = 25_000L

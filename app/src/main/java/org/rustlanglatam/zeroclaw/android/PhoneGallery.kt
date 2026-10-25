@@ -65,12 +65,36 @@ class PhoneGallery(private val context: Context) {
     private fun look(id: Long): Pair<Set<String>, Int>? {
         index[id]?.let { return it }
         val bitmap = runCatching { context.contentResolver.loadThumbnail(uri(id), Size(480, 480), null) }.getOrNull() ?: return null
-        val image = InputImage.fromBitmap(bitmap, 0)
-        val labels = runCatching { Tasks.await(labeler.process(image)).map { it.text }.toSet() }.getOrDefault(emptySet())
-        val faces = runCatching { Tasks.await(detector.process(image)).size }.getOrDefault(0)
+        val seen = see(InputImage.fromBitmap(bitmap, 0))
         bitmap.recycle()
-        return (labels to faces).also { index[id] = it; dirty = true }
+        return seen.also { index[id] = it; dirty = true }
     }
+
+    private fun see(image: InputImage): Pair<Set<String>, Int> =
+        runCatching { Tasks.await(labeler.process(image)).map { it.text }.toSet() }.getOrDefault(emptySet()) to
+            runCatching { Tasks.await(detector.process(image)).size }.getOrDefault(0)
+
+    /**
+     * Looks at a photo the owner just took ([PhotoActivity]), on the phone: labels and faces as [find] does, plus the
+     * text it contains, which adds [Photos.textLabels]. Keeps a copy at most [SMALL] px in [small] for an explanation
+     * the owner may ask for. Returns the labels seen (in English) and the text read.
+     */
+    fun taken(id: Long): Pair<Set<String>, String> {
+        load()
+        val bitmap = context.contentResolver.loadThumbnail(uri(id), Size(SMALL, SMALL), null)
+        val image = InputImage.fromBitmap(bitmap, 0)
+        val (labels, faces) = see(image)
+        val text = runCatching { Tasks.await(reader.process(image)).text }.getOrDefault("")
+        small(id).apply { parentFile?.mkdirs() }.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, it) }
+        bitmap.recycle()
+        index[id] = (labels + Photos.textLabels(text)) to faces
+        dirty = true
+        save()
+        return labels to text
+    }
+
+    /** The small copy of photo [id] kept by [taken]; in the cache, so Android may clear it. */
+    fun small(id: Long) = File(context.cacheDir, "photos/$id.jpg")
 
     /**
      * Finds photos in [from]..[to] matching any of [wanted] labels and, if [withPeople], containing a face.
@@ -114,7 +138,8 @@ class PhoneGallery(private val context: Context) {
         runCatching {
             val present = context.contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, arrayOf(MediaStore.Images.Media._ID), null, null, null)
                 ?.use { c -> buildSet { while (c.moveToNext()) add(c.getLong(0)) } }
-            if (present != null) index.keys.retainAll(present)
+            // Without the read permission the query returns only the app's own photos: nothing is pruned then.
+            if (present != null && permitted()) index.keys.retainAll(present)
         }
         val json = JSONObject()
         index.forEach { (id, v) -> json.put(id.toString(), JSONObject().put("l", JSONArray(v.first.toList())).put("f", v.second)) }
@@ -127,11 +152,15 @@ class PhoneGallery(private val context: Context) {
         /** Maximum number of candidates (newest first) considered per search. */
         private const val MAX = 400
 
+        /** Longest side of the copy [taken] reads and keeps: enough for text, small for the model. */
+        private const val SMALL = 1280
+
         private val index = ConcurrentHashMap<Long, Pair<Set<String>, Int>>()
         @Volatile private var loaded = false
         @Volatile private var dirty = false
 
         private val labeler by lazy { ImageLabeling.getClient(ImageLabelerOptions.Builder().setConfidenceThreshold(0.6f).build()) }
+        private val reader by lazy { com.google.mlkit.vision.text.TextRecognition.getClient(com.google.mlkit.vision.text.latin.TextRecognizerOptions.DEFAULT_OPTIONS) }
         private val detector by lazy {
             FaceDetection.getClient(FaceDetectorOptions.Builder().setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST).setMinFaceSize(0.08f).build())
         }

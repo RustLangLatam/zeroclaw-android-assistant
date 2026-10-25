@@ -54,6 +54,7 @@ Required arguments in **bold**.
 | `cancel_alarm` (**hour**, minute) | ALARM_SET | ACT | none |
 | `next_alarm` () | ALARM_SET | ACT | none |
 | `find_photos` (month, year, years_ago, from, to, what, with_people) | PHOTOS_READ (personal read) | ACT | `READ_MEDIA_IMAGES` (API 33+), else `READ_EXTERNAL_STORAGE` |
+| `take_photo` () | APP_OPEN (internal) | ACT | none (the camera app takes it) |
 | `find_files` (**query**) | FILES_READ (personal read) | ACT | none; all-files access (`MANAGE_EXTERNAL_STORAGE`, special) to see other apps' files |
 | `send_message` (**to**, **text**) | MESSAGE_SEND (outward irreversible) | ASK, strong; group `family` ACT_NOTIFY, 5 per day; undo window | none (notification reply action or WhatsApp) |
 | `list_messages` () | MESSAGES_READ (personal read) | ACT | notification access |
@@ -86,6 +87,23 @@ three actions that run in code on the owner's tap (`Cards.show(…, handlers)`),
 The reminder and the event go through the owner's tools and `Guard` like any other. Only *Ask Ksandra* sends the text
 (at most 4 000 characters) to the model, as the owner's message, with an instruction to propose actions only for
 the owner to confirm.
+
+## Taking a photo
+
+`take_photo()` (owner only, `Capability.APP_OPEN`, default `ACT`; [ADR-0032](../adr/0032-photos-seen-on-the-phone-explained-on-request.md))
+starts `PhotoActivity` (not exported, its own task): it adds a gallery entry in `Pictures/Ksandra` and opens the
+phone's camera app with `ACTION_IMAGE_CAPTURE` into it. The owner presses the shutter; the app holds no camera
+permission. Cancelled, the empty entry is deleted.
+
+Taken, the photo is always looked at on the phone (`PhoneGallery.taken`), from a copy at most 1280 px: image labels and
+faces as for `find_photos`, plus text recognition; `Photos.textLabels` (pure, `PhotosTest`) adds `Receipt` for a bill
+and `Document` for other text, so "the receipt from last week" finds it. The result goes into the photo index, and the
+copy stays in the cache (`cache/photos/<id>.jpg`). A card then asks *Explain it* or *Just keep it*.
+
+Only *Explain it* sends anything: the owner's message with the labels and the text read, plus the copy as ZeroClaw's
+`[IMAGE:<path>]` marker (`OwnerChat.send(image = …)`; the chat shows the message without it). When the cloud model
+cannot see pictures, the daemon refuses the turn with a vision error and the message is sent again without the
+picture, so the model explains from the labels and the text. In local mode the picture is never attached.
 
 ## Calling someone
 

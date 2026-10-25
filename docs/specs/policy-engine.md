@@ -106,7 +106,7 @@ third-party column lists family / work / anyone else; "—" means no tool expose
 | PHOTOS_READ | PERSONAL_READ | `find_photos` | ACT | — (NEVER) |
 | FILES_READ | PERSONAL_READ | `find_files` | ACT | — (NEVER) |
 | MESSAGES_READ | PERSONAL_READ | `list_messages` | ACT | — (NEVER) |
-| APP_OPEN | INTERNAL | `open_app`, `play_media` | ACT | — |
+| APP_OPEN | INTERNAL | `open_app`, `play_media`, `take_photo` | ACT | — |
 | MEDIA_CONTROL | INTERNAL | `media_control` | ACT | — |
 | MEMORY | INTERNAL | `remember`, `forget`, `recall`, `how_well_i_know_you`, `set_address` | ACT | — |
 | EMAIL_DRAFT | INTERNAL | `draft_email` | ACT | — |
