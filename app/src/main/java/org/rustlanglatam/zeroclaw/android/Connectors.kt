@@ -133,6 +133,49 @@ object ModelCatalog {
     fun perMillion(price: String?) = price?.toDoubleOrNull()?.takeIf { it >= 0 }?.let { "%.4f".format(java.util.Locale.ROOT, it * 1e6).trimEnd('0').trimEnd('.') }
 }
 
+/**
+ * Checks a key just entered with its own provider before it is saved: one authenticated read (the provider's model
+ * list) at the address the data files give for it (`check` in `assets/models.json` and `assets/voices.json`, ADR-0033).
+ * Keys already saved are not checked again.
+ */
+object KeyCheck {
+    enum class Result { VALID, INVALID, UNKNOWN }
+
+    /** The `check` entry for [key] given the form's [value]s: its provider's, or its voice service's; `null` when none. */
+    private fun spec(context: android.content.Context, key: Keys.Key, value: (Keys.Key) -> String): org.json.JSONObject? = runCatching {
+        fun read(file: String) = org.json.JSONObject(context.assets.open(file).bufferedReader().use { it.readText() })
+        when (key) {
+            Keys.Key.MODEL_KEY, Keys.Key.VISION_KEY ->
+                read("models.json").getJSONObject("providers").optJSONObject(value(Connectors.KEY_OF.getValue(key)))?.optJSONObject("check")
+            Keys.Key.VOICE_KEY -> read("voices.json").getJSONArray("providers").let { a -> (0 until a.length()).map(a::getJSONObject) }
+                .firstOrNull { it.getString("url") == value(Keys.Key.VOICE_URL).trim() }?.optJSONObject("check")
+            else -> null
+        }
+    }.getOrNull()
+
+    /** Whether [key] can be checked at all (its provider has a `check` entry). */
+    fun checkable(context: android.content.Context, key: Keys.Key, value: (Keys.Key) -> String) = spec(context, key, value) != null
+
+    /**
+     * Checks [secret] for [key]: [Result.VALID] on success, [Result.INVALID] when the provider refuses it (400, 401,
+     * 403), [Result.UNKNOWN] when it cannot tell (no entry, offline, another error). Blocking; call off the main thread.
+     */
+    fun check(context: android.content.Context, key: Keys.Key, secret: String, value: (Keys.Key) -> String): Result {
+        val spec = spec(context, key, value) ?: return Result.UNKNOWN
+        val url = spec.optString("url").takeIf { it.startsWith("https://") } ?: return Result.UNKNOWN
+        return runCatching {
+            val c = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+            c.connectTimeout = 10_000; c.readTimeout = 10_000
+            val auth = spec.optString("auth", "bearer")
+            if (auth == "bearer") c.setRequestProperty("Authorization", "Bearer ${secret.trim()}") else c.setRequestProperty(auth, secret.trim())
+            spec.optJSONObject("headers")?.let { h -> h.keys().forEach { c.setRequestProperty(it, h.getString(it)) } }
+            val code = c.responseCode
+            c.disconnect()
+            when (code) { in 200..299 -> Result.VALID; 400, 401, 403 -> Result.INVALID; else -> Result.UNKNOWN }
+        }.getOrDefault(Result.UNKNOWN)
+    }
+}
+
 @Composable
 fun ConnectorsPlace(ui: MainActivity, onBack: () -> Unit) {
     Ui.tick
@@ -266,6 +309,9 @@ private fun ServicesForm(ui: MainActivity) {
     var busy by remember { mutableStateOf(false) }
     var problem by remember { mutableStateOf<String?>(null) }
     var advanced by remember { mutableStateOf(setOf<Int>()) }
+    // Saved keys the owner chose to replace: their field is shown instead of "saved".
+    var changing by remember { mutableStateOf(setOf<Keys.Key>()) }
+    var checking by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     fun value(key: Keys.Key) = values[key] ?: Keys[key]
     val provider = value(Keys.Key.MODEL_PROVIDER)
@@ -308,8 +354,14 @@ private fun ServicesForm(ui: MainActivity) {
     }
     /** Whether [key]'s saved value still applies: set, and its provider unchanged. */
     fun kept(key: Keys.Key) = Keys[key].isNotBlank() && Connectors.KEY_OF[key]?.let { value(it) == Keys[it] } != false
-    /** The required fields left empty in the groups in use (a provider or service chosen): marked, and saving waits. */
-    fun lacking(): List<Keys.Key> = Connectors.required(::value).filter { if (it.secret) values[it].isNullOrBlank() && !kept(it) else value(it).isBlank() }
+    /**
+     * The required fields left empty in the groups being changed now: marked, and saving waits. A group the owner did not
+     * touch never holds back another's save (a voice service set by the build but with no key must not block photos).
+     */
+    fun lacking(): List<Keys.Key> {
+        val touched = Connectors.GROUPS.map { (_, shown, more) -> (shown + more).map { it.first } }.filter { g -> g.any { it in values } }.flatten()
+        return Connectors.required(::value).filter { it in touched && if (it.secret) values[it].isNullOrBlank() && !kept(it) else value(it).isBlank() }
+    }
     @Composable
     fun Setting(key: Keys.Key, label: Int) {
         val change = { v: String -> values[key] = v; problem = null }
@@ -350,12 +402,19 @@ private fun ServicesForm(ui: MainActivity) {
                 }
                 val named = whose?.let { t(R.string.connectors_api_key_of_x, it) } ?: t(label)
                 val empty = key in lacking()
-                val hint = when {
-                    key.secret && kept(key) -> t(R.string.connectors_x_saved_leave_empty, named)
-                    empty -> t(R.string.connectors_x_empty, named)
-                    else -> named
+                // A saved key reads as saved, with a way to replace it.
+                if (key.secret && kept(key) && key !in changing) {
+                    Panel { Item(named, t(R.string.connectors_key_saved), divider = false) {
+                        Text(t(R.string.connectors_change), Modifier.clickable { changing = changing + key }.padding(8.dp), style = MaterialTheme.typography.labelLarge, color = Ink.warmth)
+                    } }
+                } else {
+                    val hint = when {
+                        empty -> t(R.string.connectors_x_empty, named)
+                        key.secret && kept(key) -> t(R.string.connectors_x_new, named)
+                        else -> named
+                    }
+                    Field(shown, hint, keyboard = if (key.secret) KeyboardType.Password else KeyboardType.Uri, hidden = key.secret, alert = empty, onChange = change)
                 }
-                Field(shown, hint, keyboard = if (key.secret) KeyboardType.Password else KeyboardType.Uri, hidden = key.secret, alert = empty, onChange = change)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -382,14 +441,31 @@ private fun ServicesForm(ui: MainActivity) {
                 if (open) more.forEach { (key, label) -> Setting(key, label) }
             }
         }
+        if (checking) { Spacer(Modifier.height(10.dp)); Text(t(R.string.connectors_checking_keys), style = MaterialTheme.typography.bodyMedium, color = Ink.slate) }
         problem?.let { Spacer(Modifier.height(10.dp)); Text(it, style = MaterialTheme.typography.bodyMedium, color = Ink.alert) }
         Spacer(Modifier.height(20.dp))
         // An empty key field keeps the saved key; other fields left as shown are unchanged.
         val changed = values.filter { (k, v) -> if (k.secret) v.isNotBlank() else v.trim() != Keys[k] }
         GlowButton(t(R.string.connectors_save), Modifier.fillMaxWidth(), enabled = !busy && changed.isNotEmpty()) {
             if (lacking().isNotEmpty()) { problem = t(R.string.connectors_fill_the_marked); return@GlowButton }
-            busy = true
-            ui.saveKeys(changed) { error -> busy = false; problem = error }
+            busy = true; checking = true; problem = null
+            val snapshot = Keys.Key.entries.associateWith { value(it) }
+            kotlin.concurrent.thread(name = "key-check") {
+                // Only keys entered now are checked; one refused is dropped with the rest of its group's changes, so a
+                // new provider is never saved with the old provider's key.
+                val refused = changed.keys.filter { it.secret && it in Connectors.KEY_OF }
+                    .filter { KeyCheck.check(context, it, changed.getValue(it), snapshot::getValue) == KeyCheck.Result.INVALID }
+                val dropped = Connectors.GROUPS.map { (_, shown, more) -> (shown + more).map { it.first } }.filter { g -> g.any { it in refused } }.flatten().toSet()
+                val keep = changed.filterKeys { it !in dropped }
+                val whose = refused.joinToString(", ") { k -> ModelCatalog.label(snapshot.getValue(Connectors.KEY_OF.getValue(k))).let { if (k == Keys.Key.VOICE_KEY) CloudVoice.providerOf(it, voices)?.name ?: voiceHost(it) ?: it else it } }
+                ui.runOnUiThread {
+                    checking = false
+                    refused.forEach { values.remove(it) }
+                    val note = if (refused.isEmpty()) null else t(R.string.connectors_key_refused_x, whose)
+                    if (keep.isEmpty()) { busy = false; problem = t(R.string.connectors_key_refused_only_x, whose); return@runOnUiThread }
+                    ui.saveKeys(keep) { error -> busy = false; problem = error ?: note; if (error == null && note != null) ui.remark(note) }
+                }
+            }
         }
     }
 }

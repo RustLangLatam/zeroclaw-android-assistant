@@ -958,6 +958,12 @@
     <string name="connectors_services_explained">The services I use and their keys. They stay encrypted on this phone, never in the app itself. Changing them asks for your screen lock.</string>
     <string name="connectors_choose_needed">Choose one: needed</string>
     <string name="connectors_active">Active</string>
+    <string name="connectors_key_saved">Saved</string>
+    <string name="connectors_change">Change</string>
+    <string name="connectors_x_new">New %1$s</string>
+    <string name="connectors_checking_keys">Checking the new keys with their providers…</string>
+    <string name="connectors_key_refused_x">%1$s refused the key: I discarded it and the changes to its group. The rest is saved.</string>
+    <string name="connectors_key_refused_only_x">%1$s refused the key, so I discarded it. Paste a valid one and save again.</string>
     <string name="connectors_x_empty">%1$s: empty, needed</string>
     <string name="connectors_fill_the_marked">Fill in the fields marked in red.</string>
     <string name="connectors_x_saved_leave_empty">%1$s saved (leave empty to keep it)</string>

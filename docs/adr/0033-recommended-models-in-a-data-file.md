@@ -26,12 +26,18 @@ Option 1. `app/src/main/assets/models.json` maps each provider family to its `ch
 provider fills the model with the recommended one when the provider's list has it (or there is no list to check),
 else with the list's first (`ModelCatalog.pick`). The photos group offers only the providers with a `vision` entry; any
 other model can still be typed. The form also marks what each group in use still needs (`Connectors.required`): the
-model, the key and, for a custom gateway, its URL; the key is the only field left empty, shown in red until entered,
-and a saved key stops counting when its provider changes. Saving waits until nothing is marked. A group whose saved
+model, the key and, for a custom gateway, its URL. Only the groups being changed are checked, so a group left as it
+was never holds back another's save. The key is the only field left empty, shown in red until entered, and a saved key
+stops counting when its provider changes; a saved key shows as saved, with *Change*. Saving waits until nothing is
+marked, then checks each key entered now with its provider (`KeyCheck`: one authenticated read of the provider's model
+list, at the `check` address the same files give). A refused key (400, 401, 403) is discarded with the rest of its
+group's changes and the owner is told; a key that cannot be checked (offline, no entry) is saved. Saved keys are not
+checked again. A group whose saved
 settings are complete shows "Active" beside its title.
 
 ## Consequences
 
 - AGENTS.md's no-vendor-names rule has a second exception: this file.
 - A recommendation that goes stale is replaced by the list's first until the file is updated; it is one line.
-- Search keys stay optional: some search providers need none.
+- Search keys stay optional: some search providers need none. Search and video keys are not checked.
+- Checking sends the new key to its own provider only, over HTTPS, to an address shipped in the APK.

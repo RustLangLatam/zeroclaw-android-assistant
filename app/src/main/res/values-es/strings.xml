@@ -958,6 +958,12 @@
     <string name="connectors_services_explained">Los servicios que uso y sus claves. Quedan cifradas en este teléfono, nunca dentro de la app. Cambiarlas pide tu bloqueo de pantalla.</string>
     <string name="connectors_choose_needed">Elige uno: hace falta</string>
     <string name="connectors_active">Activo</string>
+    <string name="connectors_key_saved">Guardada</string>
+    <string name="connectors_change">Cambiar</string>
+    <string name="connectors_x_new">Nueva %1$s</string>
+    <string name="connectors_checking_keys">Comprobando las claves nuevas con sus proveedores…</string>
+    <string name="connectors_key_refused_x">%1$s rechazó la clave: la descarté junto con los cambios de su grupo. Lo demás quedó guardado.</string>
+    <string name="connectors_key_refused_only_x">%1$s rechazó la clave y la descarté. Pega una válida y guarda de nuevo.</string>
     <string name="connectors_x_empty">%1$s: vacía, hace falta</string>
     <string name="connectors_fill_the_marked">Completa los campos marcados en rojo.</string>
     <string name="connectors_x_saved_leave_empty">%1$s guardada (déjala vacía para mantenerla)</string>
