@@ -399,7 +399,9 @@ class AssistantService : Service() {
      * A model that can see pictures, when the owner set one: ZeroClaw sends a message with a photo to it when the main
      * model cannot see pictures, and every other message to the main model.
      */
-    private fun vision(): String = if (!Keys.visionReady) "" else """
+    private fun vision(): String = if (!Keys.visionReady) "".also {
+        Log.i(TAG, "config: no photos model; missing ${listOf(Keys.Key.VISION_PROVIDER, Keys.Key.VISION_MODEL, Keys.Key.VISION_KEY).filter { Keys[it].isBlank() }}")
+    } else """
         [providers.models.${Keys[Keys.Key.VISION_PROVIDER]}.vision]
         model = "${Keys[Keys.Key.VISION_MODEL]}"
         api_key = "${Keys[Keys.Key.VISION_KEY]}"
