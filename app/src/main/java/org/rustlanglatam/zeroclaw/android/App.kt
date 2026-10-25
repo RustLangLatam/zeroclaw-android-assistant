@@ -346,7 +346,7 @@ fun Mark(done: Boolean) {
 @Composable
 fun Field(
     value: String, placeholder: String, modifier: Modifier = Modifier, onDone: () -> Unit = {}, onMic: (() -> Unit)? = null,
-    keyboard: androidx.compose.ui.text.input.KeyboardType? = null, hidden: Boolean = false, onChange: (String) -> Unit,
+    keyboard: androidx.compose.ui.text.input.KeyboardType? = null, hidden: Boolean = false, alert: Boolean = false, onChange: (String) -> Unit,
 ) {
     Row(
         modifier.fillMaxWidth().heightIn(min = 58.dp).glass(RoundedCornerShape(Dimens.control))
@@ -354,7 +354,7 @@ fun Field(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f).padding(vertical = 11.dp), contentAlignment = Alignment.CenterStart) {
-            if (value.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = Ink.slate)
+            if (value.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = if (alert) Ink.alert else Ink.slate)
             FieldText(value, onDone, keyboard, hidden, onChange)
         }
         if (onMic != null) LightDot(Glyphs.mic, t(R.string.app_say_it), 44.dp, onClick = onMic)

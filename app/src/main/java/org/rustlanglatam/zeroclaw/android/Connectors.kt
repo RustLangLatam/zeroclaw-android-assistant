@@ -36,6 +36,23 @@ object Connectors {
      * The services form's groups: a title, the settings shown, and those under "Advanced" (prefilled, rarely changed),
      * each with its field label. The model's provider and name and the voice service and voice are chosen from lists.
      */
+    /**
+     * The fields each group needs once it is in use: a model provider needs its model and key (and a custom gateway its
+     * URL), a photos provider its model and key, and a voice service its voice, speech model and key. Search keys
+     * stay optional: some search providers need none. [value] gives each field's current value.
+     */
+    fun required(value: (Keys.Key) -> String): List<Keys.Key> = buildList {
+        if (value(Keys.Key.MODEL_PROVIDER).isNotBlank()) {
+            addAll(listOf(Keys.Key.MODEL, Keys.Key.MODEL_KEY))
+            if (value(Keys.Key.MODEL_PROVIDER) == Keys.CUSTOM) add(Keys.Key.MODEL_URL)
+        }
+        if (value(Keys.Key.VISION_PROVIDER).isNotBlank()) addAll(listOf(Keys.Key.VISION_MODEL, Keys.Key.VISION_KEY))
+        if (value(Keys.Key.VOICE_URL).isNotBlank()) addAll(listOf(Keys.Key.VOICE_NAME, Keys.Key.VOICE_MODEL, Keys.Key.VOICE_KEY))
+    }
+
+    /** Each key and the provider (or voice service) it belongs to: a saved key stops counting once that changes. */
+    val KEY_OF = mapOf(Keys.Key.MODEL_KEY to Keys.Key.MODEL_PROVIDER, Keys.Key.VISION_KEY to Keys.Key.VISION_PROVIDER, Keys.Key.VOICE_KEY to Keys.Key.VOICE_URL)
+
     val GROUPS = listOf(
         Triple(R.string.connectors_model,
             listOf(Keys.Key.MODEL_PROVIDER to R.string.connectors_provider, Keys.Key.MODEL to R.string.connectors_model_name,
@@ -84,6 +101,21 @@ object ModelCatalog {
      */
     fun ordered(providers: List<io.github.rustlanglatam.zeroclaw.CatalogModelProvider>, current: String, build: String = BuildConfig.MODEL_PROVIDER) =
         providers.sortedBy { when (it.name) { current -> 0; build -> 1; Keys.CUSTOM -> 3; else -> 2 } }.map { it.name to it.displayName }
+
+    /** The recommended models per provider and use ("chat", "vision"), from `assets/models.json` (ADR-0033). */
+    @Volatile private var recommended: org.json.JSONObject? = null
+
+    /** Returns [provider]'s recommended model for [use], or `null` when the file names none. */
+    fun recommended(context: android.content.Context, provider: String, use: String): String? =
+        (recommended ?: runCatching { org.json.JSONObject(context.assets.open("models.json").bufferedReader().use { it.readText() }).getJSONObject("providers") }
+            .getOrDefault(org.json.JSONObject()).also { recommended = it }).optJSONObject(provider)?.optString(use)?.takeIf { it.isNotBlank() }
+
+    /**
+     * The model proposed when a provider is chosen: the [recommended] one if the provider's list has it (or there is no
+     * list to check), else the list's first; `null` when there is neither.
+     */
+    fun pick(recommended: String?, models: List<String>?): String? =
+        recommended?.takeIf { models.isNullOrEmpty() || it in models } ?: models?.firstOrNull()
 
     /** The name shown for [provider]: the catalog's display name when loaded. */
     fun label(provider: String) = providers?.firstOrNull { it.name == provider }?.displayName ?: provider
@@ -235,6 +267,14 @@ private fun ServicesForm(ui: MainActivity) {
     val voiceService = CloudVoice.providerOf(value(Keys.Key.VOICE_URL), voices)
     // A service not listed is entered by its URL; chosen as "Other", or already saved that way.
     var ownVoiceUrl by remember { mutableStateOf(voiceService == null && Keys[Keys.Key.VOICE_URL].isNotBlank()) }
+    fun pickModel(v: String) {
+        values[Keys.Key.MODEL] = v; problem = null
+        // The provider's published prices fill the cost fields; otherwise they stay for the owner.
+        catalog?.pricing?.get(v)?.let { p ->
+            ModelCatalog.perMillion(p.prompt)?.let { values[Keys.Key.MODEL_INPUT_PER_MTOK] = it }
+            ModelCatalog.perMillion(p.completion)?.let { values[Keys.Key.MODEL_OUTPUT_PER_MTOK] = it }
+        }
+    }
     androidx.compose.runtime.LaunchedEffect(Unit) {
         providers = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.load(context) }
         if (providers == null) loading = false
@@ -244,14 +284,23 @@ private fun ServicesForm(ui: MainActivity) {
     var visionModels by remember { mutableStateOf<List<String>?>(null) }
     androidx.compose.runtime.LaunchedEffect(visionProvider) {
         visionModels = null
-        if (visionProvider.isNotBlank()) visionModels = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.models(context, visionProvider) }?.models
+        if (visionProvider.isBlank()) return@LaunchedEffect
+        visionModels = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.models(context, visionProvider) }?.models
+        // A provider just chosen brings its model for pictures.
+        if (value(Keys.Key.VISION_MODEL).isBlank()) ModelCatalog.pick(ModelCatalog.recommended(context, visionProvider, "vision"), visionModels)?.let { values[Keys.Key.VISION_MODEL] = it }
     }
     androidx.compose.runtime.LaunchedEffect(provider) {
         catalog = null
         loading = provider.isNotBlank() && provider != Keys.CUSTOM
         if (loading) catalog = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.models(context, provider) }
         loading = false
+        // A provider just chosen brings its model, with its prices when the provider publishes them.
+        if (provider.isNotBlank() && value(Keys.Key.MODEL).isBlank()) ModelCatalog.pick(ModelCatalog.recommended(context, provider, "chat"), catalog?.models)?.let { pickModel(it) }
     }
+    /** Whether [key]'s saved value still applies: set, and its provider unchanged. */
+    fun kept(key: Keys.Key) = Keys[key].isNotBlank() && Connectors.KEY_OF[key]?.let { value(it) == Keys[it] } != false
+    /** The required fields left empty in the groups in use (a provider or service chosen): marked, and saving waits. */
+    fun lacking(): List<Keys.Key> = Connectors.required(::value).filter { if (it.secret) values[it].isNullOrBlank() && !kept(it) else value(it).isBlank() }
     @Composable
     fun Setting(key: Keys.Key, label: Int) {
         val change = { v: String -> values[key] = v; problem = null }
@@ -259,19 +308,12 @@ private fun ServicesForm(ui: MainActivity) {
             Keys.Key.MODEL_PROVIDER -> Combo(t(label), provider, ModelCatalog.label(provider), providers?.let { ModelCatalog.ordered(it, provider) }) { v ->
                 if (v != provider) { change(v); values[Keys.Key.MODEL] = "" }
             }
-            Keys.Key.MODEL -> Combo(t(label), value(key), value(key), catalog?.models?.map { it to it }, loading && providers != null) { v ->
-                change(v)
-                // The provider's published prices fill the cost fields; otherwise they stay for the owner.
-                catalog?.pricing?.get(v)?.let { p ->
-                    ModelCatalog.perMillion(p.prompt)?.let { values[Keys.Key.MODEL_INPUT_PER_MTOK] = it }
-                    ModelCatalog.perMillion(p.completion)?.let { values[Keys.Key.MODEL_OUTPUT_PER_MTOK] = it }
-                }
-            }
+            Keys.Key.MODEL -> Combo(t(label), value(key), value(key), catalog?.models?.map { it to it }, loading && providers != null, alert = key in lacking(), onPick = ::pickModel)
             Keys.Key.VISION_PROVIDER -> Combo(t(label), value(key), ModelCatalog.label(value(key)),
-                providers?.filter { it.name != Keys.CUSTOM }?.let { ModelCatalog.ordered(it, value(key)) }) { v ->
+                providers?.filter { ModelCatalog.recommended(context, it.name, "vision") != null }?.let { ModelCatalog.ordered(it, value(key)) }) { v ->
                 if (v != value(key)) { change(v); values[Keys.Key.VISION_MODEL] = "" }
             }
-            Keys.Key.VISION_MODEL -> Combo(t(label), value(key), value(key), visionModels?.map { it to it }, onPick = change)
+            Keys.Key.VISION_MODEL -> Combo(t(label), value(key), value(key), visionModels?.map { it to it }, alert = key in lacking(), onPick = change)
             Keys.Key.MODEL_URL -> if (provider == Keys.CUSTOM || value(key).isNotBlank()) Field(value(key), t(label), keyboard = KeyboardType.Uri) { change(it.trim()) } else return
             Keys.Key.VOICE_URL -> {
                 val options = voices.map { it.url to it.name } + (OWN_URL to t(R.string.connectors_other_my_own_url))
@@ -287,7 +329,7 @@ private fun ServicesForm(ui: MainActivity) {
                 if (ownVoiceUrl) { Spacer(Modifier.height(10.dp)); Field(value(key), t(R.string.connectors_websocket_url), keyboard = KeyboardType.Uri) { change(it.trim()) } }
             }
             Keys.Key.VOICE_NAME -> Combo(t(label), value(key), value(key).replaceFirstChar(Char::uppercase),
-                voiceService?.voices?.map { it to it.replaceFirstChar(Char::uppercase) }, onPick = change)
+                voiceService?.voices?.map { it to it.replaceFirstChar(Char::uppercase) }, alert = key in lacking(), onPick = change)
             else -> {
                 val shown = values[key] ?: if (key.secret) "" else Keys[key]
                 // A key says whose it is: the model provider's name, or the voice service's host.
@@ -298,8 +340,13 @@ private fun ServicesForm(ui: MainActivity) {
                     else -> null
                 }
                 val named = whose?.let { t(R.string.connectors_api_key_of_x, it) } ?: t(label)
-                val hint = if (key.secret && Keys[key].isNotBlank()) t(R.string.connectors_x_saved_leave_empty, named) else named
-                Field(shown, hint, keyboard = if (key.secret) KeyboardType.Password else KeyboardType.Uri, hidden = key.secret, onChange = change)
+                val empty = key in lacking()
+                val hint = when {
+                    key.secret && kept(key) -> t(R.string.connectors_x_saved_leave_empty, named)
+                    empty -> t(R.string.connectors_x_empty, named)
+                    else -> named
+                }
+                Field(shown, hint, keyboard = if (key.secret) KeyboardType.Password else KeyboardType.Uri, hidden = key.secret, alert = empty, onChange = change)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -324,6 +371,7 @@ private fun ServicesForm(ui: MainActivity) {
         // An empty key field keeps the saved key; other fields left as shown are unchanged.
         val changed = values.filter { (k, v) -> if (k.secret) v.isNotBlank() else v.trim() != Keys[k] }
         GlowButton(t(R.string.connectors_save), Modifier.fillMaxWidth(), enabled = !busy && changed.isNotEmpty()) {
+            if (lacking().isNotEmpty()) { problem = t(R.string.connectors_fill_the_marked); return@GlowButton }
             busy = true
             ui.saveKeys(changed) { error -> busy = false; problem = error }
         }
@@ -336,13 +384,13 @@ private fun ServicesForm(ui: MainActivity) {
  * so; with no options (the catalog can't be reached), a plain text field.
  */
 @Composable
-private fun Combo(label: String, value: String, shown: String, options: List<Pair<String, String>>?, loading: Boolean = false, other: Boolean = true, onPick: (String) -> Unit) {
+private fun Combo(label: String, value: String, shown: String, options: List<Pair<String, String>>?, loading: Boolean = false, other: Boolean = true, alert: Boolean = false, onPick: (String) -> Unit) {
     if (loading) return Panel { Item(label, t(R.string.connectors_loading), divider = false) }
-    if (options == null) return Field(value, label, keyboard = KeyboardType.Uri) { onPick(it.trim()) }
+    if (options == null) return Field(value, if (alert) t(R.string.connectors_x_empty, label) else label, keyboard = KeyboardType.Uri, alert = alert) { onPick(it.trim()) }
     var open by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     Panel {
-        Item(label, shown.ifBlank { t(R.string.connectors_choose) }, divider = open, onClick = { open = !open; query = "" }) { Chevron() }
+        Item(label, shown.ifBlank { t(if (alert) R.string.connectors_choose_needed else R.string.connectors_choose) }, divider = open, onClick = { open = !open; query = "" }) { Chevron() }
         if (open) {
             androidx.compose.foundation.layout.Box(Modifier.padding(12.dp)) {
                 Field(query, t(R.string.connectors_search), keyboard = KeyboardType.Uri) { query = it }

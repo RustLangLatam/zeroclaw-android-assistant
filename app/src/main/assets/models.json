@@ -1,0 +1,11 @@
+{
+  "providers": {
+    "deepseek": { "chat": "deepseek-chat" },
+    "gemini": { "chat": "gemini-2.5-flash", "vision": "gemini-2.5-flash" },
+    "openai": { "chat": "gpt-4.1-mini", "vision": "gpt-4.1-mini" },
+    "anthropic": { "chat": "claude-sonnet-5-5", "vision": "claude-haiku-5-5" },
+    "mistral": { "chat": "mistral-small-latest", "vision": "mistral-small-latest" },
+    "groq": { "chat": "llama-3.3-70b-versatile", "vision": "meta-llama/llama-4-scout-17b-16e-instruct" },
+    "openrouter": { "chat": "deepseek/deepseek-chat", "vision": "google/gemini-2.5-flash" }
+  }
+}

@@ -40,3 +40,4 @@ documentation are in [ADR-0000](0000-documentation-standards.md).
 | [0030](0030-service-keys-entered-by-the-owner.md) | Service keys entered by the owner, not built into the APK | Accepted |
 | [0031](0031-voice-services-named-in-a-data-file.md) | Voice services named in a data file | Accepted |
 | [0032](0032-photos-seen-on-the-phone-explained-on-request.md) | Photos seen on the phone, explained by the model only on request | Accepted |
+| [0033](0033-recommended-models-in-a-data-file.md) | Recommended models in a data file | Accepted |

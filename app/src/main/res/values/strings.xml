@@ -956,6 +956,9 @@
     <string name="connectors_usd_per_minute">US$ per minute</string>
     <string name="connectors_not_set_i_can_t_think">Not set: I can\'t think without it</string>
     <string name="connectors_services_explained">The services I use and their keys. They stay encrypted on this phone, never in the app itself. Changing them asks for your screen lock.</string>
+    <string name="connectors_choose_needed">Choose one: needed</string>
+    <string name="connectors_x_empty">%1$s: empty, needed</string>
+    <string name="connectors_fill_the_marked">Fill in the fields marked in red.</string>
     <string name="connectors_x_saved_leave_empty">%1$s saved (leave empty to keep it)</string>
     <string name="connectors_save">Save</string>
     <string name="mainactivity_that_value_can_t_be_used">One of the values can\'t be used: no quotes, backslashes or line breaks; a provider is one word; the voice URL starts with wss://.</string>
