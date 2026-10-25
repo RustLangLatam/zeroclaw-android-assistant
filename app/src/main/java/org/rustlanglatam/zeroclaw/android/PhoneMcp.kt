@@ -166,7 +166,7 @@ class PhoneMcp(private val context: Context, private val port: Int) {
         val text = if (name !in TOOLS.getValue(principal)) {
             Guard.journal.add(principal, name, "refused", "not a ${principal.name.lowercase()} tool")
             "Unknown tool $name."
-        } else HANDLERS[name]?.invoke(this, principal, args) ?: "Unknown tool $name."
+        } else Guard.inert(HANDLERS[name]?.invoke(this, principal, args) ?: "Unknown tool $name.")
         Log.i(AssistantService.TAG, "tool ${principal.name.lowercase()} $name: ${AssistantService.logged(text)}")
         return JSONObject().put("content", JSONArray().put(JSONObject().put("type", "text").put("text", text)))
     }
@@ -1112,6 +1112,13 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     }
                 }
             },
+            "take_photo" to { principal, _ ->
+                Guard.gated(principal, Capability.APP_OPEN, Policy.OWNER_TARGET, Act.takePhoto()) {
+                    runCatching { context.startActivity(Intent(context, PhotoActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                        .fold({ "The camera is open; the owner presses the shutter. The app then labels the photo on the phone and asks the owner " +
+                            "whether to explain it or just keep it: don't ask that yourself." + unconfirmed() }, { "Could not open the camera: ${it.message}" })
+                }
+            },
             "birthdays" to { principal, args ->
                 val days = args.optInt("days", 30).coerceIn(1, 366)
                 Guard.gated(principal, Capability.CONTACTS_READ, Policy.OWNER_TARGET, Act.birthdays()) {
@@ -1576,6 +1583,8 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                 tool("my_settings", "Your settings now, and who is family and who is work.", emptyList()),
                 tool("dial", "Call someone (\"call Ana\", \"llama a mi hermana\"): opens the phone's dialer with the contact's number, " +
                     "and the owner presses call; you never place the call. contact: the contact's name as saved.", listOf("contact"), "contact" to "string"),
+                tool("take_photo", "Take a photo (\"take a photo\", \"toma una foto\"): opens the camera and the owner presses the shutter. " +
+                    "It is saved in the gallery and labeled on the phone, so find_photos finds it later (\"the receipt\").", emptyList()),
                 tool("birthdays", "Contacts' birthdays in the next days (\"who has a birthday soon?\"), from the phone's contacts; days (default 30).",
                     emptyList(), "days" to "integer"),
                 tool("list_add", "Add items to one of the owner's lists (\"add milk and bread to the shopping list\"): list (its name; " +
@@ -1642,6 +1651,14 @@ class PhoneMcp(private val context: Context, private val port: Int) {
 /** Holds the app-wide policy state shared by the MCP server and the UI, and runs actions through the policy. */
 object Guard {
     val policy = Policy(Policy.DEFAULT_RULES)
+
+    /**
+     * Returns [text] with ZeroClaw's media markers (`[IMAGE:/path]`, `[DOCUMENT:…]`) broken, so words from others
+     * (a message, an email, a tool result) cannot make the daemon load a file from the phone and show it to the
+     * model. Only the app adds a marker, for a photo the owner asked about.
+     */
+    fun inert(text: String): String = MARKER.replace(text, "[$1 :")
+    private val MARKER = Regex("""\[([A-Z]{3,10}):""")
     val approvals = Approvals()
     val journal = Journal()
 

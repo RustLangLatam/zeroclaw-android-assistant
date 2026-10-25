@@ -331,7 +331,7 @@ object Turns {
         show("← $sender: $text")
         val turn = open(context, "third_party", onFailure = { finish(null) }) { chat, frame ->
             when (frame.type) {
-                FrameType.SESSION_START -> chat.send("$sender wrote to ${Policy.owner}:\n$text\n\n(Your answer goes to $sender.)")
+                FrameType.SESSION_START -> chat.send(Guard.inert("$sender wrote to ${Policy.owner}:\n$text\n\n(Your answer goes to $sender.)"))
                 FrameType.TOOL_CALL -> show("  · ${frame.name} ${frame.args}")
                 FrameType.DONE -> { val answer = frame.done?.fullResponse.orEmpty(); show("→ $sender: $answer"); chat.close(); finish(answer) }
                 FrameType.ERROR -> { show("Error: ${frame.message}"); chat.close(); finish(null) }
@@ -353,7 +353,7 @@ object Turns {
         fun finish(answer: String?) { if (finished.compareAndSet(false, true)) done(answer) }
         val turn = open(context, AssistantService.SCRIBE, onFailure = { finish(null) }) { chat, frame ->
             when (frame.type) {
-                FrameType.SESSION_START -> chat.send(prompt)
+                FrameType.SESSION_START -> chat.send(Guard.inert(prompt))
                 FrameType.DONE -> { chat.close(); finish(frame.done?.fullResponse.orEmpty()) }
                 FrameType.ERROR -> { chat.close(); finish(null) }
             }

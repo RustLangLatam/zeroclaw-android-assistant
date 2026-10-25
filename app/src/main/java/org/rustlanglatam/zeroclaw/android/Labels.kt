@@ -130,6 +130,7 @@ object Labels {
             "news" -> t(R.string.labels_news) + arg("topic")
             "cancel_reminder" -> t(R.string.labels_reminder_remove)
             "find_files" -> t(R.string.labels_files) + arg("query")
+            "take_photo" -> t(R.string.act_take_a_photo)
             "find_photos" -> t(R.string.labels_photos) + arg("what").takeIf(String::isNotEmpty)?.let { " · $it" }.orEmpty()
             "read_email" -> t(R.string.labels_email_read)
             "draft_email" -> t(R.string.labels_email_2) + arg("to").ifBlank { t(R.string.labels_reply) }

@@ -93,7 +93,7 @@ Behaviour of each group is specified where noted.
 | Apps and media | `list_apps` / `open_app`, `play_media` / `media_control` | APPS_READ / APP_OPEN / MEDIA_CONTROL | [phone-abilities.md](phone-abilities.md) |
 | Device | `device_setting`, `device_status`, `weather` | DEVICE | [phone-abilities.md](phone-abilities.md), [home-and-widgets.md](home-and-widgets.md) |
 | Calls | `dial` (opens the dialer with the contact's number; never places a call) | DIAL | [phone-abilities.md](phone-abilities.md) |
-| Photos and files | `find_photos` / `find_files` | PHOTOS_READ / FILES_READ | [phone-abilities.md](phone-abilities.md) |
+| Photos and files | `find_photos`, `take_photo` / `find_files` | PHOTOS_READ, APP_OPEN / FILES_READ | [phone-abilities.md](phone-abilities.md) |
 | Reminders | `remind`, `list_reminders`, `cancel_reminder`, `move_reminder`; `birthdays` (CONTACTS_READ) | REMINDERS | [reminders.md](reminders.md) |
 | News and videos | `follow_topic`, `unfollow_topic`, `list_topics`, `news`, `find_videos` | NEWS | [news.md](news.md) |
 | Email (notifications) | `list_emails`, `read_email` / `draft_email` | EMAIL_READ / EMAIL_DRAFT | [email.md](email.md) |
