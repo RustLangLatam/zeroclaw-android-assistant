@@ -146,8 +146,14 @@ object Offline {
     /** Whether the device has a working internet connection, as reported by the network callback. */
     @Volatile var online = true
 
-    /** Whether answers go to the local model now: opted in, model ready, and no internet. */
-    fun now() = !online && wanted && ready
+    /** Whether answers go to the local model now: opted in, model ready, and no internet or no cloud model. */
+    fun now() = local(online, wanted, ready, Keys.modelReady)
+
+    /** Local mode: online, but the on-device model answers because no cloud model is set. */
+    val localMode get() = online && now()
+
+    /** Whether the local model answers, given the connection, the owner's opt-in, the model file and the cloud model. */
+    fun local(online: Boolean, wanted: Boolean, ready: Boolean, cloud: Boolean) = wanted && ready && (!online || !cloud)
 
     /** Count of offline answers and total seconds spent on them, shown on the settings screen. */
     var answers by mutableStateOf(0)
@@ -209,15 +215,16 @@ object Offline {
     }
 
     /**
-     * Handles a connectivity change. Going online stops the engine to free its memory; going offline clears the
-     * local conversation and, if offline answering applies, warms up the engine.
+     * Handles a connectivity change. Going online stops the engine to free its memory, unless it is still the one
+     * answering (local mode); going offline clears the local conversation and, if offline answering applies, warms up
+     * the engine.
      */
     fun network(online: Boolean) {
         if (online != this.online) android.util.Log.i(AssistantService.TAG, "network: ${if (online) "online" else "offline"}; engine ${if (engine?.isAlive == true) "running" else "off"}")
         if (!online && this.online) OwnerChat.forgetLocal()
         this.online = online
         offline = !online
-        if (online) stop()
+        if (online && !now()) stop()
         // Warms up before the first question: model loading dominated first-answer latency on low-end devices.
         else if (now()) app?.let { ctx -> kotlin.concurrent.thread(name = "offline-warm") { ensure(ctx) } }
     }
@@ -229,7 +236,7 @@ object Offline {
 
     /** Returns the in-progress label; while the local model is answering, it includes the elapsed seconds. */
     fun thinking(): String = OwnerChat.localSeconds()?.let { s ->
-        t(R.string.offline_thinking_without_internet_x_s, s)
+        t(if (online) R.string.offline_thinking_on_the_phone_x_s else R.string.offline_thinking_without_internet_x_s, s)
     } ?: t(R.string.offline_thinking)
 
     /**

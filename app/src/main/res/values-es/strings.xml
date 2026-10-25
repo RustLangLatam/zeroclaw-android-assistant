@@ -456,7 +456,6 @@
     <string name="offline_your_next_alarm_is_x_at">Tu próxima alarma es %1$s a las %%s:%%s.</string>
     <string name="ownerchat_still_working">Sigo con ello…</string>
     <string name="ownerchat_no_answer_try_again">Esta vez no me llegó respuesta; pregúntame otra vez.</string>
-    <string name="ownerchat_something_failed">"Algo falló: "</string>
     <string name="ownerchat_without_internet_i_couldn_t_answer">Sin internet no pude responderte esta vez; prueba a decirlo de otra forma.</string>
     <string name="ownerchat_without_internet_i_couldn_t_think">Sin internet no pude pensar: el cerebro pequeño no arrancó.</string>
     <string name="ownerchat_without_internet_i_m_thinking_too">Sin internet estoy pensando demasiado lento en este teléfono; inténtalo con algo más corto, o cuando vuelva la conexión.</string>
@@ -1049,4 +1048,13 @@
     <string name="simple_off">De vuelta al modo normal.</string>
     <string name="mainactivity_connect_x">Leer todo el correo de %1$s</string>
     <string name="mainactivity_not_confirmed_nothing_connected">No confirmado: no se conectó nada.</string>
+    <string name="offline_thinking_on_the_phone_x_s">Pensando en el teléfono… %1$s s</string>
+    <string name="ownerchat_the_phone_s_model_didn_t_start">El modelo del teléfono no arrancó y no pude pensar.</string>
+    <string name="ownerchat_on_the_phone_i_m_thinking_too_slowly">Estoy pensando demasiado lento en este teléfono; prueba con algo más corto, o añade un modelo en Conectores › Servicios.</string>
+    <string name="ownerchat_with_the_phone_s_model_i_couldn_t_answer">Con el modelo del teléfono no pude responderte esta vez; prueba a decirlo de otra forma.</string>
+    <string name="ownerchat_i_couldn_t_reach_my_model">No pude conectar con mi modelo: revísalo en Conectores › Servicios.</string>
+    <string name="ownerchat_i_couldn_t_answer_this_time">Esta vez no pude responderte; inténtalo de nuevo en un momento.</string>
+    <string name="mainactivity_i_m_in_local_mode">Estoy en modo local: respondo con el modelo de este teléfono, más despacio y con menos capacidades. Para respuestas completas, añade un modelo en Conectores › Servicios.</string>
+    <string name="screens_local_mode">Modo local</string>
+    <string name="connectors_not_set_local_mode">Sin configurar: modo local, con el modelo del teléfono</string>
 </resources>

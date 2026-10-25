@@ -455,6 +455,7 @@ private fun TalkHint(modifier: Modifier = Modifier) {
         // Offline: states whether answers come from the on-device model or are unavailable.
         Offline.offline -> t(R.string.screens_no_internet) to (if (Offline.wanted && Offline.ready) t(R.string.screens_i_answer_from_the_phone_more)
             else t(R.string.screens_i_m_limited_until_it_s))
+        Offline.localMode -> t(R.string.screens_local_mode) to t(R.string.screens_i_answer_from_the_phone_more)
         Guard.openMic -> t(R.string.screens_talk_to_me) to t(R.string.screens_open_microphone_tell_me_what_you)
         else -> t(R.string.screens_talk_to_me) to t(R.string.screens_tap_the_circle)
     }
