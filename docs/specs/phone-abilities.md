@@ -104,10 +104,11 @@ Only *Explain it* sends anything. With a photos model set, the message asks to d
 carries only the text read (marked as possibly wrong), not the labels: a model given "Mobile phone, Tie" for a TV
 remote repeated them. Otherwise it is the owner's message with the labels and the text read. Either way it goes with
 the copy as ZeroClaw's
-`[IMAGE:<path>]` marker, to the tool-less `scribe` in a new session (`OwnerChat.send(image = …)` →
-`Turns.scribe(image = …)`). If the main model cannot see pictures, ZeroClaw routes that turn to the photos model set
-in Connectors › Services › Photos (`VISION_PROVIDER`, `VISION_MODEL`, `VISION_KEY`; `zeroclaw.vision.*` in
-`local.properties`), written as `[multimodal] vision_model_provider` when all three are set (`Keys.visionReady`). The
+`[IMAGE:<path>]` marker, to a tool-less agent in a new session (`OwnerChat.send(image = …)` →
+`Turns.scribe(image = …, agent)`): `seer` when a photos model is set in Connectors › Photos (`VISION_PROVIDER`,
+`VISION_MODEL`, `VISION_KEY`; `zeroclaw.vision.*` in `local.properties`; `Keys.visionReady`), else `scribe`. The
+photos model is written as `[providers.models.custom.vision]` with its provider's OpenAI-compatible `endpoint` from
+`assets/models.json`, `vision = true` and the default temperature, and `seer` uses it directly (ADR-0032 says why). The
 answer is shown and spoken, and appended to the owner's next message (`OwnerChat.PHOTO_MARK`, stripped from the chat)
 so the owner's agent can act on it, e.g. set the reminder it proposed. The picture never enters the owner's session:
 ZeroClaw keeps it in the history and sent every later turn there to the photos model; a resumed owner session that

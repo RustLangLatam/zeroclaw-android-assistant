@@ -24,6 +24,7 @@ object Usage {
         "owner" -> t(R.string.usage_with_you)
         "third_party" -> t(R.string.usage_replies_to_others)
         AssistantService.SCRIBE -> t(R.string.usage_briefings_and_notices)
+        AssistantService.SEER -> t(R.string.usage_photos)
         Offline.AGENT -> t(R.string.usage_without_internet_on_the_phone)
         else -> agent
     }

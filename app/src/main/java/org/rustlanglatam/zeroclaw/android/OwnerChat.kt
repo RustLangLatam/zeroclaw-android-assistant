@@ -174,7 +174,7 @@ object OwnerChat {
         // and the owner's agent hears its answer with the next message ([aside]).
         if (image != null) {
             asked = null
-            fun look(again: Boolean): Unit = Turns.scribe(app, text, image) { said ->
+            fun look(again: Boolean): Unit = Turns.scribe(app, text, image, if (Keys.visionReady) AssistantService.SEER else AssistantService.SCRIBE) { said ->
                 val why = photoFailure(Turns.scribeError, Keys.visionReady)
                 when {
                     // A busy provider usually frees up in seconds: one more try before telling the owner.

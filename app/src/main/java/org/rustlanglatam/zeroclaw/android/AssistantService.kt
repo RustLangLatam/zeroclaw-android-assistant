@@ -325,26 +325,7 @@ class AssistantService : Service() {
         // `allowed_tools` would allow every tool). Nothing it reads can trigger an action (ADR-0018).
         // A custom gateway's endpoint (ZeroClaw's `uri`, the full URL); other providers use their family's default.
         val uri = Keys[Keys.Key.MODEL_URL].takeIf { it.isNotBlank() }?.let { "uri = \"$it\"" }.orEmpty()
-        val scribe = """
-            [risk_profiles.$SCRIBE]
-            level = "supervised"
-            workspace_only = true
-            allowed_tools = ["calculator"]
-            auto_approve = ["calculator"]
-
-            [risk_profiles.$SCRIBE.delegation_policy]
-            mode = "forbidden"
-
-            [runtime_profiles.$SCRIBE]
-            max_actions_per_hour = 30
-            max_cost_per_day_cents = 100
-            memory_recall_limit = 0
-
-            [agents.$SCRIBE]
-            model_provider = "${Keys[Keys.Key.MODEL_PROVIDER]}.warm"
-            risk_profile = "$SCRIBE"
-            runtime_profile = "$SCRIBE"
-        """.trimIndent() + "\n"
+        val scribe = toolless(SCRIBE, "${Keys[Keys.Key.MODEL_PROVIDER]}.warm")
         return """
             $CONFIG_MARK
             schema_version = 3
@@ -399,14 +380,44 @@ class AssistantService : Service() {
         """.trimIndent() + "\n\n" + vision() + rates() + agents + "\n" + scribe + "\n" + offline() + "\n" + EmailAccounts.config(EmailAccounts.accounts)
     }
 
+    /** A tool-less agent [name] on [provider]: only the calculator, no memory recall, nothing it reads can act. */
+    private fun toolless(name: String, provider: String) = """
+        [risk_profiles.$name]
+        level = "supervised"
+        workspace_only = true
+        allowed_tools = ["calculator"]
+        auto_approve = ["calculator"]
+
+        [risk_profiles.$name.delegation_policy]
+        mode = "forbidden"
+
+        [runtime_profiles.$name]
+        max_actions_per_hour = 30
+        max_cost_per_day_cents = 100
+        memory_recall_limit = 0
+
+        [agents.$name]
+        model_provider = "$provider"
+        risk_profile = "$name"
+        runtime_profile = "$name"
+    """.trimIndent() + "\n"
+
     /**
-     * A model that can see pictures, when the owner set one: ZeroClaw sends a message with a photo to it when the main
-     * model cannot see pictures, and every other message to the main model.
+     * A model that can see pictures, when the owner set one, and the tool-less [SEER] agent that uses it for photos.
+     * The agent talks to it directly, through the provider's OpenAI-compatible endpoint (`endpoint` in
+     * `assets/models.json`): ZeroClaw 0.8.5 put the picture in the message text (`[IMAGE:data:…]`) both on its
+     * `[multimodal] vision_model_provider` route and from its own OpenAI client, and the model read it as noise.
      */
     private fun vision(): String = if (!Keys.visionReady) "".also {
         Log.i(TAG, "config: no photos model; missing ${listOf(Keys.Key.VISION_PROVIDER, Keys.Key.VISION_MODEL, Keys.Key.VISION_KEY).filter { Keys[it].isBlank() }}")
-    } else """
-        [providers.models.${Keys[Keys.Key.VISION_PROVIDER]}.vision]
+    } else {
+        // Through the provider's OpenAI-compatible endpoint: ZeroClaw 0.8.5 sends a picture as an image part only from
+        // its compatible client; its own OpenAI client put it in the text, and the model read noise.
+        val endpoint = ModelCatalog.recommended(this, Keys[Keys.Key.VISION_PROVIDER], "endpoint")
+        val provider = if (endpoint != null) Keys.CUSTOM else Keys[Keys.Key.VISION_PROVIDER]
+        """
+        [providers.models.$provider.vision]
+        ${endpoint?.let { "uri = \"$it\"" }.orEmpty()}
         model = "${Keys[Keys.Key.VISION_MODEL]}"
         api_key = "${Keys[Keys.Key.VISION_KEY]}"
         # No max_tokens: newer models refuse the parameter ("use max_completion_tokens"), and each has its own cap.
@@ -415,11 +426,8 @@ class AssistantService : Service() {
         # Chosen for pictures: ZeroClaw's family default refused them for some (an OpenAI model on the phone).
         vision = true
 
-        [multimodal]
-        vision_model_provider = "${Keys[Keys.Key.VISION_PROVIDER]}.vision"
-        vision_model = "${Keys[Keys.Key.VISION_MODEL]}"
-
-    """.trimIndent() + "\n\n"
+    """.trimIndent() + "\n\n" + toolless(SEER, "$provider.vision") + "\n"
+    }
 
     /**
      * Builds the config of the offline agent (ADR-0025), which serves the owner's chat through the on-device model
@@ -631,7 +639,7 @@ class AssistantService : Service() {
         private const val HEALTH_MS = 5_000L
 
         /** Version marker of the config this app writes; a config with another marker is replaced and paired again. */
-        private const val CONFIG_MARK = "# ksandra-config 22"
+        private const val CONFIG_MARK = "# ksandra-config 24"
 
         /** Returns the model's cost rates from `local.properties`, or an empty string; without them ZeroClaw counts tokens but not cost. */
         private fun rates(): String {
@@ -670,6 +678,9 @@ class AssistantService : Service() {
 
         /** Name of the tool-less agent for turns not typed by the owner (ADR-0018). */
         const val SCRIBE = "scribe"
+
+        /** The tool-less agent on the photos model ([Keys.visionReady]): looks at a photo the owner asked about. */
+        const val SEER = "seer"
 
         /** Returns the search provider's config line: an API key for brave, tavily, jina or bocha; the instance URL for searxng. */
         private fun searchKey(): String = when {
@@ -950,8 +961,11 @@ class AssistantService : Service() {
                     "symbols, never invent a fact.",
                 "TOOLS.md" to "# Tools\nNone. You only write.",
             )
-            val dir = File(context.filesDir, "zeroclaw/agents/$SCRIBE/workspace").apply { mkdirs() }
-            scribe.forEach { (file, content) -> File(dir, file).replaceWith(content + "\n") }
+            // The seer, on the photos model, shares the scribe's persona and role.
+            listOf(SCRIBE, SEER).forEach { name ->
+                val dir = File(context.filesDir, "zeroclaw/agents/$name/workspace").apply { mkdirs() }
+                scribe.forEach { (file, content) -> File(dir, file).replaceWith(content + "\n") }
+            }
             // The offline agent: a minimal persona and role for the on-device model.
             val offline = mapOf(
                 "IDENTITY.md" to "# Identity\nName: $name\nRole: $owner's personal assistant, on $owner's Android phone.",
