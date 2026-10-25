@@ -52,6 +52,7 @@ and the build accepts every key empty.
 | `zeroclaw.model` | `MODEL` | **running at all**: the `model` of both profiles | — | `AssistantService.initialConfig` |
 | `zeroclaw.apiKey` | `MODEL_API_KEY` | **running at all** with any provider that needs a key: `api_key` of both profiles | — | `AssistantService.initialConfig` |
 | `zeroclaw.inputPerMTok`, `zeroclaw.outputPerMTok` | `MODEL_INPUT_PER_MTOK`, `MODEL_OUTPUT_PER_MTOK` | cost in US$ ("What I cost"); both must parse as numbers or no `[cost.rates…]` section is written and ZeroClaw counts tokens only | — | `AssistantService.rates` |
+| `zeroclaw.vision.provider`, `zeroclaw.vision.model`, `zeroclaw.vision.apiKey` | `VISION_PROVIDER`, `VISION_MODEL`, `VISION_API_KEY` | photo explanations when the main model cannot see pictures: `[providers.models.<provider>.vision]` and `[multimodal] vision_model_provider`, only when all three are set | — | `AssistantService.vision` |
 | `zeroclaw.search` | `SEARCH_PROVIDER` | ZeroClaw's `web_search_tool` | `duckduckgo` (no key; often blocks requests it takes for a robot) | `AssistantService.initialConfig` |
 | `zeroclaw.searchKey` | `SEARCH_KEY` | the search provider: written as `<provider>_api_key` for `brave`, `tavily`, `jina` or `bocha`; as `searxng_instance_url` (the instance URL) for `searxng` | — | `AssistantService.searchKey` |
 | `youtube.apiKey` | `YOUTUBE_KEY` | `find_videos`: video options in cards; without it the tool answers with a YouTube search link | — | `PhoneMcp` (`find_videos`), `Videos.kt` |

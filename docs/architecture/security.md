@@ -258,8 +258,10 @@ Mitigations in code:
 - ZeroClaw loads any file named by a media marker (`[IMAGE:/path]`) in a message or a tool result and
   sends it to the model. `Guard.inert` breaks such markers in third-party turns, scribe prompts, every
   tool result and the owner's chat text, so a message cannot make a stranger's turn see the owner's
-  photos; only the app adds a marker, for a photo the owner asked to explain
-  ([ADR-0032](../adr/0032-photos-seen-on-the-phone-explained-on-request.md)).
+  photos; only the app adds a marker, for a photo the owner asked to explain, and only in a turn of the
+  tool-less `scribe` ([ADR-0032](../adr/0032-photos-seen-on-the-phone-explained-on-request.md)). Its answer reaches
+  the owner's agent marked as possibly holding other people's words, and that turn counts as having read them
+  (`Guard.heardOthers`).
 
 Internal tools (device controls, reminders, memory, following a topic) are `ACT` by default.
 

@@ -101,9 +101,15 @@ and `Document` for other text, so "the receipt from last week" finds it. The res
 copy stays in the cache (`cache/photos/<id>.jpg`). A card then asks *Explain it* or *Just keep it*.
 
 Only *Explain it* sends anything: the owner's message with the labels and the text read, plus the copy as ZeroClaw's
-`[IMAGE:<path>]` marker (`OwnerChat.send(image = …)`; the chat shows the message without it). When the cloud model
-cannot see pictures, the daemon refuses the turn with a vision error and the message is sent again without the
-picture, so the model explains from the labels and the text. In local mode the picture is never attached.
+`[IMAGE:<path>]` marker, to the tool-less `scribe` in a new session (`OwnerChat.send(image = …)` →
+`Turns.scribe(image = …)`). If the main model cannot see pictures, ZeroClaw routes that turn to the photos model set
+in Connectors › Services › Photos (`VISION_PROVIDER`, `VISION_MODEL`, `VISION_KEY`; `zeroclaw.vision.*` in
+`local.properties`), written as `[multimodal] vision_model_provider` when all three are set (`Keys.visionReady`). The
+answer is shown and spoken, and appended to the owner's next message (`OwnerChat.PHOTO_MARK`, stripped from the chat)
+so the owner's agent can act on it, e.g. set the reminder it proposed. The picture never enters the owner's session:
+ZeroClaw keeps it in the history and sent every later turn there to the photos model. When the scribe turn fails (no
+model sees pictures, a wrong key), the owner's agent gets the message without the picture and explains from the labels
+and the text. In local mode the picture is never attached.
 
 ## Calling someone
 

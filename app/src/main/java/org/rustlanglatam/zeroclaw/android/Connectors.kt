@@ -35,6 +35,8 @@ object Connectors {
     val GROUPS = listOf(
         R.string.connectors_model to listOf(Keys.Key.MODEL_PROVIDER to R.string.connectors_provider, Keys.Key.MODEL to R.string.connectors_model_name, Keys.Key.MODEL_KEY to R.string.connectors_api_key,
             Keys.Key.MODEL_INPUT_PER_MTOK to R.string.connectors_input_price, Keys.Key.MODEL_OUTPUT_PER_MTOK to R.string.connectors_output_price),
+        R.string.connectors_photos to listOf(Keys.Key.VISION_PROVIDER to R.string.connectors_provider, Keys.Key.VISION_MODEL to R.string.connectors_model_name,
+            Keys.Key.VISION_KEY to R.string.connectors_api_key),
         R.string.connectors_web_search to listOf(Keys.Key.SEARCH_PROVIDER to R.string.connectors_provider, Keys.Key.SEARCH_KEY to R.string.connectors_api_key_or_url),
         R.string.connectors_videos to listOf(Keys.Key.YOUTUBE_KEY to R.string.connectors_api_key),
         R.string.connectors_natural_voice to listOf(

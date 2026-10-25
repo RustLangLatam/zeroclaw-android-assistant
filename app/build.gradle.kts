@@ -44,6 +44,10 @@ android {
         // The model's price, US$ per million tokens (optional): ZeroClaw counts the cost only with a rate.
         buildConfigField("String", "MODEL_INPUT_PER_MTOK", localString("zeroclaw.inputPerMTok"))
         buildConfigField("String", "MODEL_OUTPUT_PER_MTOK", localString("zeroclaw.outputPerMTok"))
+        // A model that can see pictures (optional), for the photos the main model cannot see: provider, model and key.
+        buildConfigField("String", "VISION_PROVIDER", localString("zeroclaw.vision.provider"))
+        buildConfigField("String", "VISION_MODEL", localString("zeroclaw.vision.model"))
+        buildConfigField("String", "VISION_API_KEY", localString("zeroclaw.vision.apiKey"))
         // ZeroClaw's web search (optional): DuckDuckGo needs no key but blocks searches it takes for a robot.
         buildConfigField("String", "SEARCH_PROVIDER", localString("zeroclaw.search", "duckduckgo"))
         buildConfigField("String", "SEARCH_KEY", localString("zeroclaw.searchKey"))
@@ -76,7 +80,7 @@ android {
     buildTypes {
         release {
             // No key ships inside a release APK: the owner enters theirs in Connectors (ADR-0030).
-            listOf("MODEL_API_KEY", "SEARCH_KEY", "YOUTUBE_KEY", "VOICE_API_KEY").forEach { buildConfigField("String", it, "\"\"") }
+            listOf("MODEL_API_KEY", "VISION_API_KEY", "SEARCH_KEY", "YOUTUBE_KEY", "VOICE_API_KEY").forEach { buildConfigField("String", it, "\"\"") }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

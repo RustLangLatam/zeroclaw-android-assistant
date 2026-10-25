@@ -948,6 +948,7 @@
     <string name="connectors_model_name">Model</string>
     <string name="connectors_api_key">API key</string>
     <string name="connectors_api_key_or_url">API key (or the instance URL for searxng)</string>
+    <string name="connectors_photos">Photos</string>
     <string name="connectors_web_search">Web search</string>
     <string name="connectors_videos">Video options (YouTube)</string>
     <string name="connectors_natural_voice">Natural voice</string>
