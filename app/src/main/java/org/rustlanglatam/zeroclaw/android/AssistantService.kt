@@ -409,7 +409,10 @@ class AssistantService : Service() {
         [providers.models.${Keys[Keys.Key.VISION_PROVIDER]}.vision]
         model = "${Keys[Keys.Key.VISION_MODEL]}"
         api_key = "${Keys[Keys.Key.VISION_KEY]}"
-        max_tokens = 1500
+        # Room for a model that reasons before answering: its reasoning counts against this cap.
+        max_tokens = 4000
+        # Chosen for pictures: ZeroClaw's family default refused them for some (an OpenAI model on the phone).
+        vision = true
 
         [multimodal]
         vision_model_provider = "${Keys[Keys.Key.VISION_PROVIDER]}.vision"
@@ -627,7 +630,7 @@ class AssistantService : Service() {
         private const val HEALTH_MS = 5_000L
 
         /** Version marker of the config this app writes; a config with another marker is replaced and paired again. */
-        private const val CONFIG_MARK = "# ksandra-config 20"
+        private const val CONFIG_MARK = "# ksandra-config 21"
 
         /** Returns the model's cost rates from `local.properties`, or an empty string; without them ZeroClaw counts tokens but not cost. */
         private fun rates(): String {
