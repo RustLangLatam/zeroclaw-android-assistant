@@ -183,6 +183,7 @@ object OwnerChat {
         if (!modelReady || Regex("provider|api.?key|unauthori[sz]ed|authenticat|\\b40[13]\\b", RegexOption.IGNORE_CASE).containsMatchIn(error))
             R.string.ownerchat_i_couldn_t_reach_my_model
         else R.string.ownerchat_i_couldn_t_answer_this_time
+
     /** The text of a turn sent with a picture, resent alone if the model cannot see pictures. */
     @Volatile private var blind: String? = null
 
