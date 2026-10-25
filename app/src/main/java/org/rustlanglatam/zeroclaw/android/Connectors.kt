@@ -257,7 +257,14 @@ private fun ServicesForm(ui: MainActivity) {
             Keys.Key.VOICE_NAME -> Combo(t(label), value(key), value(key), CloudVoice.VOICES.map { it to it.replaceFirstChar(Char::uppercase) }, onPick = change)
             else -> {
                 val shown = values[key] ?: if (key.secret) "" else Keys[key]
-                val hint = if (key.secret && Keys[key].isNotBlank()) t(R.string.connectors_x_saved_leave_empty, t(label)) else t(label)
+                // A key says whose it is: the model provider's name, or the voice service's host.
+                val whose = when (key) {
+                    Keys.Key.MODEL_KEY -> provider.takeIf { it.isNotBlank() }?.let(ModelCatalog::label)
+                    Keys.Key.VOICE_KEY -> voiceHost(value(Keys.Key.VOICE_URL))
+                    else -> null
+                }
+                val named = whose?.let { t(R.string.connectors_api_key_of_x, it) } ?: t(label)
+                val hint = if (key.secret && Keys[key].isNotBlank()) t(R.string.connectors_x_saved_leave_empty, named) else named
                 Field(shown, hint, keyboard = if (key.secret) KeyboardType.Password else KeyboardType.Uri, hidden = key.secret, onChange = change)
             }
         }
@@ -269,6 +276,11 @@ private fun ServicesForm(ui: MainActivity) {
         Text(t(R.string.connectors_services_explained), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
         Connectors.GROUPS.forEach { (title, shown, more) ->
             SectionLabel(t(title))
+            // The voice service is set by its URL (under Advanced): say which one it is, so its key makes sense.
+            if (title == R.string.connectors_natural_voice) {
+                Text(voiceHost(value(Keys.Key.VOICE_URL))?.let { t(R.string.connectors_voice_service_x, it) } ?: t(R.string.connectors_no_voice_service),
+                    Modifier.padding(start = 6.dp, bottom = 12.dp), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
+            }
             shown.forEach { (key, label) -> Setting(key, label) }
             if (more.isNotEmpty()) {
                 val open = title in advanced
@@ -317,6 +329,9 @@ private fun Combo(label: String, value: String, shown: String, options: List<Pai
         }
     }
 }
+
+/** Returns the host of the voice service's [url] (`wss://host/...`), or `null` when none is set. */
+fun voiceHost(url: String) = runCatching { java.net.URI(url.trim()).host }.getOrNull()?.takeIf { it.isNotBlank() }
 
 /** Options listed at once in a [Combo]; the search narrows the rest. */
 private const val MAX_SHOWN = 30

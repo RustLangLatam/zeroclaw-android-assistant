@@ -23,6 +23,11 @@ class ModelCatalogTest {
         assertNull(ModelCatalog.perMillion(null))
     }
 
+    @Test fun theVoiceServiceIsNamedByItsHost() {
+        assertEquals("voice.example.com", voiceHost("wss://voice.example.com/v1/realtime?x=1"))
+        assertNull(voiceHost(""))
+    }
+
     @Test fun aGatewayUrlIsEncryptedOrOnThisPhone() {
         assertTrue(Keys.valid(Keys.Key.MODEL_URL, "https://gateway.example.com/v1/chat/completions"))
         assertTrue(Keys.valid(Keys.Key.MODEL_URL, "http://127.0.0.1:4000/v1"))
