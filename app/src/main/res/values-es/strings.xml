@@ -957,6 +957,7 @@
     <string name="connectors_not_set_i_can_t_think">Sin configurar: sin esto no puedo pensar</string>
     <string name="connectors_services_explained">Los servicios que uso y sus claves. Quedan cifradas en este teléfono, nunca dentro de la app. Cambiarlas pide tu bloqueo de pantalla.</string>
     <string name="connectors_choose_needed">Elige uno: hace falta</string>
+    <string name="connectors_active">Activo</string>
     <string name="connectors_x_empty">%1$s: vacía, hace falta</string>
     <string name="connectors_fill_the_marked">Completa los campos marcados en rojo.</string>
     <string name="connectors_x_saved_leave_empty">%1$s guardada (déjala vacía para mantenerla)</string>

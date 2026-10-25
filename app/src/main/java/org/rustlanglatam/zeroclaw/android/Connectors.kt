@@ -3,6 +3,7 @@ package org.rustlanglatam.zeroclaw.android
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +49,14 @@ object Connectors {
         }
         if (value(Keys.Key.VISION_PROVIDER).isNotBlank()) addAll(listOf(Keys.Key.VISION_MODEL, Keys.Key.VISION_KEY))
         if (value(Keys.Key.VOICE_URL).isNotBlank()) addAll(listOf(Keys.Key.VOICE_NAME, Keys.Key.VOICE_MODEL, Keys.Key.VOICE_KEY))
+    }
+
+    /** Whether the group titled [title] is in use with its saved settings: the main model, photos or the natural voice. */
+    fun active(title: Int) = when (title) {
+        R.string.connectors_model -> Keys.modelReady
+        R.string.connectors_photos -> Keys.visionReady
+        R.string.connectors_natural_voice -> CloudVoice.configured && Keys[Keys.Key.VOICE_NAME].isNotBlank()
+        else -> false
     }
 
     /** Each key and the provider (or voice service) it belongs to: a saved key stops counting once that changes. */
@@ -356,7 +365,14 @@ private fun ServicesForm(ui: MainActivity) {
         Spacer(Modifier.height(8.dp))
         Text(t(R.string.connectors_services_explained), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
         Connectors.GROUPS.forEach { (title, shown, more) ->
-            SectionLabel(t(title))
+            // A group whose saved settings are complete is the one in use: marked so at a glance.
+            androidx.compose.foundation.layout.Row(Modifier.padding(top = 30.dp, bottom = 12.dp, start = 6.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Eyebrow(t(title))
+                if (Connectors.active(title)) {
+                    Spacer(Modifier.width(12.dp)); Light(Ink.ok); Spacer(Modifier.width(6.dp))
+                    Eyebrow(t(R.string.connectors_active), color = Ink.ok)
+                }
+            }
             shown.forEach { (key, label) -> Setting(key, label) }
             if (more.isNotEmpty()) {
                 val open = title in advanced

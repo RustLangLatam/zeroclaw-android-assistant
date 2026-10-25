@@ -27,7 +27,8 @@ provider fills the model with the recommended one when the provider's list has i
 else with the list's first (`ModelCatalog.pick`). The photos group offers only the providers with a `vision` entry; any
 other model can still be typed. The form also marks what each group in use still needs (`Connectors.required`): the
 model, the key and, for a custom gateway, its URL; the key is the only field left empty, shown in red until entered,
-and a saved key stops counting when its provider changes. Saving waits until nothing is marked.
+and a saved key stops counting when its provider changes. Saving waits until nothing is marked. A group whose saved
+settings are complete shows "Active" beside its title.
 
 ## Consequences
 
