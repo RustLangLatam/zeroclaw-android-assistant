@@ -38,3 +38,4 @@ documentation are in [ADR-0000](0000-documentation-standards.md).
 | [0028](0028-a-log-of-what-leaves-the-phone.md) | A log of every connection that leaves the phone | Proposed (deferred) |
 | [0029](0029-ui-text-in-android-string-resources.md) | UI text in Android string resources | Accepted |
 | [0030](0030-service-keys-entered-by-the-owner.md) | Service keys entered by the owner, not built into the APK | Accepted |
+| [0031](0031-voice-services-named-in-a-data-file.md) | Voice services named in a data file | Accepted |

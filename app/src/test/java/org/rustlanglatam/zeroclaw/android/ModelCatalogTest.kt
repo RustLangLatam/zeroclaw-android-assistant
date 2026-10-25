@@ -28,6 +28,17 @@ class ModelCatalogTest {
         assertNull(voiceHost(""))
     }
 
+    @Test fun theListedVoiceServicesAreComplete() {
+        val list = CloudVoice.providers(java.io.File("src/main/assets/voices.json").readText())
+        assertTrue(list.isNotEmpty())
+        list.forEach { p ->
+            assertTrue(p.url.startsWith("wss://")); assertTrue(p.model.isNotBlank()); assertTrue(p.voices.isNotEmpty())
+            assertTrue(Keys.valid(Keys.Key.VOICE_URL, p.url)); assertTrue(Keys.valid(Keys.Key.VOICE_PER_MINUTE, p.perMinute))
+        }
+        assertEquals(list.first(), CloudVoice.providerOf(" ${list.first().url} ", list))
+        assertNull(CloudVoice.providerOf("wss://elsewhere.example.com/v1", list))
+    }
+
     @Test fun aGatewayUrlIsEncryptedOrOnThisPhone() {
         assertTrue(Keys.valid(Keys.Key.MODEL_URL, "https://gateway.example.com/v1/chat/completions"))
         assertTrue(Keys.valid(Keys.Key.MODEL_URL, "http://127.0.0.1:4000/v1"))
