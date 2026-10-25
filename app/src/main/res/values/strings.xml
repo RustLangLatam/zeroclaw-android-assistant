@@ -1057,4 +1057,11 @@
     <string name="mainactivity_i_m_in_local_mode">I\'m in local mode: I answer with the model on this phone, more slowly and with fewer abilities. For full answers, add a model in Connectors › Services.</string>
     <string name="screens_local_mode">Local mode</string>
     <string name="connectors_not_set_local_mode">Not set: local mode, with the phone\'s model</string>
+    <string name="connectors_server_url">Server URL (https://…)</string>
+    <string name="connectors_advanced">Advanced</string>
+    <string name="connectors_choose">Choose</string>
+    <string name="connectors_search">Search</string>
+    <string name="connectors_use_x">Use “%1$s”</string>
+    <string name="connectors_x_more_type_to_search">%1$d more: type to search</string>
+    <string name="connectors_loading">Loading…</string>
 </resources>

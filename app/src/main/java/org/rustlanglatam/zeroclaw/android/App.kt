@@ -179,6 +179,7 @@ object Sections {
             k in places -> Ui.place = places.getValue(k)
             k in ANCHORS || k in SHEETS -> { Ui.place = Place.CONTROL; Ui.section = k }
             k == "add_email" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.PICK }
+            k == "services" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES }
             k == "phone_permissions" -> Ui.draft = Draft.current().apply { step = 1 }
             else -> return false
         }

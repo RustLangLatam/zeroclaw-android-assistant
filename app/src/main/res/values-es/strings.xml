@@ -1057,4 +1057,11 @@
     <string name="mainactivity_i_m_in_local_mode">Estoy en modo local: respondo con el modelo de este teléfono, más despacio y con menos capacidades. Para respuestas completas, añade un modelo en Conectores › Servicios.</string>
     <string name="screens_local_mode">Modo local</string>
     <string name="connectors_not_set_local_mode">Sin configurar: modo local, con el modelo del teléfono</string>
+    <string name="connectors_server_url">URL del servidor (https://…)</string>
+    <string name="connectors_advanced">Avanzado</string>
+    <string name="connectors_choose">Elegir</string>
+    <string name="connectors_search">Buscar</string>
+    <string name="connectors_use_x">Usar «%1$s»</string>
+    <string name="connectors_x_more_type_to_search">%1$d más: escribe para buscar</string>
+    <string name="connectors_loading">Cargando…</string>
 </resources>

@@ -1,5 +1,6 @@
 package org.rustlanglatam.zeroclaw.android
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,18 +32,61 @@ object Connectors {
     /** Value of [Ui.connector] that opens the services form (model, search, videos, voice keys). */
     const val SERVICES = "services"
 
-    /** The services form's groups: a title and its settings, each with its field label. */
+    /**
+     * The services form's groups: a title, the settings shown, and those under "Advanced" (prefilled, rarely changed),
+     * each with its field label. The model's provider and name and the voice's name are chosen from lists.
+     */
     val GROUPS = listOf(
-        R.string.connectors_model to listOf(Keys.Key.MODEL_PROVIDER to R.string.connectors_provider, Keys.Key.MODEL to R.string.connectors_model_name, Keys.Key.MODEL_KEY to R.string.connectors_api_key,
-            Keys.Key.MODEL_INPUT_PER_MTOK to R.string.connectors_input_price, Keys.Key.MODEL_OUTPUT_PER_MTOK to R.string.connectors_output_price),
-        R.string.connectors_web_search to listOf(Keys.Key.SEARCH_PROVIDER to R.string.connectors_provider, Keys.Key.SEARCH_KEY to R.string.connectors_api_key_or_url),
-        R.string.connectors_videos to listOf(Keys.Key.YOUTUBE_KEY to R.string.connectors_api_key),
-        R.string.connectors_natural_voice to listOf(
-            Keys.Key.VOICE_URL to R.string.connectors_websocket_url, Keys.Key.VOICE_MODEL to R.string.connectors_model_name,
-            Keys.Key.VOICE_KEY to R.string.connectors_api_key, Keys.Key.VOICE_NAME to R.string.connectors_voice_name,
-            Keys.Key.VOICE_PER_MINUTE to R.string.connectors_usd_per_minute,
-        ),
+        Triple(R.string.connectors_model,
+            listOf(Keys.Key.MODEL_PROVIDER to R.string.connectors_provider, Keys.Key.MODEL to R.string.connectors_model_name,
+                Keys.Key.MODEL_URL to R.string.connectors_server_url, Keys.Key.MODEL_KEY to R.string.connectors_api_key),
+            listOf(Keys.Key.MODEL_INPUT_PER_MTOK to R.string.connectors_input_price, Keys.Key.MODEL_OUTPUT_PER_MTOK to R.string.connectors_output_price)),
+        Triple(R.string.connectors_web_search,
+            listOf(Keys.Key.SEARCH_PROVIDER to R.string.connectors_provider, Keys.Key.SEARCH_KEY to R.string.connectors_api_key_or_url), emptyList()),
+        Triple(R.string.connectors_videos, listOf(Keys.Key.YOUTUBE_KEY to R.string.connectors_api_key), emptyList()),
+        Triple(R.string.connectors_natural_voice,
+            listOf(Keys.Key.VOICE_NAME to R.string.connectors_voice_name, Keys.Key.VOICE_KEY to R.string.connectors_api_key),
+            listOf(Keys.Key.VOICE_URL to R.string.connectors_websocket_url, Keys.Key.VOICE_MODEL to R.string.connectors_model_name,
+                Keys.Key.VOICE_PER_MINUTE to R.string.connectors_usd_per_minute)),
     )
+}
+
+/**
+ * ZeroClaw's model catalog (`/api/config/catalog`), so no provider or model name is written in the app: the providers
+ * it knows and each provider's models, live from the provider when it can. `null` until loaded or when the daemon is
+ * not reachable; the form then falls back to text fields.
+ */
+object ModelCatalog {
+    @Volatile var providers: List<io.github.rustlanglatam.zeroclaw.CatalogModelProvider>? = null
+    private val models = java.util.concurrent.ConcurrentHashMap<String, io.github.rustlanglatam.zeroclaw.CatalogModels>()
+
+    /** Words of model ids that are not chat models (embeddings, speech, images, moderation). */
+    private val NOT_CHAT = Regex("embed|moderation|tts|whisper|transcri|guard|image|audio|realtime|rerank", RegexOption.IGNORE_CASE)
+
+    private fun <T> call(context: android.content.Context, block: suspend (io.github.rustlanglatam.zeroclaw.Client) -> T): T? =
+        AssistantService.token(context)?.let { token -> runCatching { kotlinx.coroutines.runBlocking { block(AssistantService.client(token)) } }.getOrNull() }
+
+    /** Loads the providers once: remote ones only (the phone's own model is the offline answers' job). */
+    fun load(context: android.content.Context) =
+        providers ?: call(context) { it.config.catalog() }?.filterNot { it.local }?.also { providers = it }
+
+    /** Loads [provider]'s chat models; `null` when the daemon or the provider can't be reached. */
+    fun models(context: android.content.Context, provider: String) = models[provider]
+        ?: call(context) { it.config.catalogModels(provider) }?.let { m -> m.copy(models = m.models.filterNot { NOT_CHAT.containsMatchIn(it) }) }
+            ?.also { models[provider] = it }
+
+    /**
+     * Returns [providers] as options (name to display name) in the catalog's own order, most used first, after the
+     * [current] choice and the build's provider; the custom gateway last.
+     */
+    fun ordered(providers: List<io.github.rustlanglatam.zeroclaw.CatalogModelProvider>, current: String, build: String = BuildConfig.MODEL_PROVIDER) =
+        providers.sortedBy { when (it.name) { current -> 0; build -> 1; Keys.CUSTOM -> 3; else -> 2 } }.map { it.name to it.displayName }
+
+    /** The name shown for [provider]: the catalog's display name when loaded. */
+    fun label(provider: String) = providers?.firstOrNull { it.name == provider }?.displayName ?: provider
+
+    /** US$ per million tokens from a per-token price string, as the price fields take it; `null` if unknown. */
+    fun perMillion(price: String?) = price?.toDoubleOrNull()?.takeIf { it >= 0 }?.let { "%.4f".format(java.util.Locale.ROOT, it * 1e6).trimEnd('0').trimEnd('.') }
 }
 
 @Composable
@@ -59,7 +103,7 @@ fun ConnectorsPlace(ui: MainActivity, onBack: () -> Unit) {
             )
             SectionLabel(t(R.string.connectors_services))
             // Computed here, not inside the panel's content, so a save (which bumps Ui.tick) redraws it.
-            val model = if (Keys.modelReady) "${Keys[Keys.Key.MODEL_PROVIDER]} · ${Keys[Keys.Key.MODEL]}" else if (Offline.wanted && Offline.ready) t(R.string.connectors_not_set_local_mode) else t(R.string.connectors_not_set_i_can_t_think)
+            val model = if (Keys.modelReady) "${ModelCatalog.label(Keys[Keys.Key.MODEL_PROVIDER])} · ${Keys[Keys.Key.MODEL]}" else if (Offline.wanted && Offline.ready) t(R.string.connectors_not_set_local_mode) else t(R.string.connectors_not_set_i_can_t_think)
             Panel {
                 Item(
                     t(R.string.connectors_model),
@@ -168,24 +212,70 @@ private fun EmailForm(ui: MainActivity, provider: EmailAccounts.Provider) {
 
 /**
  * Shows the services form: each group's settings, prefilled with the current value; a key is never shown back, and
- * left empty it keeps the one saved. Saving applies only what changed ([MainActivity.saveKeys]).
+ * left empty it keeps the one saved. The model's provider and name come from ZeroClaw's catalog and the voice from
+ * [CloudVoice.VOICES], each with a search and "use what I typed"; prices come from the catalog when the provider
+ * publishes them. Saving applies only what changed ([MainActivity.saveKeys]).
  */
 @Composable
 private fun ServicesForm(ui: MainActivity) {
     val values = remember { androidx.compose.runtime.mutableStateMapOf<Keys.Key, String>() }
     var busy by remember { mutableStateOf(false) }
     var problem by remember { mutableStateOf<String?>(null) }
+    var advanced by remember { mutableStateOf(setOf<Int>()) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    fun value(key: Keys.Key) = values[key] ?: Keys[key]
+    val provider = value(Keys.Key.MODEL_PROVIDER)
+    var providers by remember { mutableStateOf(ModelCatalog.providers) }
+    var catalog by remember { mutableStateOf<io.github.rustlanglatam.zeroclaw.CatalogModels?>(null) }
+    var loading by remember { mutableStateOf(true) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        providers = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.load(context) }
+        if (providers == null) loading = false
+    }
+    androidx.compose.runtime.LaunchedEffect(provider) {
+        catalog = null
+        loading = provider.isNotBlank() && provider != Keys.CUSTOM
+        if (loading) catalog = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.models(context, provider) }
+        loading = false
+    }
+    @Composable
+    fun Setting(key: Keys.Key, label: Int) {
+        val change = { v: String -> values[key] = v; problem = null }
+        when (key) {
+            Keys.Key.MODEL_PROVIDER -> Combo(t(label), provider, ModelCatalog.label(provider), providers?.let { ModelCatalog.ordered(it, provider) }) { v ->
+                if (v != provider) { change(v); values[Keys.Key.MODEL] = "" }
+            }
+            Keys.Key.MODEL -> Combo(t(label), value(key), value(key), catalog?.models?.map { it to it }, loading && providers != null) { v ->
+                change(v)
+                // The provider's published prices fill the cost fields; otherwise they stay for the owner.
+                catalog?.pricing?.get(v)?.let { p ->
+                    ModelCatalog.perMillion(p.prompt)?.let { values[Keys.Key.MODEL_INPUT_PER_MTOK] = it }
+                    ModelCatalog.perMillion(p.completion)?.let { values[Keys.Key.MODEL_OUTPUT_PER_MTOK] = it }
+                }
+            }
+            Keys.Key.MODEL_URL -> if (provider == Keys.CUSTOM || value(key).isNotBlank()) Field(value(key), t(label), keyboard = KeyboardType.Uri) { change(it.trim()) } else return
+            Keys.Key.VOICE_NAME -> Combo(t(label), value(key), value(key), CloudVoice.VOICES.map { it to it.replaceFirstChar(Char::uppercase) }, onPick = change)
+            else -> {
+                val shown = values[key] ?: if (key.secret) "" else Keys[key]
+                val hint = if (key.secret && Keys[key].isNotBlank()) t(R.string.connectors_x_saved_leave_empty, t(label)) else t(label)
+                Field(shown, hint, keyboard = if (key.secret) KeyboardType.Password else KeyboardType.Uri, hidden = key.secret, onChange = change)
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+    }
     Sheet({ if (!busy) Ui.connector = null }) {
         Text(t(R.string.connectors_services), style = MaterialTheme.typography.displaySmall)
         Spacer(Modifier.height(8.dp))
         Text(t(R.string.connectors_services_explained), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
-        Connectors.GROUPS.forEach { (title, fields) ->
+        Connectors.GROUPS.forEach { (title, shown, more) ->
             SectionLabel(t(title))
-            fields.forEach { (key, label) ->
-                val shown = values[key] ?: if (key.secret) "" else Keys[key]
-                val hint = if (key.secret && Keys[key].isNotBlank()) t(R.string.connectors_x_saved_leave_empty, t(label)) else t(label)
-                Field(shown, hint, keyboard = if (key.secret) KeyboardType.Password else KeyboardType.Uri, hidden = key.secret) { values[key] = it; problem = null }
-                Spacer(Modifier.height(10.dp))
+            shown.forEach { (key, label) -> Setting(key, label) }
+            if (more.isNotEmpty()) {
+                val open = title in advanced
+                Text(t(R.string.connectors_advanced) + if (open) " ▴" else " ▾",
+                    Modifier.clickable { advanced = if (open) advanced - title else advanced + title }.padding(start = 6.dp, top = 2.dp, bottom = 10.dp),
+                    style = MaterialTheme.typography.labelLarge, color = Ink.slate)
+                if (open) more.forEach { (key, label) -> Setting(key, label) }
             }
         }
         problem?.let { Spacer(Modifier.height(10.dp)); Text(it, style = MaterialTheme.typography.bodyMedium, color = Ink.alert) }
@@ -198,3 +288,35 @@ private fun ServicesForm(ui: MainActivity) {
         }
     }
 }
+
+/**
+ * A choice from [options] (value to label), shown as a row with [label] and the current [shown] text; tapping it opens
+ * a search and the matching options, plus "use what I typed" for a value not listed. While [loading], a row saying
+ * so; with no options (the catalog can't be reached), a plain text field.
+ */
+@Composable
+private fun Combo(label: String, value: String, shown: String, options: List<Pair<String, String>>?, loading: Boolean = false, onPick: (String) -> Unit) {
+    if (loading) return Panel { Item(label, t(R.string.connectors_loading), divider = false) }
+    if (options == null) return Field(value, label, keyboard = KeyboardType.Uri) { onPick(it.trim()) }
+    var open by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    Panel {
+        Item(label, shown.ifBlank { t(R.string.connectors_choose) }, divider = open, onClick = { open = !open; query = "" }) { Chevron() }
+        if (open) {
+            androidx.compose.foundation.layout.Box(Modifier.padding(12.dp)) {
+                Field(query, t(R.string.connectors_search), keyboard = KeyboardType.Uri) { query = it }
+            }
+            val q = query.trim()
+            val matches = options.filter { (v, l) -> q.isEmpty() || v.contains(q, true) || l.contains(q, true) }
+            matches.take(MAX_SHOWN).forEach { (v, l) ->
+                Item(l, onClick = { onPick(v); open = false }) { if (v == value) Mark(true) }
+            }
+            if (matches.size > MAX_SHOWN) Text(t(R.string.connectors_x_more_type_to_search, matches.size - MAX_SHOWN),
+                Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
+            if (q.isNotEmpty() && options.none { it.first == q }) Item(t(R.string.connectors_use_x, q), divider = false, onClick = { onPick(q); open = false })
+        }
+    }
+}
+
+/** Options listed at once in a [Combo]; the search narrows the rest. */
+private const val MAX_SHOWN = 30
