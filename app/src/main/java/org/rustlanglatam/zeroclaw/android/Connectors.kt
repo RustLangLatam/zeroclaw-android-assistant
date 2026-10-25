@@ -239,6 +239,13 @@ private fun ServicesForm(ui: MainActivity) {
         providers = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.load(context) }
         if (providers == null) loading = false
     }
+    // The photos model's choices, from its own provider's live list.
+    val visionProvider = value(Keys.Key.VISION_PROVIDER)
+    var visionModels by remember { mutableStateOf<List<String>?>(null) }
+    androidx.compose.runtime.LaunchedEffect(visionProvider) {
+        visionModels = null
+        if (visionProvider.isNotBlank()) visionModels = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.models(context, visionProvider) }?.models
+    }
     androidx.compose.runtime.LaunchedEffect(provider) {
         catalog = null
         loading = provider.isNotBlank() && provider != Keys.CUSTOM
@@ -261,7 +268,10 @@ private fun ServicesForm(ui: MainActivity) {
                 }
             }
             Keys.Key.VISION_PROVIDER -> Combo(t(label), value(key), ModelCatalog.label(value(key)),
-                providers?.filter { it.name != Keys.CUSTOM }?.let { ModelCatalog.ordered(it, value(key)) }, onPick = change)
+                providers?.filter { it.name != Keys.CUSTOM }?.let { ModelCatalog.ordered(it, value(key)) }) { v ->
+                if (v != value(key)) { change(v); values[Keys.Key.VISION_MODEL] = "" }
+            }
+            Keys.Key.VISION_MODEL -> Combo(t(label), value(key), value(key), visionModels?.map { it to it }, onPick = change)
             Keys.Key.MODEL_URL -> if (provider == Keys.CUSTOM || value(key).isNotBlank()) Field(value(key), t(label), keyboard = KeyboardType.Uri) { change(it.trim()) } else return
             Keys.Key.VOICE_URL -> {
                 val options = voices.map { it.url to it.name } + (OWN_URL to t(R.string.connectors_other_my_own_url))
