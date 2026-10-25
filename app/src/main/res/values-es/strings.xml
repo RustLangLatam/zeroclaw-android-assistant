@@ -1056,4 +1056,7 @@
     <string name="connectors_use_x">Usar «%1$s»</string>
     <string name="connectors_x_more_type_to_search">%1$d más: escribe para buscar</string>
     <string name="connectors_loading">Cargando…</string>
+    <string name="connectors_api_key_of_x">Clave de API de %1$s</string>
+    <string name="connectors_voice_service_x">Servicio: %1$s. Su clave va abajo; el servicio se cambia en Avanzado.</string>
+    <string name="connectors_no_voice_service">Aún no hay servicio de voz: pon su URL en Avanzado.</string>
 </resources>
