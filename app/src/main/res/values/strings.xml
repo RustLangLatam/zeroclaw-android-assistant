@@ -964,6 +964,9 @@
     <string name="connectors_checking_keys">Checking the new keys with their providers…</string>
     <string name="connectors_key_refused_x">%1$s refused the key: I discarded it and the changes to its group. The rest is saved.</string>
     <string name="connectors_key_refused_only_x">%1$s refused the key, so I discarded it. Paste a valid one and save again.</string>
+    <string name="connectors_models">AI models</string>
+    <string name="connectors_apps">Integrations</string>
+    <string name="connectors_not_set">Not set</string>
     <string name="connectors_x_empty">%1$s: empty, needed</string>
     <string name="connectors_fill_the_marked">Fill in the fields marked in red.</string>
     <string name="connectors_x_saved_leave_empty">%1$s saved (leave empty to keep it)</string>

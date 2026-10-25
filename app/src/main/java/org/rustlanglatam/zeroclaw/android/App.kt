@@ -180,6 +180,7 @@ object Sections {
             k in ANCHORS || k in SHEETS -> { Ui.place = Place.CONTROL; Ui.section = k }
             k == "add_email" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.PICK }
             k == "services" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES }
+            k == "integrations" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.APPS }
             k == "phone_permissions" -> Ui.draft = Draft.current().apply { step = 1 }
             else -> return false
         }

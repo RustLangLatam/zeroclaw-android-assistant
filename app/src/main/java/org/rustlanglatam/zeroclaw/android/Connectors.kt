@@ -33,6 +33,12 @@ object Connectors {
     /** Value of [Ui.connector] that opens the services form (model, search, videos, voice keys). */
     const val SERVICES = "services"
 
+    /** Value of [Ui.connector] that opens the integrations form (other apps and services: web search, videos). */
+    const val APPS = "apps"
+
+    /** The groups of the models form (the assistant's own thinking, sight and voice); the rest are integrations. */
+    val MODEL_GROUPS = setOf(R.string.connectors_model, R.string.connectors_photos, R.string.connectors_natural_voice)
+
     /**
      * The services form's groups: a title, the settings shown, and those under "Advanced" (prefilled, rarely changed),
      * each with its field label. The model's provider and name and the voice service and voice are chosen from lists.
@@ -188,15 +194,26 @@ fun ConnectorsPlace(ui: MainActivity, onBack: () -> Unit) {
                 t(R.string.connectors_i_read_each_account_whole_and),
                 Modifier.padding(start = 4.dp), style = MaterialTheme.typography.bodyMedium, color = Ink.slate,
             )
-            SectionLabel(t(R.string.connectors_services))
+            // The providers' display names come from ZeroClaw's catalog, loaded once.
+            val context = androidx.compose.ui.platform.LocalContext.current
+            var named by remember { mutableStateOf(ModelCatalog.providers != null) }
+            androidx.compose.runtime.LaunchedEffect(Unit) { if (!named) named = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ModelCatalog.load(context) } != null }
+            SectionLabel(t(R.string.connectors_models))
             // Computed here, not inside the panel's content, so a save (which bumps Ui.tick) redraws it.
             val model = if (Keys.modelReady) "${ModelCatalog.label(Keys[Keys.Key.MODEL_PROVIDER])} · ${Keys[Keys.Key.MODEL]}" else if (Offline.wanted && Offline.ready) t(R.string.connectors_not_set_local_mode) else t(R.string.connectors_not_set_i_can_t_think)
+            val photos = if (Keys.visionReady) "${ModelCatalog.label(Keys[Keys.Key.VISION_PROVIDER])} · ${Keys[Keys.Key.VISION_MODEL]}" else t(R.string.connectors_not_set)
+            val voice = if (Connectors.active(R.string.connectors_natural_voice)) Keys[Keys.Key.VOICE_NAME].replaceFirstChar(Char::uppercase) else t(R.string.connectors_not_set)
+            val models = { Ui.connector = Connectors.SERVICES }
             Panel {
-                Item(
-                    t(R.string.connectors_model),
-                    model,
-                    divider = false, onClick = { Ui.connector = Connectors.SERVICES },
-                ) { Chevron() }
+                Item(t(R.string.connectors_model), model, onClick = models) { Chevron() }
+                Item(t(R.string.connectors_photos), photos, onClick = models) { Chevron() }
+                Item(t(R.string.connectors_natural_voice), voice, divider = false, onClick = models) { Chevron() }
+            }
+            SectionLabel(t(R.string.connectors_apps))
+            val apps = { Ui.connector = Connectors.APPS }
+            Panel {
+                Item(t(R.string.connectors_web_search), Keys[Keys.Key.SEARCH_PROVIDER].ifBlank { t(R.string.connectors_not_set) }, onClick = apps) { Chevron() }
+                Item(t(R.string.connectors_videos), t(if (Keys[Keys.Key.YOUTUBE_KEY].isNotBlank()) R.string.connectors_key_saved else R.string.connectors_not_set), divider = false, onClick = apps) { Chevron() }
             }
             SectionLabel(t(R.string.connectors_email))
             Panel {
@@ -233,7 +250,8 @@ fun ConnectorSheet(ui: MainActivity, which: String) {
                 }
             }
         }
-        which == Connectors.SERVICES -> ServicesForm(ui)
+        which == Connectors.SERVICES -> ServicesForm(ui, models = true)
+        which == Connectors.APPS -> ServicesForm(ui, models = false)
         which.startsWith("account:") -> EmailAccounts.accounts.firstOrNull { it.alias == which.removePrefix("account:") }?.let { a ->
             Sheet(close) {
                 Text(a.provider.label, style = MaterialTheme.typography.displaySmall)
@@ -304,7 +322,7 @@ private fun EmailForm(ui: MainActivity, provider: EmailAccounts.Provider) {
  * from the catalog when the provider publishes them. Saving applies only what changed ([MainActivity.saveKeys]).
  */
 @Composable
-private fun ServicesForm(ui: MainActivity) {
+private fun ServicesForm(ui: MainActivity, models: Boolean) {
     val values = remember { androidx.compose.runtime.mutableStateMapOf<Keys.Key, String>() }
     var busy by remember { mutableStateOf(false) }
     var problem by remember { mutableStateOf<String?>(null) }
@@ -420,10 +438,10 @@ private fun ServicesForm(ui: MainActivity) {
         Spacer(Modifier.height(10.dp))
     }
     Sheet({ if (!busy) Ui.connector = null }) {
-        Text(t(R.string.connectors_services), style = MaterialTheme.typography.displaySmall)
+        Text(t(if (models) R.string.connectors_models else R.string.connectors_apps), style = MaterialTheme.typography.displaySmall)
         Spacer(Modifier.height(8.dp))
         Text(t(R.string.connectors_services_explained), style = MaterialTheme.typography.bodyMedium, color = Ink.slate)
-        Connectors.GROUPS.forEach { (title, shown, more) ->
+        Connectors.GROUPS.filter { (it.first in Connectors.MODEL_GROUPS) == models }.forEach { (title, shown, more) ->
             // A group whose saved settings are complete is the one in use: marked so at a glance.
             androidx.compose.foundation.layout.Row(Modifier.padding(top = 30.dp, bottom = 12.dp, start = 6.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Eyebrow(t(title))

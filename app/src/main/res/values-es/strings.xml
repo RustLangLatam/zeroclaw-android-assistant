@@ -964,6 +964,9 @@
     <string name="connectors_checking_keys">Comprobando las claves nuevas con sus proveedores…</string>
     <string name="connectors_key_refused_x">%1$s rechazó la clave: la descarté junto con los cambios de su grupo. Lo demás quedó guardado.</string>
     <string name="connectors_key_refused_only_x">%1$s rechazó la clave y la descarté. Pega una válida y guarda de nuevo.</string>
+    <string name="connectors_models">Modelos de IA</string>
+    <string name="connectors_apps">Integraciones</string>
+    <string name="connectors_not_set">Sin configurar</string>
     <string name="connectors_x_empty">%1$s: vacía, hace falta</string>
     <string name="connectors_fill_the_marked">Completa los campos marcados en rojo.</string>
     <string name="connectors_x_saved_leave_empty">%1$s guardada (déjala vacía para mantenerla)</string>
