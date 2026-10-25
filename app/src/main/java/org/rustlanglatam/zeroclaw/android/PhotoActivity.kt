@@ -53,7 +53,7 @@ class PhotoActivity : ComponentActivity() {
         }
         thread {
             val id = ContentUris.parseId(taken)
-            val (labels, text) = runCatching { PhoneGallery(this).taken(id) }.onFailure { Log.w(AssistantService.TAG, "photo: ${it.message}") }
+            val (labels, text) = runCatching { PhoneGallery(this).taken(id) }.onFailure { Log.w(AssistantService.TAG, "photo: not looked at", it) }
                 .getOrDefault(emptySet<String>() to "")
             last = Triple(id, labels, text)
             startActivity(MainActivity.sealed(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("photo", true)))
