@@ -32,6 +32,9 @@ object CloudVoice {
     /** Identifier of this voice in [Voices.chosen]. */
     const val NAME = "cloud"
 
+    /** The voices the realtime speech protocol offers, for the services form; any other name can be typed. */
+    val VOICES = listOf("marin", "cedar", "alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse")
+
     /** Time to first audio after which the line falls back to the platform voice. */
     const val FIRST_SOUND_MS = 2_500L
 

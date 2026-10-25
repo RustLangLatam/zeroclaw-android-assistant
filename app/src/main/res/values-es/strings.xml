@@ -1049,4 +1049,11 @@
     <string name="simple_off">De vuelta al modo normal.</string>
     <string name="mainactivity_connect_x">Leer todo el correo de %1$s</string>
     <string name="mainactivity_not_confirmed_nothing_connected">No confirmado: no se conectó nada.</string>
+    <string name="connectors_server_url">URL del servidor (https://…)</string>
+    <string name="connectors_advanced">Avanzado</string>
+    <string name="connectors_choose">Elegir</string>
+    <string name="connectors_search">Buscar</string>
+    <string name="connectors_use_x">Usar «%1$s»</string>
+    <string name="connectors_x_more_type_to_search">%1$d más: escribe para buscar</string>
+    <string name="connectors_loading">Cargando…</string>
 </resources>
