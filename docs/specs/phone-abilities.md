@@ -100,7 +100,10 @@ faces as for `find_photos`, plus text recognition; `Photos.textLabels` (pure, `P
 and `Document` for other text, so "the receipt from last week" finds it. The result goes into the photo index, and the
 copy stays in the cache (`cache/photos/<id>.jpg`). A card then asks *Explain it* or *Just keep it*.
 
-Only *Explain it* sends anything: the owner's message with the labels and the text read, plus the copy as ZeroClaw's
+Only *Explain it* sends anything. With a photos model set, the message asks to describe the picture itself and
+carries only the text read (marked as possibly wrong), not the labels: a model given "Mobile phone, Tie" for a TV
+remote repeated them. Otherwise it is the owner's message with the labels and the text read. Either way it goes with
+the copy as ZeroClaw's
 `[IMAGE:<path>]` marker, to the tool-less `scribe` in a new session (`OwnerChat.send(image = …)` →
 `Turns.scribe(image = …)`). If the main model cannot see pictures, ZeroClaw routes that turn to the photos model set
 in Connectors › Services › Photos (`VISION_PROVIDER`, `VISION_MODEL`, `VISION_KEY`; `zeroclaw.vision.*` in

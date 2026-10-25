@@ -1091,6 +1091,8 @@
     <string name="photo_key_refused_x">The provider of the photos model refused its key (model %1$s). Check it in Connectors › Photos and ask me again.</string>
     <string name="photo_model_change">Choose another model</string>
     <string name="photo_model_busy_x">The photos model, %1$s, is busy right now at its provider. Ask me again in a moment.</string>
+    <string name="photo_look">Describe what you see in the picture itself.</string>
+    <string name="photo_text_read_maybe">The text the phone read in it (it may have errors):</string>
     <string name="photo_explain">Explain it</string>
     <string name="photo_keep">Just keep it</string>
     <string name="photo_explain_prompt">I just took this photo. Tell me in a few words what it shows and anything useful about it; if it is a receipt, a document or an appointment, propose a reminder or a calendar entry only for me to confirm.</string>

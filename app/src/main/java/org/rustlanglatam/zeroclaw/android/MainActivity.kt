@@ -328,10 +328,19 @@ class MainActivity : ComponentActivity() {
         Cards.show(t(R.string.photo_saved_title), t(R.string.photo_saved) + read.take(200).takeIf { it.isNotEmpty() }?.let { "\n\n> $it" }.orEmpty(), listOf(explain, keep), mapOf(
             explain to {
                 val small = PhoneGallery(this).small(id).takeIf { it.exists() && !Offline.now() }
-                val prompt = t(R.string.photo_explain_prompt) +
+                val words = read.take(1500).takeIf { it.isNotEmpty() }
+                // The phone's labels, for a model that cannot see the photo.
+                val labelled = t(R.string.photo_explain_prompt) +
                     labels.takeIf { it.isNotEmpty() }?.let { "\n\n" + t(R.string.photo_labels_seen) + " " + it.joinToString(", ") }.orEmpty() +
-                    read.take(1500).takeIf { it.isNotEmpty() }?.let { "\n\n" + t(R.string.photo_text_read) + "\n" + it }.orEmpty()
-                runOnUiThread { send(prompt, byVoice = Guard.voice, image = small?.path) }
+                    words?.let { "\n\n" + t(R.string.photo_text_read) + "\n" + it }.orEmpty()
+                // A model that sees the photo gets no labels: a wrong one (a remote control taken for a phone and a tie)
+                // was repeated instead of what the picture showed. The text read helps with receipts; it may have errors.
+                val seeing = t(R.string.photo_explain_prompt) + " " + t(R.string.photo_look) +
+                    words?.let { "\n\n" + t(R.string.photo_text_read_maybe) + "\n" + it }.orEmpty()
+                runOnUiThread {
+                    if (small != null && Keys.visionReady) send(seeing, byVoice = Guard.voice, image = small.path, blind = labelled)
+                    else send(labelled, byVoice = Guard.voice, image = small?.path)
+                }
             },
             keep to {},
         ))
@@ -581,7 +590,7 @@ class MainActivity : ComponentActivity() {
      * @param from the UI element tapped to produce [text], if any; the chat line is then marked as a tap.
      * @param image a picture on the phone for the model to see along with [text]; not shown in the chat.
      */
-    fun send(text: String, byVoice: Boolean = false, from: String? = null, image: String? = null) {
+    fun send(text: String, byVoice: Boolean = false, from: String? = null, image: String? = null, blind: String? = null) {
         val trimmed = text.trim()
         Commands.of(trimmed)?.let { return act(it, byVoice) }
         if (trimmed.isEmpty() || OwnerChat.socket == null) return
@@ -596,7 +605,7 @@ class MainActivity : ComponentActivity() {
         // Added before sending so that an immediate local answer (e.g. offline) appears after it.
         add(Line(Line.Who.ME, trimmed, via = if (from != null) Line.Via.TAP else if (byVoice) Line.Via.VOICE else Line.Via.TYPED, from = from))
         Ui.thinking = true
-        OwnerChat.send(trimmed, image = image)
+        OwnerChat.send(trimmed, image = image, blind = blind)
         // Opens the cloud voice connection while the agent is processing, to reduce speech latency.
         if (Guard.voice || byVoice) CloudVoice.warm(this)
     }

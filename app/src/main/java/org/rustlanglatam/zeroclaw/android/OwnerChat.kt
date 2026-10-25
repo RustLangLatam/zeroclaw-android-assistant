@@ -112,9 +112,9 @@ object OwnerChat {
      * Sends [text] to the `owner` agent, or, when offline answers are enabled and there is no network, to the local
      * model's agent on a background thread (starting the engine first if needed). [check] marks the [Promises] follow-up
      * note. With an [image] (a picture's path), [text] goes to the tool-less scribe instead ([Turns.scribe]); if that
-     * fails, [text] is sent alone. Returns `false` when the message could not be sent.
+     * fails, [blind] (the words for a model that cannot see it), or [text], is sent alone. Returns `false` when the message could not be sent.
      */
-    fun send(text: String, check: Boolean = false, image: String? = null): Boolean {
+    fun send(text: String, check: Boolean = false, image: String? = null, blind: String? = null): Boolean {
         val owners = !text.startsWith(Phrases.NOTE)
         if (owners) { asked = text; tools = 0; lastWords = text }
         // Offline or in local mode, app-generated notes (a greeting, a catch-up) are dropped: only the owner's messages
@@ -190,7 +190,7 @@ object OwnerChat {
                         if (why != R.string.photo_model_busy_x) Cards.show(t(R.string.photo_model_failed_title), note, listOf(t(R.string.photo_model_change)),
                             mapOf(t(R.string.photo_model_change) to { Sections.open("photos_model") }))
                     }
-                    else -> send("$text\n\n$NO_VISION").also { Guard.heardOthers = true }
+                    else -> send("${blind ?: text}\n\n$NO_VISION").also { Guard.heardOthers = true }
                 }
             }
             look(again = true)

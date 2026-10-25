@@ -1091,6 +1091,8 @@
     <string name="photo_key_refused_x">El proveedor del modelo de fotos rechazó su clave (modelo %1$s). Revísala en Conectores › Fotos y pídemelo de nuevo.</string>
     <string name="photo_model_change">Elegir otro modelo</string>
     <string name="photo_model_busy_x">El modelo de fotos, %1$s, está muy ocupado ahora mismo en su proveedor. Pídemelo de nuevo en un momento.</string>
+    <string name="photo_look">Describe lo que ves en la imagen misma.</string>
+    <string name="photo_text_read_maybe">El texto que el teléfono leyó en ella (puede tener errores):</string>
     <string name="photo_explain">Explícamela</string>
     <string name="photo_keep">Solo guardarla</string>
     <string name="photo_explain_prompt">Acabo de tomar esta foto. Dime en pocas palabras qué muestra y lo que sea útil de ella; si es un recibo, un documento o una cita, propón un recordatorio o una entrada en la agenda solo para que yo la confirme.</string>
