@@ -410,6 +410,8 @@ class AssistantService : Service() {
         model = "${Keys[Keys.Key.VISION_MODEL]}"
         api_key = "${Keys[Keys.Key.VISION_KEY]}"
         # No max_tokens: newer models refuse the parameter ("use max_completion_tokens"), and each has its own cap.
+        # The default temperature: some models (reasoning ones) refuse any other.
+        temperature = 1.0
         # Chosen for pictures: ZeroClaw's family default refused them for some (an OpenAI model on the phone).
         vision = true
 
