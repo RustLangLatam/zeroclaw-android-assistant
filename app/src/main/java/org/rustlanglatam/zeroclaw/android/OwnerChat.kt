@@ -174,9 +174,11 @@ object OwnerChat {
         // and the owner's agent hears its answer with the next message ([aside]).
         if (image != null) {
             asked = null
-            Turns.scribe(app, text, image) { said ->
+            fun look(again: Boolean): Unit = Turns.scribe(app, text, image) { said ->
                 val why = photoFailure(Turns.scribeError, Keys.visionReady)
                 when {
+                    // A busy provider usually frees up in seconds: one more try before telling the owner.
+                    said.isNullOrBlank() && why == R.string.photo_model_busy_x && again -> thread { Thread.sleep(BUSY_RETRY_MS); look(again = false) }
                     !said.isNullOrBlank() -> { aside = said; Ui.thinking = false; Ui.add(Line(Line.Who.ASSISTANT, said)); onAnswer?.invoke(said) }
                     // The photos model set by the owner failed: say why and offer to fix it, rather than guess from labels.
                     why != null -> {
@@ -184,12 +186,14 @@ object OwnerChat {
                         Ui.thinking = false
                         Ui.add(Line(Line.Who.NOTE, note))
                         onAnswer?.invoke(note)
-                        Cards.show(t(R.string.photo_model_failed_title), note, listOf(t(R.string.photo_model_change)),
+                        // Busy is temporary: nothing to change.
+                        if (why != R.string.photo_model_busy_x) Cards.show(t(R.string.photo_model_failed_title), note, listOf(t(R.string.photo_model_change)),
                             mapOf(t(R.string.photo_model_change) to { Sections.open("photos_model") }))
                     }
                     else -> send("$text\n\n$NO_VISION").also { Guard.heardOthers = true }
                 }
             }
+            look(again = true)
             return true
         }
         val talk = if (owners) offlineTalk.toList() else emptyList()
@@ -209,11 +213,12 @@ object OwnerChat {
         else R.string.ownerchat_i_couldn_t_answer_this_time
 
     /**
-     * Why the photos model the owner set failed, from the daemon's [error]: the model no longer offered, or the key
-     * refused; `null` when no photos model is set ([vision]) or the cause is another (then the labels explain it).
+     * Why the photos model the owner set failed, from the daemon's [error]: busy for now, the model no longer offered,
+     * or the key refused; `null` when no photos model is set ([vision]) or the cause is another (then the labels explain it).
      */
     fun photoFailure(error: String?, vision: Boolean): Int? = when {
         !vision || error == null -> null
+        Regex("""\b(503|429|529)\b|unavailable|high demand|overloaded|rate.?limit|resource.?exhausted""", RegexOption.IGNORE_CASE).containsMatchIn(error) -> R.string.photo_model_busy_x
         Regex("""\b404\b|not.?found|no longer available|does not exist|not supported for""", RegexOption.IGNORE_CASE).containsMatchIn(error) -> R.string.photo_model_gone_x
         Regex("""\b40[13]\b|api.?key|unauthori[sz]ed|permission""", RegexOption.IGNORE_CASE).containsMatchIn(error) -> R.string.photo_key_refused_x
         else -> null
@@ -371,6 +376,9 @@ object OwnerChat {
         .replace(Regex("""\s*\[IMAGE:[^\]]*]"""), "")
 
     private const val LOCAL_TURN_MS = 180_000L
+
+    /** Wait before the one retry of a photo whose model was busy. */
+    private const val BUSY_RETRY_MS = 4_000L
 
     /** Added when the scribe could not look at a photo and the owner's agent explains it from the words alone. */
     private const val NO_VISION = "(The picture could not be seen: explain from what the phone recognized and read, if anything, and say you could not see the photo itself.)"
