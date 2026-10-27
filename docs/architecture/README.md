@@ -21,7 +21,7 @@ decision rationale in the [ADRs](../adr/README.md). Known limitations are stated
 | 7. Deployment view | [Threads and processes](#threads-and-processes), [Ports](#ports), [configuration.md](configuration.md): build requirements, `local.properties`, what the app writes at runtime, minimal start-up |
 | 8. Cross-cutting concepts | [security.md](security.md), [storage.md](storage.md), [model-and-code.md](model-and-code.md), [access model](../specs/access-model.md), [Localization](#localization) |
 | 9. Architecture decisions | [adr/](../adr/README.md) |
-| 10. Quality requirements | [access model › principles](../specs/access-model.md#principles) |
+| 10. Quality requirements | [access model › principles](../specs/access-model.md#principles); [battery-and-memory.md](battery-and-memory.md): measured on a real phone, and how to measure again |
 | 11. Risks and technical debt | [security.md › Known gaps](security.md#known-gaps) |
 | 12. Glossary | [Glossary](#glossary) |
 
