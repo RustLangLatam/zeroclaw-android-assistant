@@ -101,7 +101,7 @@ and `Document` for other text, so "the receipt from last week" finds it. The res
 copy stays in the cache (`cache/photos/<id>.jpg`). A card then asks *Explain it* or *Just keep it*.
 
 Only *Explain it* sends anything. With a photos model set, the message asks to describe the picture itself and
-carries only the text read (marked as possibly wrong), not the labels: a model given "Mobile phone, Tie" for a TV
+carries only the text read, to be used only where it matches the picture (on a TV remote the phone "read" a code from the button symbols and the model repeated it), not the labels: a model given "Mobile phone, Tie" for a TV
 remote repeated them. Otherwise it is the owner's message with the labels and the text read. Either way it goes with
 the copy as ZeroClaw's
 `[IMAGE:<path>]` marker, to a tool-less agent in a new session (`OwnerChat.send(image = …)` →
