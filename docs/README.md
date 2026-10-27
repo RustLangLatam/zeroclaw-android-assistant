@@ -13,7 +13,7 @@ Map of the project documentation. Standards and maintenance rules are defined in
 | How to contribute? | [CONTRIBUTING.md](../CONTRIBUTING.md) | — |
 | How to report a vulnerability? | [SECURITY.md](../SECURITY.md) | — |
 
-Roadmap and open work are tracked in GitHub issues, grouped by phase in milestones: [Phase A: robustness and trust](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/1) (done but for the battery measurement on a real phone), [Phase B: everyday value](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/2) (done), and [Phase C](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/24) (later).
+Roadmap and open work are tracked in GitHub issues, grouped by phase in milestones: [Phase A: robustness and trust](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/1) (done; battery and memory [measured at rest](architecture/battery-and-memory.md), still to measure with an email account and the local model), [Phase B: everyday value](https://github.com/RustLangLatam/zeroclaw-android-assistant/milestone/2) (done), and [Phase C](https://github.com/RustLangLatam/zeroclaw-android-assistant/issues/24) (later).
 
 ## Rules
 
