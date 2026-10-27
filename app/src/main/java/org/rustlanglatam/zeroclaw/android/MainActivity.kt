@@ -333,10 +333,9 @@ class MainActivity : ComponentActivity() {
                 val labelled = t(R.string.photo_explain_prompt) +
                     labels.takeIf { it.isNotEmpty() }?.let { "\n\n" + t(R.string.photo_labels_seen) + " " + it.joinToString(", ") }.orEmpty() +
                     words?.let { "\n\n" + t(R.string.photo_text_read) + "\n" + it }.orEmpty()
-                // A model that sees the photo gets no labels: a wrong one (a remote control taken for a phone and a tie)
-                // was repeated instead of what the picture showed. The text read helps with receipts; it may have errors.
-                val seeing = t(R.string.photo_explain_prompt) + " " + t(R.string.photo_look) +
-                    words?.let { "\n\n" + t(R.string.photo_text_read_maybe) + "\n" + it }.orEmpty()
+                // A model that sees the photo gets neither labels nor the text the phone read: it reads the picture better,
+                // and it repeated both when wrong (a TV remote taken for a phone and a tie, a code "read" from its buttons).
+                val seeing = t(R.string.photo_explain_prompt) + " " + t(R.string.photo_look)
                 runOnUiThread {
                     if (small != null && Keys.visionReady) send(seeing, byVoice = Guard.voice, image = small.path, blind = labelled)
                     else send(labelled, byVoice = Guard.voice, image = small?.path)
