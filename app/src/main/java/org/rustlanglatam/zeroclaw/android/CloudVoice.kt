@@ -32,6 +32,29 @@ object CloudVoice {
     /** Identifier of this voice in [Voices.chosen]. */
     const val NAME = "cloud"
 
+    /** A voice service the owner can pick: its name, WebSocket URL, speech model, US$ per minute and voices. */
+    data class Provider(val name: String, val url: String, val model: String, val perMinute: String, val voices: List<String>)
+
+    /**
+     * Parses `assets/voices.json`, the services that speak this protocol, verified, with their voices (ADR-0031). It
+     * is data, the only place voice services are named; a service not listed is entered by its URL.
+     */
+    fun providers(text: String): List<Provider> = JSONObject(text).getJSONArray("providers").let { a ->
+        (0 until a.length()).map(a::getJSONObject).map { o ->
+            Provider(o.getString("name"), o.getString("url"), o.getString("model"), o.optString("perMinute"),
+                o.getJSONArray("voices").let { v -> (0 until v.length()).map(v::getString) })
+        }
+    }
+
+    @Volatile private var listed: List<Provider>? = null
+
+    /** The listed voice services, read once from the APK's assets; empty if the file can't be read. */
+    fun providers(context: Context): List<Provider> = listed
+        ?: runCatching { providers(context.assets.open("voices.json").bufferedReader().use { it.readText() }) }.getOrDefault(emptyList()).also { listed = it }
+
+    /** The listed service [url] belongs to, or `null` for one entered by its URL. */
+    fun providerOf(url: String, list: List<Provider>) = list.firstOrNull { it.url == url.trim() }
+
     /** Time to first audio after which the line falls back to the platform voice. */
     const val FIRST_SOUND_MS = 2_500L
 

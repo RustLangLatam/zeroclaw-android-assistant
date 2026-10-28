@@ -1048,6 +1048,16 @@
     <string name="simple_off">De vuelta al modo normal.</string>
     <string name="mainactivity_connect_x">Leer todo el correo de %1$s</string>
     <string name="mainactivity_not_confirmed_nothing_connected">No confirmado: no se conectó nada.</string>
+    <string name="connectors_server_url">URL del servidor (https://…)</string>
+    <string name="connectors_advanced">Avanzado</string>
+    <string name="connectors_choose">Elegir</string>
+    <string name="connectors_search">Buscar</string>
+    <string name="connectors_use_x">Usar «%1$s»</string>
+    <string name="connectors_x_more_type_to_search">%1$d más: escribe para buscar</string>
+    <string name="connectors_loading">Cargando…</string>
+    <string name="connectors_api_key_of_x">Clave de API de %1$s</string>
+    <string name="connectors_voice_provider">Proveedor de voz</string>
+    <string name="connectors_other_my_own_url">Otro (URL propia)</string>
     <string name="offline_thinking_on_the_phone_x_s">Pensando en el teléfono… %1$s s</string>
     <string name="ownerchat_the_phone_s_model_didn_t_start">El modelo del teléfono no arrancó y no pude pensar.</string>
     <string name="ownerchat_on_the_phone_i_m_thinking_too_slowly">Estoy pensando demasiado lento en este teléfono; prueba con algo más corto, o añade un modelo en Conectores › Servicios.</string>

@@ -1048,6 +1048,16 @@
     <string name="simple_off">Back to normal mode.</string>
     <string name="mainactivity_connect_x">Read all the email of %1$s</string>
     <string name="mainactivity_not_confirmed_nothing_connected">Not confirmed: nothing was connected.</string>
+    <string name="connectors_server_url">Server URL (https://…)</string>
+    <string name="connectors_advanced">Advanced</string>
+    <string name="connectors_choose">Choose</string>
+    <string name="connectors_search">Search</string>
+    <string name="connectors_use_x">Use “%1$s”</string>
+    <string name="connectors_x_more_type_to_search">%1$d more: type to search</string>
+    <string name="connectors_loading">Loading…</string>
+    <string name="connectors_api_key_of_x">API key of %1$s</string>
+    <string name="connectors_voice_provider">Voice provider</string>
+    <string name="connectors_other_my_own_url">Other (my own URL)</string>
     <string name="offline_thinking_on_the_phone_x_s">Thinking on the phone… %1$s s</string>
     <string name="ownerchat_the_phone_s_model_didn_t_start">The phone\'s model didn\'t start, so I couldn\'t think.</string>
     <string name="ownerchat_on_the_phone_i_m_thinking_too_slowly">I\'m thinking too slowly on this phone; try something shorter, or add a model in Connectors › Services.</string>

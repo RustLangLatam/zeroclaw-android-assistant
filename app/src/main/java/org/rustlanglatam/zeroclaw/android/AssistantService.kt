@@ -323,6 +323,8 @@ class AssistantService : Service() {
         // Turns not typed by the owner (briefings, catch-up, an email read aloud) contain third-party text, so their
         // agent gets no MCP servers (none without a bundle) and only the calculator among native tools (an empty
         // `allowed_tools` would allow every tool). Nothing it reads can trigger an action (ADR-0018).
+        // A custom gateway's endpoint (ZeroClaw's `uri`, the full URL); other providers use their family's default.
+        val uri = Keys[Keys.Key.MODEL_URL].takeIf { it.isNotBlank() }?.let { "uri = \"$it\"" }.orEmpty()
         val scribe = """
             [risk_profiles.$SCRIBE]
             level = "supervised"
@@ -383,12 +385,14 @@ class AssistantService : Service() {
             [providers.models.${Keys[Keys.Key.MODEL_PROVIDER]}.main]
             model = "${Keys[Keys.Key.MODEL]}"
             api_key = "${Keys[Keys.Key.MODEL_KEY]}"
+            $uri
             temperature = 0.3
 
             # The owner: a warmer, freer voice, with room to talk.
             [providers.models.${Keys[Keys.Key.MODEL_PROVIDER]}.warm]
             model = "${Keys[Keys.Key.MODEL]}"
             api_key = "${Keys[Keys.Key.MODEL_KEY]}"
+            $uri
             temperature = 0.75
             max_tokens = 1500
 

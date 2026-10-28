@@ -51,6 +51,7 @@ and the build accepts every key empty.
 | `zeroclaw.provider` | `MODEL_PROVIDER` | **running at all**: the provider type for `[providers.models.<provider>.main]` and `.warm` and every agent's `model_provider` | — | `AssistantService.initialConfig` |
 | `zeroclaw.model` | `MODEL` | **running at all**: the `model` of both profiles | — | `AssistantService.initialConfig` |
 | `zeroclaw.apiKey` | `MODEL_API_KEY` | **running at all** with any provider that needs a key: `api_key` of both profiles | — | `AssistantService.initialConfig` |
+| — (Services only) | `MODEL_URL` | the `custom` provider (any compatible gateway): `uri` of both profiles, the full endpoint URL; optional for other providers | the family's default endpoint | `AssistantService.initialConfig` |
 | `zeroclaw.inputPerMTok`, `zeroclaw.outputPerMTok` | `MODEL_INPUT_PER_MTOK`, `MODEL_OUTPUT_PER_MTOK` | cost in US$ ("What I cost"); both must parse as numbers or no `[cost.rates…]` section is written and ZeroClaw counts tokens only | — | `AssistantService.rates` |
 | `zeroclaw.search` | `SEARCH_PROVIDER` | ZeroClaw's `web_search_tool` | `duckduckgo` (no key; often blocks requests it takes for a robot) | `AssistantService.initialConfig` |
 | `zeroclaw.searchKey` | `SEARCH_KEY` | the search provider: written as `<provider>_api_key` for `brave`, `tavily`, `jina` or `bocha`; as `searxng_instance_url` (the instance URL) for `searxng` | — | `AssistantService.searchKey` |
@@ -129,7 +130,7 @@ names, values, defaults and keys is in
 | Memory | learning on or off (`memory.json`) |
 | Monthly model budget | US$ a month for the model (none by default); by voice (`model_budget`) or Settings › What I cost |
 | Rules | one autonomy per capability, principal and scope, editable up to the risk class's ceiling; changes need the device credential |
-| Services (Connectors) | model provider, model, key and price per million tokens; web search provider and key; YouTube key; natural voice URL, model, key, voice and price. Encrypted on the phone (`Keys.kt`), over the build's defaults; replacing them needs the device credential ([ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)) |
+| Services (Connectors) | model provider and model, chosen from ZeroClaw's catalog (`/api/config/catalog`: the providers this build knows, most used first, and each provider's models, live from the provider when it can), with a search and "use what I typed"; a custom gateway's URL (`MODEL_URL`, written as the provider's `uri`; `https://`, or `http://` only to this phone); key; price per million tokens, filled from the catalog when the provider publishes it (under Advanced). Web search provider and key; YouTube key; natural voice: the service and its voice chosen from `assets/voices.json` ([ADR-0031](../adr/0031-voice-services-named-in-a-data-file.md)), or "Other (my own URL)" with its WebSocket URL; then its key ("API key of <service>"); its speech model and price under Advanced, filled from the file. Encrypted on the phone (`Keys.kt`), over the build's defaults; replacing them needs the device credential ([ADR-0030](../adr/0030-service-keys-entered-by-the-owner.md)). Model provider and model names are not written in the app: they come from the daemon |
 
 ## Minimal start-up
 
