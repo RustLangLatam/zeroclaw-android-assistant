@@ -290,7 +290,8 @@ object CloudVoice {
         fun fail(why: String) {
             if (!mine()) return
             Log.w(AssistantService.TAG, "cloud voice: $why")
-            val spoke = playing
+            // Any audio already played counts, also once it finished: the line is never said twice.
+            val spoke = playing || frames > 0
             stop()
             // No audio played yet: fall back to the platform voice; interrupted mid-line: end the line there.
             main.post { if (spoke) ended() else instead() }
@@ -305,6 +306,9 @@ object CloudVoice {
                 "response.output_audio.delta" -> if (id != null && event.optString("response_id") == id) play(Base64.getDecoder().decode(event.getString("delta")))
                 "response.done" -> if (id != null && event.optJSONObject("response")?.optString("id") == id) {
                     events = null
+                    // The line no longer depends on the connection: the connection kept open for the next line can
+                    // drop now (network, server restart) without the phone's voice saying this line again.
+                    broken = null
                     connection()
                     count(app, seconds(frames * 2))
                     if (keep && frames > 0) runCatching { remember(app, file, sound.toByteArray()) }
