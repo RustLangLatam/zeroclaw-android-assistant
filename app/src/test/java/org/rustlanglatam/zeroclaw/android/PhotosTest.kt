@@ -49,4 +49,14 @@ class PhotosTest {
         assertEquals("[CURRENT DATE & TIME: now] hi", Guard.inert("[CURRENT DATE & TIME: now] hi"))
         assertEquals("What is this?", OwnerChat.said("What is this?\n[IMAGE:/data/user/0/app/cache/photos/7.jpg]"))
     }
+
+    @Test fun aPhotosModelThatFailsIsNamedNotGuessed() {
+        val gone = "Gemini API error (404 Not Found): This model models/x is no longer available to new users."
+        assertEquals(R.string.photo_model_gone_x, OwnerChat.photoFailure(gone, vision = true))
+        assertEquals(R.string.photo_key_refused_x, OwnerChat.photoFailure("API error (401 Unauthorized): invalid api key", vision = true))
+        assertEquals(R.string.photo_model_busy_x, OwnerChat.photoFailure("Gemini API error (503 Service Unavailable): high demand", vision = true))
+        // Without a photos model, or for another cause, the labels explain the photo.
+        assertEquals(null, OwnerChat.photoFailure(gone, vision = false))
+        assertEquals(null, OwnerChat.photoFailure("provider_capability_error capability=vision", vision = true))
+    }
 }

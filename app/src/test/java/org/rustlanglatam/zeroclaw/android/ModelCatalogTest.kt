@@ -45,4 +45,23 @@ class ModelCatalogTest {
         assertFalse(Keys.valid(Keys.Key.MODEL_URL, "http://gateway.example.com/v1"))
         assertFalse(Keys.valid(Keys.Key.MODEL_URL, "https://x\"/v1"))
     }
+
+    @Test fun aChosenProviderBringsItsModelAndOnlyTheKeyIsLeftEmpty() {
+        // The recommended model when the provider lists it or there is no list; else the list's first.
+        assertEquals("b", ModelCatalog.pick("b", listOf("a", "b")))
+        assertEquals("a", ModelCatalog.pick("gone", listOf("a", "b")))
+        assertEquals("b", ModelCatalog.pick("b", null))
+        assertNull(ModelCatalog.pick(null, emptyList()))
+        // Each group in use needs its model (or voice) and key; a custom gateway its URL; an unused group nothing.
+        val chosen = mapOf(Keys.Key.MODEL_PROVIDER to "p", Keys.Key.MODEL to "m", Keys.Key.VISION_PROVIDER to "v")
+        assertEquals(listOf(Keys.Key.MODEL, Keys.Key.MODEL_KEY, Keys.Key.VISION_MODEL, Keys.Key.VISION_KEY), Connectors.required { chosen[it].orEmpty() })
+        assertTrue(Keys.Key.MODEL_URL in Connectors.required { if (it == Keys.Key.MODEL_PROVIDER) Keys.CUSTOM else "" })
+        assertEquals(emptyList<Keys.Key>(), Connectors.required { "" })
+    }
+
+    @Test fun aProvidersModelListIsReadInBothShapes() {
+        assertEquals(setOf("a-1", "b-2"), KeyCheck.ids("""{"object":"list","data":[{"id":"a-1"},{"id":"b-2"}]}"""))
+        assertEquals(setOf("g-3-flash"), KeyCheck.ids("""{"models":[{"name":"models/g-3-flash"}]}"""))
+        assertEquals(emptySet<String>(), KeyCheck.ids("not json"))
+    }
 }

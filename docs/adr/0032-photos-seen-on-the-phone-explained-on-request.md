@@ -27,9 +27,12 @@ loads any marker it finds, whoever wrote it.
 
 Option 2. The labels, faces and text come from the on-device models the photo search already uses (ML Kit, bundled),
 so classifying costs nothing and nothing leaves the phone. *Explain it* sends the photo, at most 1280 px, with what the
-phone found, to the tool-less `scribe` agent in a session of its own. When the main model cannot see pictures, ZeroClaw
-hands that turn to the model the owner set for pictures (`[multimodal] vision_model_provider`, Connectors › Services ›
-Photos); every other turn stays on the main model. The owner's session never holds the picture: ZeroClaw keeps it in
+phone found, to a tool-less agent in a session of its own: `seer`, on the model the owner set for pictures
+(Connectors › Photos), or else `scribe` on the main model. `seer` reaches that model through its provider's
+OpenAI-compatible endpoint (`endpoint` in `assets/models.json`): ZeroClaw 0.8.5 sends a picture as an image part only
+from that client, and put it in the message text both from its own OpenAI client and on its
+`[multimodal] vision_model_provider` route, so the model read the picture's base64 as noise. Every other turn stays on
+the main model. The owner's session never holds the picture: ZeroClaw keeps it in
 the history, and every later turn there went to the picture model. The owner's agent hears the scribe's answer with
 the next message. If no model could look at the photo, the owner's agent explains from the labels and text.
 The app takes the photo through the camera app (`ACTION_IMAGE_CAPTURE`), so it holds no camera permission and the

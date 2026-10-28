@@ -169,7 +169,7 @@ object Sections {
     val ANCHORS = listOf("presence", "color", "people", "messages", "voice", "offline", "cost", "privacy")
     val SHEETS = listOf("name", "family", "work", "apps")
 
-    val keys get() = places.keys + ANCHORS + SHEETS + listOf("add_email", "phone_permissions")
+    val keys get() = places.keys + ANCHORS + SHEETS + Connectors.GROUP_KEYS.keys + listOf("models", "integrations", "add_email", "phone_permissions")
 
     /** Navigates to the section named by [key]; returns `false` if the key is unknown. */
     fun open(key: String): Boolean {
@@ -178,8 +178,11 @@ object Sections {
         when {
             k in places -> Ui.place = places.getValue(k)
             k in ANCHORS || k in SHEETS -> { Ui.place = Place.CONTROL; Ui.section = k }
+            k == "themes" || k == "theme" || k == "palette" -> { Ui.place = Place.CONTROL; Ui.section = "color" }
             k == "add_email" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.PICK }
-            k == "services" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES }
+            k == "services" || k == "models" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES }
+            k == "integrations" -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.APPS }
+            k in Connectors.GROUP_KEYS -> { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.GROUP + k }
             k == "phone_permissions" -> Ui.draft = Draft.current().apply { step = 1 }
             else -> return false
         }
@@ -346,7 +349,7 @@ fun Mark(done: Boolean) {
 @Composable
 fun Field(
     value: String, placeholder: String, modifier: Modifier = Modifier, onDone: () -> Unit = {}, onMic: (() -> Unit)? = null,
-    keyboard: androidx.compose.ui.text.input.KeyboardType? = null, hidden: Boolean = false, onChange: (String) -> Unit,
+    keyboard: androidx.compose.ui.text.input.KeyboardType? = null, hidden: Boolean = false, alert: Boolean = false, onChange: (String) -> Unit,
 ) {
     Row(
         modifier.fillMaxWidth().heightIn(min = 58.dp).glass(RoundedCornerShape(Dimens.control))
@@ -354,7 +357,7 @@ fun Field(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f).padding(vertical = 11.dp), contentAlignment = Alignment.CenterStart) {
-            if (value.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = Ink.slate)
+            if (value.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = if (alert) Ink.alert else Ink.slate)
             FieldText(value, onDone, keyboard, hidden, onChange)
         }
         if (onMic != null) LightDot(Glyphs.mic, t(R.string.app_say_it), 44.dp, onClick = onMic)

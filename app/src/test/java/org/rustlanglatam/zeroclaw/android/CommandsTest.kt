@@ -84,4 +84,17 @@ class CommandsTest {
         assertEquals(Command.NORMAL_MODE, Commands.of("normal mode"))
         assertEquals(Command.APP_MODE, Commands.of("modo app"))
     }
+
+    @Test fun theModelsTheIntegrationsAndTheColorThemesOpenByVoice() {
+        assertEquals(Command.MODELS, Commands.of("Ksandra, muéstrame la configuración de los modelos"))
+        assertEquals(Command.MODELS, Commands.of("abre los modelos de IA"))
+        assertEquals(Command.MODELS, Commands.of("show me the AI models"))
+        assertEquals(Command.INTEGRATIONS, Commands.of("muéstrame las integraciones"))
+        assertEquals(Command.THEMES, Commands.of("¡Muéstrame los themes de colores!"))
+        assertEquals(Command.THEMES, Commands.of("muéstrame los temas de colores"))
+        assertEquals(Command.THEMES, Commands.of("show me the color themes"))
+        assertEquals(Command.CONTROL, Commands.of("muéstrame la configuración"))
+        // A question that merely mentions them still goes to the agent.
+        assertEquals(null, Commands.of("qué modelos de IA conoces"))
+    }
 }

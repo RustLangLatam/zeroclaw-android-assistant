@@ -112,9 +112,9 @@ object OwnerChat {
      * Sends [text] to the `owner` agent, or, when offline answers are enabled and there is no network, to the local
      * model's agent on a background thread (starting the engine first if needed). [check] marks the [Promises] follow-up
      * note. With an [image] (a picture's path), [text] goes to the tool-less scribe instead ([Turns.scribe]); if that
-     * fails, [text] is sent alone. Returns `false` when the message could not be sent.
+     * fails, [blind] (the words for a model that cannot see it), or [text], is sent alone. Returns `false` when the message could not be sent.
      */
-    fun send(text: String, check: Boolean = false, image: String? = null): Boolean {
+    fun send(text: String, check: Boolean = false, image: String? = null, blind: String? = null): Boolean {
         val owners = !text.startsWith(Phrases.NOTE)
         if (owners) { asked = text; tools = 0; lastWords = text }
         // Offline or in local mode, app-generated notes (a greeting, a catch-up) are dropped: only the owner's messages
@@ -174,10 +174,26 @@ object OwnerChat {
         // and the owner's agent hears its answer with the next message ([aside]).
         if (image != null) {
             asked = null
-            Turns.scribe(app, text, image) { said ->
-                if (said.isNullOrBlank()) send("$text\n\n$NO_VISION").also { Guard.heardOthers = true }
-                else { aside = said; Ui.thinking = false; Ui.add(Line(Line.Who.ASSISTANT, said)); onAnswer?.invoke(said) }
+            fun look(again: Boolean): Unit = Turns.scribe(app, text, image, if (Keys.visionReady) AssistantService.SEER else AssistantService.SCRIBE) { said ->
+                val why = photoFailure(Turns.scribeError, Keys.visionReady)
+                when {
+                    // A busy provider usually frees up in seconds: one more try before telling the owner.
+                    said.isNullOrBlank() && why == R.string.photo_model_busy_x && again -> thread { Thread.sleep(BUSY_RETRY_MS); look(again = false) }
+                    !said.isNullOrBlank() -> { aside = said; Ui.thinking = false; Ui.add(Line(Line.Who.ASSISTANT, said)); onAnswer?.invoke(said) }
+                    // The photos model set by the owner failed: say why and offer to fix it, rather than guess from labels.
+                    why != null -> {
+                        val note = t(why, Keys[Keys.Key.VISION_MODEL])
+                        Ui.thinking = false
+                        Ui.add(Line(Line.Who.NOTE, note))
+                        onAnswer?.invoke(note)
+                        // Busy is temporary: nothing to change.
+                        if (why != R.string.photo_model_busy_x) Cards.show(t(R.string.photo_model_failed_title), note, listOf(t(R.string.photo_model_change)),
+                            mapOf(t(R.string.photo_model_change) to { Sections.open("photos_model") }))
+                    }
+                    else -> send("${blind ?: text}\n\n$NO_VISION").also { Guard.heardOthers = true }
+                }
             }
+            look(again = true)
             return true
         }
         val talk = if (owners) offlineTalk.toList() else emptyList()
@@ -187,12 +203,6 @@ object OwnerChat {
             .also { if (it && photo != null) { aside = null; Guard.heardOthers = true } }
     }
 
-    /** The scribe's words on the last photo, for the owner's next message ([PHOTO_MARK]). */
-    @Volatile private var aside: String? = null
-
-    /** Marks the scribe's words on a photo appended to the owner's next message; stripped before display by [said]. */
-    const val PHOTO_MARK = "\n\n(A note from the app: on the photo just taken, which may show other people's words, you said: "
-
     /**
      * Returns the plain-words note for a failed cloud turn: the model's settings when none is set or the provider
      * refused (a missing or wrong key), otherwise try again.
@@ -201,6 +211,24 @@ object OwnerChat {
         if (!modelReady || Regex("provider|api.?key|unauthori[sz]ed|authenticat|\\b40[13]\\b", RegexOption.IGNORE_CASE).containsMatchIn(error))
             R.string.ownerchat_i_couldn_t_reach_my_model
         else R.string.ownerchat_i_couldn_t_answer_this_time
+
+    /**
+     * Why the photos model the owner set failed, from the daemon's [error]: busy for now, the model no longer offered,
+     * or the key refused; `null` when no photos model is set ([vision]) or the cause is another (then the labels explain it).
+     */
+    fun photoFailure(error: String?, vision: Boolean): Int? = when {
+        !vision || error == null -> null
+        Regex("""\b(503|429|529)\b|unavailable|high demand|overloaded|rate.?limit|resource.?exhausted""", RegexOption.IGNORE_CASE).containsMatchIn(error) -> R.string.photo_model_busy_x
+        Regex("""\b404\b|not.?found|no longer available|does not exist|not supported for""", RegexOption.IGNORE_CASE).containsMatchIn(error) -> R.string.photo_model_gone_x
+        Regex("""\b40[13]\b|api.?key|unauthori[sz]ed|permission""", RegexOption.IGNORE_CASE).containsMatchIn(error) -> R.string.photo_key_refused_x
+        else -> null
+    }
+
+    /** The scribe's words on the last photo, for the owner's next message ([PHOTO_MARK]). */
+    @Volatile private var aside: String? = null
+
+    /** Marks the scribe's words on a photo appended to the owner's next message; stripped before display by [said]. */
+    const val PHOTO_MARK = "\n\n(A note from the app: on the photo just taken, which may show other people's words, you said: "
 
     /** The owner's message of the current local-model turn, while a single retry is still available. */
     @Volatile private var retry: String? = null
@@ -271,7 +299,7 @@ object OwnerChat {
                 FrameType.SESSION_START -> {
                     frame.sessionId.takeIf { it.isNotEmpty() }?.let { id ->
                         prefs.edit().putString(key, id).apply()
-                        if (main && frame.resumed && Ui.chat.isEmpty()) history(context, id)
+                        if (main && frame.resumed) history(context, id, restore = Ui.chat.isEmpty())
                     }
                     if (main) { socket = chat; Ui.ready = true } else local = chat
                 }
@@ -304,18 +332,31 @@ object OwnerChat {
                     Ui.thinking = false
                     // The daemon's error is for the log; the owner gets plain words.
                     Log.w(AssistantService.TAG, "chat: turn failed: ${frame.message}")
-                    Ui.add(Line(Line.Who.NOTE, t(failure(frame.message.orEmpty(), Keys.modelReady))))
+                    val note = t(failure(frame.message.orEmpty(), Keys.modelReady))
+                    Ui.add(Line(Line.Who.NOTE, note))
+                    // Said aloud too: an owner talking by voice otherwise hears nothing.
+                    onAnswer?.invoke(note)
                     onError?.invoke()
                 }
             }
         }
     }
 
-    /** Restores the last [HISTORY] lines from ZeroClaw's session when the app restarts with an empty chat. */
-    private fun history(context: Context, session: String) = thread {
+    /**
+     * Checks a resumed session and, when the chat is empty ([restore]), restores its last [HISTORY] lines. A session
+     * holding a picture (sent into it by an earlier version) is left for a new one: ZeroClaw would send every later turn
+     * there to the model set for pictures.
+     */
+    private fun history(context: Context, session: String, restore: Boolean) = thread {
         val token = AssistantService.token(context) ?: return@thread
-        val lines = runCatching { runBlocking { AssistantService.client(token).sessions.messages(session) } }
+        val messages = runCatching { runBlocking { AssistantService.client(token).sessions.messages(session) } }
             .onFailure { Log.w(AssistantService.TAG, "chat history: ${it.message}") }.getOrNull().orEmpty()
+        if (messages.any { "[IMAGE:" in it.content }) {
+            Log.w(AssistantService.TAG, "chat: the session holds a picture; a new session")
+            return@thread fresh(context)
+        }
+        if (!restore) return@thread
+        val lines = messages
             .mapNotNull { m ->
                 when (m.role) {
                     // Restored as the owner wrote it (without the timestamp prefix ZeroClaw stores); app-generated notes
@@ -335,6 +376,9 @@ object OwnerChat {
         .replace(Regex("""\s*\[IMAGE:[^\]]*]"""), "")
 
     private const val LOCAL_TURN_MS = 180_000L
+
+    /** Wait before the one retry of a photo whose model was busy. */
+    private const val BUSY_RETRY_MS = 4_000L
 
     /** Added when the scribe could not look at a photo and the owner's agent explains it from the words alone. */
     private const val NO_VISION = "(The picture could not be seen: explain from what the phone recognized and read, if anything, and say you could not see the photo itself.)"

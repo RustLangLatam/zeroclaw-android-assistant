@@ -1508,7 +1508,10 @@ class PhoneMcp(private val context: Context, private val port: Int) {
                     "Gives the lines to show in a card (show) as options that open each video.", listOf("query"), "query" to "string", "count" to "integer"),
                 tool("open_section", "Open a part of the app on screen for the owner, exactly that part (\"open the voice settings\", " +
                     "\"show me my connectors\"): section is one of home, interactions, activity, settings, rules, memory, photos, " +
-                    "files, news, connectors, email, add_email, phone_permissions; or a part of settings: presence, color, " +
+                    "files, news, connectors, email, add_email, phone_permissions; models (the AI models: language, photos, voice, their " +
+                    "providers and keys) or one of them alone: language_model, photos_model, natural_voice; integrations (web " +
+                    "search, YouTube and other apps) or one alone: web_search, videos; or a part of settings: presence, " +
+                    "color (the color themes or palettes), " +
                     "people, messages, voice, offline, cost, privacy, name, family, work, apps (the apps you read).",
                     listOf("section"), "section" to "string"),
                 tool("connect_email", "Connect one more of the owner's email accounts (they may have several) so you read all of it " +

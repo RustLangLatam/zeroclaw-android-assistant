@@ -79,7 +79,7 @@ and `run()` rewrites `config.toml` when it differs from `config.keys` in the pre
 | `zeroclaw.model` | `MODEL` | `[providers.models.<provider>.main|warm] model` | yes |
 | `zeroclaw.apiKey` | `MODEL_API_KEY` | the same sections' `api_key` | yes (the daemon starts without it; every turn fails) |
 | `zeroclaw.inputPerMTok`, `zeroclaw.outputPerMTok` | `MODEL_INPUT_PER_MTOK`, `MODEL_OUTPUT_PER_MTOK` | `[cost.rates…]` (`rates()`); both or neither | no: without them `usage` reports tokens, not dollars |
-| `zeroclaw.vision.provider`, `.model`, `.apiKey` | `VISION_PROVIDER`, `VISION_MODEL`, `VISION_API_KEY` | `[providers.models.<provider>.vision]`, `[multimodal]` (`vision()`), all three or none | no: without them a photo is explained from its labels and text |
+| `zeroclaw.vision.provider`, `.model`, `.apiKey` | `VISION_PROVIDER`, `VISION_MODEL`, `VISION_API_KEY` | `[providers.models.custom.vision]` and the `seer` agent (`vision()`), all three or none | no: without them a photo is explained from its labels and text |
 | `zeroclaw.search` | `SEARCH_PROVIDER` (default `duckduckgo`) | `[web_search] search_provider` | no |
 | `zeroclaw.searchKey` | `SEARCH_KEY` | `<provider>_api_key` (brave, tavily, jina, bocha), or `searxng_instance_url` for `searxng` (`searchKey()`) | no |
 | `youtube.apiKey` | `YOUTUBE_KEY` | `find_videos` ([phone-mcp.md](phone-mcp.md)) | no |

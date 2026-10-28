@@ -5,6 +5,7 @@
       "url": "wss://api.openai.com/v1/realtime",
       "model": "gpt-realtime-2.1-mini",
       "perMinute": "0.025",
+      "check": { "url": "https://api.openai.com/v1/models", "auth": "bearer" },
       "voices": ["marin", "cedar", "alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse"]
     }
   ]

@@ -20,9 +20,10 @@ references its issue (`Closes #N`) and updates the specs it changes.
 - Commits follow Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `ci:`, `chore:`), plain
   messages, **no attribution trailers of any kind**.
 - No AI vendor, model or assistant product names anywhere: code, comments, docs, commits, PRs. The model provider is
-  configuration in `local.properties` or chosen from ZeroClaw's catalog. The one exception is
-  `app/src/main/assets/voices.json`, the voice services the owner picks from, as data
-  ([ADR-0031](docs/adr/0031-voice-services-named-in-a-data-file.md)).
+  configuration in `local.properties` or chosen from ZeroClaw's catalog. The exceptions are two data files:
+  `app/src/main/assets/voices.json`, the voice services the owner picks from
+  ([ADR-0031](docs/adr/0031-voice-services-named-in-a-data-file.md)), and `app/src/main/assets/models.json`, the model
+  proposed for each provider ([ADR-0033](docs/adr/0033-recommended-models-in-a-data-file.md)).
 - No real personal names. The owner in examples and tests is **Milton**; fake contacts are Laura (work), Ana (family)
   and Pat (unknown).
 - Code, comments and docs in English.

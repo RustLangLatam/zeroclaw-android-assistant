@@ -306,6 +306,9 @@ object Turns {
 
     private val one = Semaphore(1)
 
+    /** The daemon's error for the last failed [scribe] turn; `null` after one that did not fail. */
+    @Volatile var scribeError: String? = null
+
     /**
      * Hands [text] from [sender] to the `third_party` agent in a new session; [done] receives the answer, or
      * `null` on failure or timeout. The message is framed as data: the agent's instructions and tools decide
@@ -345,18 +348,19 @@ object Turns {
      * Runs a turn not typed by the owner (a news briefing, the catch-up summary, reading an email aloud) on the
      * `scribe` agent, which has no tools, so third-party text in [prompt] cannot trigger actions (ADR-0018).
      * Uses its own session; [done] receives the answer, or `null` on failure or timeout. An [image] (a picture's path)
-     * is attached as ZeroClaw's `[IMAGE:…]` marker; a model that cannot see pictures hands it to the one set for them.
+     * is attached as ZeroClaw's `[IMAGE:…]` marker; [agent] is the scribe, or the seer on the photos model.
      */
-    fun scribe(context: Context, prompt: String, image: String? = null, done: (String?) -> Unit) {
+    fun scribe(context: Context, prompt: String, image: String? = null, agent: String = AssistantService.SCRIBE, done: (String?) -> Unit) {
+        scribeError = null
         // Past the owner's monthly budget the caller uses its own plain text.
         if (Budget.reached()) return done(null)
         val finished = java.util.concurrent.atomic.AtomicBoolean()
         fun finish(answer: String?) { if (finished.compareAndSet(false, true)) done(answer) }
-        val turn = open(context, AssistantService.SCRIBE, onFailure = { finish(null) }) { chat, frame ->
+        val turn = open(context, agent, onFailure = { finish(null) }) { chat, frame ->
             when (frame.type) {
                 FrameType.SESSION_START -> chat.send(Guard.inert(prompt) + image?.let { "\n[IMAGE:$it]" }.orEmpty())
                 FrameType.DONE -> { chat.close(); finish(frame.done?.fullResponse.orEmpty()) }
-                FrameType.ERROR -> { Log.w(AssistantService.TAG, "scribe turn failed: ${frame.message}"); chat.close(); finish(null) }
+                FrameType.ERROR -> { Log.w(AssistantService.TAG, "scribe turn failed: ${frame.message}"); scribeError = frame.message; chat.close(); finish(null) }
             }
         }
         // On timeout the caller (a briefing, the catch-up) falls back to its own text.
