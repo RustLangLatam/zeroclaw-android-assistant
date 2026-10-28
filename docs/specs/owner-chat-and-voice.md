@@ -24,8 +24,8 @@ decided (`Policy.kt`) nor where third-party turns run (`Turns.thirdParty`,
   regardless of the current language), everything else to the agent.
 - Voice in (`SpeechRecognizer`, open microphone, barge-in) and voice out (`TextToSpeech`, or the
   natural voice through `CloudVoice` with fallback).
-- Without internet: the offline agent on the local engine, or direct app actions, or a plain
-  statement of what is unavailable ([ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md)).
+- Without internet, or in local mode (no cloud model set, the local model downloaded): the offline agent
+  on the local engine, or direct app actions, or a plain statement of what is unavailable ([ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md)).
 - Withhold answers that claim an action no tool performed (`Promises`).
 - App-written owner turns (greeting, introduction), cards (`show`), the owner credential
   (`confirmOwner`), assistant mode and app mode (`setAppMode`), and sealed intents.
@@ -54,7 +54,7 @@ and failures through `onError`):
 | `SESSION_START` | store the session id (`session`, or `session-offline`) in `AssistantService.prefs`; `socket` set and `Ui.ready = true` for `owner`; a resumed session with an empty chat restores the last 30 user and assistant lines from `sessions.messages` |
 | `TOOL_CALL` | count the call; a tool in `PhoneMcp.OTHERS_WORDS` (including ZeroClaw's web tools) sets `Guard.heardOthers`; `Line(TOOL, Labels.tool(name, args))` |
 | `DONE` | `Promises` check (below); `Ui.thinking = false`; `Line(ASSISTANT, fullResponse)`; `onAnswer` speaks it when answers are read aloud (`Guard.voice`) or the question was spoken |
-| `ERROR` | `Ui.thinking = false`; `Line(NOTE, t(R.string.ownerchat_something_failed) + message)`; `onError` (listen again); on the offline agent, one retry in a new session |
+| `ERROR` | `Ui.thinking = false`; the daemon's message goes to the log only; the note is in plain words (`OwnerChat.failure`: check the model in Connectors › Services when none is set or the provider refused, otherwise try again); `onError` (listen again); on the offline agent, one retry in a new session |
 
 ## Configuration
 
@@ -179,6 +179,13 @@ What was said offline (`offlineTalk`) is appended to the owner's next online mes
 `OFFLINE_MARK` (stripped from displayed history by `OwnerChat.said`), so the online agent owns it.
 With offline answers off, the answer is `Offline.limited` (what is unavailable and how to enable
 it). App-written notes are not sent while offline. The owner's words are shown before any answer.
+
+**Local mode.** With internet but no cloud model set (`Keys.modelReady` false) and the local model ready,
+`Offline.now()` is also true: the owner's words go to the `offline` agent as above, going online does not
+stop the engine, and app-written notes are not sent. Home's line says "Local mode" ("I answer from the
+phone, more slowly"), the first missing item says Ksandra is in local mode and where to add a model, the
+model row in Connectors says "local mode", and the waiting and failure texts speak of the phone's model
+instead of the missing internet. Third-party turns still need the cloud model.
 
 **Promises** (`Promises`). When an answer to the owner's message claims an action was or will be
 done (`promises.claim` in the lexicon: done, set, sent, opened, "here it is", …) and no tool ran in

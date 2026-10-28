@@ -117,9 +117,9 @@ object OwnerChat {
     fun send(text: String, check: Boolean = false, image: String? = null): Boolean {
         val owners = !text.startsWith(Phrases.NOTE)
         if (owners) { asked = text; tools = 0; lastWords = text }
-        // Offline, app-generated notes (a greeting, a catch-up) are dropped: only the owner's messages and the
-        // promise check's note are worth the local model's time.
-        if (!Offline.online && !owners && !check) return false
+        // Offline or in local mode, app-generated notes (a greeting, a catch-up) are dropped: only the owner's messages
+        // and the promise check's note are worth the local model's time.
+        if ((!Offline.online || Offline.now()) && !owners && !check) return false
         if (Offline.now()) {
             thread(name = "owner-chat-local") {
                 // Timed from the request, including engine startup, since the owner waits for all of it.
@@ -144,7 +144,7 @@ object OwnerChat {
                         if (localSince == since) { localSince = 0; retry = null; failLocal(slow = true) }
                     }
                 }
-                else { Ui.thinking = false; Ui.add(Line(Line.Who.NOTE, t(R.string.ownerchat_without_internet_i_couldn_t_think))) }
+                else { Ui.thinking = false; Ui.add(Line(Line.Who.NOTE, t(if (Offline.online) R.string.ownerchat_the_phone_s_model_didn_t_start else R.string.ownerchat_without_internet_i_couldn_t_think))) }
             }
             return true
         }
@@ -193,6 +193,15 @@ object OwnerChat {
     /** Marks the scribe's words on a photo appended to the owner's next message; stripped before display by [said]. */
     const val PHOTO_MARK = "\n\n(A note from the app: on the photo just taken, which may show other people's words, you said: "
 
+    /**
+     * Returns the plain-words note for a failed cloud turn: the model's settings when none is set or the provider
+     * refused (a missing or wrong key), otherwise try again.
+     */
+    fun failure(error: String, modelReady: Boolean) =
+        if (!modelReady || Regex("provider|api.?key|unauthori[sz]ed|authenticat|\\b40[13]\\b", RegexOption.IGNORE_CASE).containsMatchIn(error))
+            R.string.ownerchat_i_couldn_t_reach_my_model
+        else R.string.ownerchat_i_couldn_t_answer_this_time
+
     /** The owner's message of the current local-model turn, while a single retry is still available. */
     @Volatile private var retry: String? = null
 
@@ -211,8 +220,12 @@ object OwnerChat {
 
     private fun failLocal(slow: Boolean = false) {
         Ui.thinking = false
-        val said = if (slow) t(R.string.ownerchat_without_internet_i_m_thinking_too)
-        else t(R.string.ownerchat_without_internet_i_couldn_t_answer)
+        val said = when {
+            slow && Offline.online -> t(R.string.ownerchat_on_the_phone_i_m_thinking_too_slowly)
+            slow -> t(R.string.ownerchat_without_internet_i_m_thinking_too)
+            Offline.online -> t(R.string.ownerchat_with_the_phone_s_model_i_couldn_t_answer)
+            else -> t(R.string.ownerchat_without_internet_i_couldn_t_answer)
+        }
         Ui.add(Line(Line.Who.ASSISTANT, said))
         onAnswer?.invoke(said)
         onError?.invoke()
@@ -289,7 +302,9 @@ object OwnerChat {
                     // message once in a new session.
                     if (!main) { if (!retryLocal()) failLocal(); return@open }
                     Ui.thinking = false
-                    Ui.add(Line(Line.Who.NOTE, t(R.string.ownerchat_something_failed) + frame.message))
+                    // The daemon's error is for the log; the owner gets plain words.
+                    Log.w(AssistantService.TAG, "chat: turn failed: ${frame.message}")
+                    Ui.add(Line(Line.Who.NOTE, t(failure(frame.message.orEmpty(), Keys.modelReady))))
                     onError?.invoke()
                 }
             }

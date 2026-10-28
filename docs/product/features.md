@@ -116,7 +116,7 @@ built. Component internals are in the [specs](../specs/README.md); permissions i
 
 | Feature | Description | Status |
 |---|---|---|
-| Offline answers | Opt-in download of a small local model (about 1 GB, on Wi-Fi), run by `llama-server` on the phone ([ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md)) | Implemented |
+| Offline answers | Opt-in download of a small local model (about 1 GB, on Wi-Fi), run by `llama-server` on the phone ([ADR-0025](../adr/0025-an-offline-agent-on-a-local-model.md)); with no cloud model set it also answers online ("local mode") | Implemented |
 | Basics without a model | Reminders, alarms, next alarm, today's calendar, weather, opening an app handled in code | Implemented |
 | Prompt cache | `--cache-reuse` and a saved slot restored at engine start, so the prompt is not reprocessed | Implemented |
 | Continuity | When the connection returns, the online agent knows what was said offline | Implemented |
