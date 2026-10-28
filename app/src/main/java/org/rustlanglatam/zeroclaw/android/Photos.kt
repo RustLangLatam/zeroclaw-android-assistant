@@ -52,6 +52,16 @@ object Photos {
         return listOfNotNull(period, what?.trim()?.takeIf { it.isNotEmpty() }, t(R.string.photos_with_you).takeIf { withPeople }).joinToString(" · ")
     }
 
+    /**
+     * Returns labels for the text a photo contains, so "the receipt" or "the document" finds it later: a bill
+     * ([Shared.read]) is a Receipt, any other text a Document; no text, no labels.
+     */
+    fun textLabels(text: String, today: LocalDate = LocalDate.now()): Set<String> = when {
+        text.isBlank() -> emptySet()
+        Shared.read(text, today, Inbox.english(text)).kind == Shared.Kind.BILL -> setOf("Receipt", "Text")
+        else -> setOf("Document", "Text")
+    }
+
     /** Returns whether [photo] has any of the [wanted] labels (any photo when empty) and, if [withPeople], at least one face. */
     fun matches(photo: Photo, wanted: Set<String>, withPeople: Boolean): Boolean =
         (wanted.isEmpty() || photo.labels.any { label -> wanted.any { it.equals(label, ignoreCase = true) } }) && (!withPeople || photo.faces > 0)

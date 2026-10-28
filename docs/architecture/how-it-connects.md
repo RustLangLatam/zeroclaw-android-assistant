@@ -181,7 +181,7 @@ Owner tools (`PhoneMcp.TOOLS`), by area:
 | Contacts and messages | `search_contacts`, `add_contact`, `edit_contact`, `delete_contact`, `set_contact_group`, `list_messages`, `send_message`, `act_on` |
 | Email | `list_emails`, `read_email`, `draft_email`, `connect_email`, `email_mark_read`, `email_archive`, `email_delete`, `send_email` |
 | Apps and media | `list_apps`, `open_app`, `play_media`, `media_control`, `find_videos` |
-| Photos and files | `find_photos`, `find_files` |
+| Photos and files | `find_photos`, `take_photo`, `find_files` |
 | News and weather | `news`, `follow_topic`, `unfollow_topic`, `list_topics`, `weather` |
 | Memory | `remember`, `forget`, `recall`, `how_well_i_know_you`, `set_address` |
 | Device | `device_setting`, `device_status` |

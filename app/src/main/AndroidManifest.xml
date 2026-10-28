@@ -110,6 +110,14 @@
             android:name=".NewsReceiver"
             android:exported="false" />
 
+        <!-- "Take a photo": the camera app takes it, the owner presses the shutter; not exported. -->
+        <activity
+            android:name=".PhotoActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=".photo"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <!-- "Share with Ksandra": a picture, a PDF or text, read on the phone and offered as a card. -->
         <activity
             android:name=".ShareActivity"

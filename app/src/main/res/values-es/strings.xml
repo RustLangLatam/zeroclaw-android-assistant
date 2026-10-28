@@ -947,6 +947,7 @@
     <string name="connectors_model_name">Modelo</string>
     <string name="connectors_api_key">Clave de API</string>
     <string name="connectors_api_key_or_url">Clave de API (o la URL de la instancia para searxng)</string>
+    <string name="connectors_photos">Fotos</string>
     <string name="connectors_web_search">Búsqueda web</string>
     <string name="connectors_videos">Opciones de video (YouTube)</string>
     <string name="connectors_natural_voice">Voz natural</string>
@@ -1048,6 +1049,15 @@
     <string name="simple_off">De vuelta al modo normal.</string>
     <string name="mainactivity_connect_x">Leer todo el correo de %1$s</string>
     <string name="mainactivity_not_confirmed_nothing_connected">No confirmado: no se conectó nada.</string>
+    <string name="act_take_a_photo">Tomar una foto</string>
+    <string name="photo_saved_title">Foto guardada</string>
+    <string name="photo_saved">En tu galería, con etiquetas para encontrarla después.</string>
+    <string name="photo_question">Guardada. ¿Te la explico o solo la guardo?</string>
+    <string name="photo_explain">Explícamela</string>
+    <string name="photo_keep">Solo guardarla</string>
+    <string name="photo_explain_prompt">Acabo de tomar esta foto. Dime en pocas palabras qué muestra y lo que sea útil de ella; si es un recibo, un documento o una cita, propón un recordatorio o una entrada en la agenda solo para que yo la confirme.</string>
+    <string name="photo_labels_seen">Lo que el teléfono reconoció en ella (etiquetas en inglés):</string>
+    <string name="photo_text_read">El texto que el teléfono leyó en ella:</string>
     <string name="connectors_server_url">URL del servidor (https://…)</string>
     <string name="connectors_advanced">Avanzado</string>
     <string name="connectors_choose">Elegir</string>

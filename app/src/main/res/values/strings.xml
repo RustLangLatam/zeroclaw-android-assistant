@@ -947,6 +947,7 @@
     <string name="connectors_model_name">Model</string>
     <string name="connectors_api_key">API key</string>
     <string name="connectors_api_key_or_url">API key (or the instance URL for searxng)</string>
+    <string name="connectors_photos">Photos</string>
     <string name="connectors_web_search">Web search</string>
     <string name="connectors_videos">Video options (YouTube)</string>
     <string name="connectors_natural_voice">Natural voice</string>
@@ -1048,6 +1049,15 @@
     <string name="simple_off">Back to normal mode.</string>
     <string name="mainactivity_connect_x">Read all the email of %1$s</string>
     <string name="mainactivity_not_confirmed_nothing_connected">Not confirmed: nothing was connected.</string>
+    <string name="act_take_a_photo">Take a photo</string>
+    <string name="photo_saved_title">Photo saved</string>
+    <string name="photo_saved">In your gallery, labeled so you can find it later.</string>
+    <string name="photo_question">Saved. Shall I explain it, or just keep it?</string>
+    <string name="photo_explain">Explain it</string>
+    <string name="photo_keep">Just keep it</string>
+    <string name="photo_explain_prompt">I just took this photo. Tell me in a few words what it shows and anything useful about it; if it is a receipt, a document or an appointment, propose a reminder or a calendar entry only for me to confirm.</string>
+    <string name="photo_labels_seen">What the phone recognized in it (labels in English):</string>
+    <string name="photo_text_read">The text the phone read in it:</string>
     <string name="connectors_server_url">Server URL (https://…)</string>
     <string name="connectors_advanced">Advanced</string>
     <string name="connectors_choose">Choose</string>

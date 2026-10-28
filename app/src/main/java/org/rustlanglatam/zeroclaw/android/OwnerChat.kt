@@ -111,9 +111,10 @@ object OwnerChat {
     /**
      * Sends [text] to the `owner` agent, or, when offline answers are enabled and there is no network, to the local
      * model's agent on a background thread (starting the engine first if needed). [check] marks the [Promises] follow-up
-     * note. Returns `false` when the message could not be sent.
+     * note. With an [image] (a picture's path), [text] goes to the tool-less scribe instead ([Turns.scribe]); if that
+     * fails, [text] is sent alone. Returns `false` when the message could not be sent.
      */
-    fun send(text: String, check: Boolean = false): Boolean {
+    fun send(text: String, check: Boolean = false, image: String? = null): Boolean {
         val owners = !text.startsWith(Phrases.NOTE)
         if (owners) { asked = text; tools = 0; lastWords = text }
         // Offline or in local mode, app-generated notes (a greeting, a catch-up) are dropped: only the owner's messages
@@ -134,7 +135,7 @@ object OwnerChat {
                     return@thread
                 }
                 if (owners) retry = text
-                val ok = Offline.ensure(app) && (local ?: openLocal())?.let { runCatching { it.send(Offline.toSmall(text)) }.isSuccess } == true
+                val ok = Offline.ensure(app) && (local ?: openLocal())?.let { runCatching { it.send(Offline.toSmall(Guard.inert(text))) }.isSuccess } == true
                 if (ok) {
                     val since = localSince
                     // A turn that exceeds [LOCAL_TURN_MS] is reported, not retried: the engine is still busy with it.
@@ -168,10 +169,29 @@ object OwnerChat {
             onAnswer?.invoke(Offline.limited)
             return true
         }
+        // A picture never enters the owner's session: ZeroClaw keeps it in the history and sends every later turn to the
+        // model set for pictures. The scribe looks at it in a session of its own, with no tools to act on what it sees,
+        // and the owner's agent hears its answer with the next message ([aside]).
+        if (image != null) {
+            asked = null
+            Turns.scribe(app, text, image) { said ->
+                if (said.isNullOrBlank()) send("$text\n\n$NO_VISION").also { Guard.heardOthers = true }
+                else { aside = said; Ui.thinking = false; Ui.add(Line(Line.Who.ASSISTANT, said)); onAnswer?.invoke(said) }
+            }
+            return true
+        }
         val talk = if (owners) offlineTalk.toList() else emptyList()
-        return (socket?.let { runCatching { it.send(withOffline(text, talk)) }.isSuccess } ?: false)
+        val photo = aside?.takeIf { owners }
+        return (socket?.let { runCatching { it.send(Guard.inert(withOffline(text, talk) + photo?.let { "$PHOTO_MARK${it.take(1500)})" }.orEmpty())) }.isSuccess } ?: false)
             .also { if (it) { offlineTalk.removeAll(talk.toSet()); lastFrame = System.currentTimeMillis(); saidSlow = false; turnAt = lastFrame } }
+            .also { if (it && photo != null) { aside = null; Guard.heardOthers = true } }
     }
+
+    /** The scribe's words on the last photo, for the owner's next message ([PHOTO_MARK]). */
+    @Volatile private var aside: String? = null
+
+    /** Marks the scribe's words on a photo appended to the owner's next message; stripped before display by [said]. */
+    const val PHOTO_MARK = "\n\n(A note from the app: on the photo just taken, which may show other people's words, you said: "
 
     /**
      * Returns the plain-words note for a failed cloud turn: the model's settings when none is set or the provider
@@ -311,9 +331,13 @@ object OwnerChat {
     }
 
     /** Returns a stored message as sent: without ZeroClaw's "[CURRENT DATE & TIME: …]" prefix and the offline transcript. */
-    fun said(stored: String) = stored.replaceFirst(Regex("""^\s*\[CURRENT DATE & TIME:[^\]]*]\s*"""), "").trimStart().substringBefore(OFFLINE_MARK)
+    fun said(stored: String) = stored.replaceFirst(Regex("""^\s*\[CURRENT DATE & TIME:[^\]]*]\s*"""), "").trimStart().substringBefore(OFFLINE_MARK).substringBefore(PHOTO_MARK)
+        .replace(Regex("""\s*\[IMAGE:[^\]]*]"""), "")
 
     private const val LOCAL_TURN_MS = 180_000L
+
+    /** Added when the scribe could not look at a photo and the owner's agent explains it from the words alone. */
+    private const val NO_VISION = "(The picture could not be seen: explain from what the phone recognized and read, if anything, and say you could not see the photo itself.)"
 
     /** A cloud turn with no frame for this long says it is still working. */
     private const val SLOW_MS = 25_000L

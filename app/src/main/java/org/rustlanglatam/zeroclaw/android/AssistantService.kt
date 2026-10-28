@@ -396,8 +396,26 @@ class AssistantService : Service() {
             temperature = 0.75
             max_tokens = 1500
 
-        """.trimIndent() + "\n\n" + rates() + agents + "\n" + scribe + "\n" + offline() + "\n" + EmailAccounts.config(EmailAccounts.accounts)
+        """.trimIndent() + "\n\n" + vision() + rates() + agents + "\n" + scribe + "\n" + offline() + "\n" + EmailAccounts.config(EmailAccounts.accounts)
     }
+
+    /**
+     * A model that can see pictures, when the owner set one: ZeroClaw sends a message with a photo to it when the main
+     * model cannot see pictures, and every other message to the main model.
+     */
+    private fun vision(): String = if (!Keys.visionReady) "".also {
+        Log.i(TAG, "config: no photos model; missing ${listOf(Keys.Key.VISION_PROVIDER, Keys.Key.VISION_MODEL, Keys.Key.VISION_KEY).filter { Keys[it].isBlank() }}")
+    } else """
+        [providers.models.${Keys[Keys.Key.VISION_PROVIDER]}.vision]
+        model = "${Keys[Keys.Key.VISION_MODEL]}"
+        api_key = "${Keys[Keys.Key.VISION_KEY]}"
+        max_tokens = 1500
+
+        [multimodal]
+        vision_model_provider = "${Keys[Keys.Key.VISION_PROVIDER]}.vision"
+        vision_model = "${Keys[Keys.Key.VISION_MODEL]}"
+
+    """.trimIndent() + "\n\n"
 
     /**
      * Builds the config of the offline agent (ADR-0025), which serves the owner's chat through the on-device model

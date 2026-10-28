@@ -18,3 +18,8 @@
 -dontwarn java.beans.**
 -dontwarn javax.security.sasl.**
 -dontwarn javax.naming.**
+# On-device vision (photo labels, faces, text): ML Kit finds its components by reflection; without these, an
+# optimized build fails on the first InputImage with a null component.
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_** { *; }
+-keep class com.google.android.gms.internal.mlkit_common.** { *; }

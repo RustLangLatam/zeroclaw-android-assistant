@@ -278,6 +278,7 @@ class MainActivity : ComponentActivity() {
         approveIntent(intent)
         listenIntent(intent)
         sharedIntent(intent)
+        photoIntent(intent)
         intent.getIntExtra("mailOffer", -1).takeIf { it >= 0 }?.let { id ->
             intent.removeExtra("mailOffer")
             Shares.mails[id]?.let { mail ->
@@ -310,6 +311,31 @@ class MainActivity : ComponentActivity() {
         Shares.offer(text, speak = { runOnUiThread { speak(it) } }, ask = { shared ->
             runOnUiThread { send(t(R.string.share_ask_prompt) + "\n\n" + shared, byVoice = false) }
         })
+    }
+
+    /**
+     * After [PhotoActivity]: the photo is saved and labeled; asks whether to explain it or just keep it. The photo
+     * leaves the phone only for an explanation, and only to a cloud model (the local one reads its text instead).
+     */
+    private fun photoIntent(intent: Intent) {
+        if (!intent.getBooleanExtra("photo", false)) return
+        intent.removeExtra("photo")
+        val (id, labels, text) = PhotoActivity.last ?: return
+        PhotoActivity.last = null
+        val read = text.lines().map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" ")
+        val explain = t(R.string.photo_explain)
+        val keep = t(R.string.photo_keep)
+        Cards.show(t(R.string.photo_saved_title), t(R.string.photo_saved) + read.take(200).takeIf { it.isNotEmpty() }?.let { "\n\n> $it" }.orEmpty(), listOf(explain, keep), mapOf(
+            explain to {
+                val small = PhoneGallery(this).small(id).takeIf { it.exists() && !Offline.now() }
+                val prompt = t(R.string.photo_explain_prompt) +
+                    labels.takeIf { it.isNotEmpty() }?.let { "\n\n" + t(R.string.photo_labels_seen) + " " + it.joinToString(", ") }.orEmpty() +
+                    read.take(1500).takeIf { it.isNotEmpty() }?.let { "\n\n" + t(R.string.photo_text_read) + "\n" + it }.orEmpty()
+                runOnUiThread { send(prompt, byVoice = Guard.voice, image = small?.path) }
+            },
+            keep to {},
+        ))
+        remark(t(R.string.photo_question))
     }
 
     private fun mailIntent(intent: Intent) {
@@ -553,8 +579,9 @@ class MainActivity : ComponentActivity() {
      * never sent; anything else is sent to the `owner` agent.
      *
      * @param from the UI element tapped to produce [text], if any; the chat line is then marked as a tap.
+     * @param image a picture on the phone for the model to see along with [text]; not shown in the chat.
      */
-    fun send(text: String, byVoice: Boolean = false, from: String? = null) {
+    fun send(text: String, byVoice: Boolean = false, from: String? = null, image: String? = null) {
         val trimmed = text.trim()
         Commands.of(trimmed)?.let { return act(it, byVoice) }
         if (trimmed.isEmpty() || OwnerChat.socket == null) return
@@ -569,7 +596,7 @@ class MainActivity : ComponentActivity() {
         // Added before sending so that an immediate local answer (e.g. offline) appears after it.
         add(Line(Line.Who.ME, trimmed, via = if (from != null) Line.Via.TAP else if (byVoice) Line.Via.VOICE else Line.Via.TYPED, from = from))
         Ui.thinking = true
-        OwnerChat.send(trimmed)
+        OwnerChat.send(trimmed, image = image)
         // Opens the cloud voice connection while the agent is processing, to reduce speech latency.
         if (Guard.voice || byVoice) CloudVoice.warm(this)
     }

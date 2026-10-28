@@ -54,7 +54,7 @@ either.
 | `CALENDAR_READ` | personal read | `list_events`, `free_time` | owner, all, act |
 | `CALENDAR_WRITE` | internal | `add_event`, `move_event` | owner, all, act_notify |
 | `APPS_READ` | personal read | `list_apps` | owner, all, act |
-| `APP_OPEN` | internal | `open_app`, `play_media` | owner, all, act |
+| `APP_OPEN` | internal | `open_app`, `play_media`, `take_photo` | owner, all, act |
 | `MEDIA_CONTROL` | internal | `media_control` | owner, all, act |
 | `MEMORY` | internal | `remember`, `forget`, `recall`, `how_well_i_know_you`, `set_address` | owner, all, act |
 | `EMAIL_READ` | personal read | `list_emails`, `read_email` | owner, all, act |
@@ -255,6 +255,13 @@ Mitigations in code:
   `RULES`, `CONTACT_GROUPS`).
 - `web_fetch` is limited to news and reference domains, so text read elsewhere cannot direct the
   agent to send data to an arbitrary page.
+- ZeroClaw loads any file named by a media marker (`[IMAGE:/path]`) in a message or a tool result and
+  sends it to the model. `Guard.inert` breaks such markers in third-party turns, scribe prompts, every
+  tool result and the owner's chat text, so a message cannot make a stranger's turn see the owner's
+  photos; only the app adds a marker, for a photo the owner asked to explain, and only in a turn of the
+  tool-less `scribe` ([ADR-0032](../adr/0032-photos-seen-on-the-phone-explained-on-request.md)). Its answer reaches
+  the owner's agent marked as possibly holding other people's words, and that turn counts as having read them
+  (`Guard.heardOthers`).
 
 Internal tools (device controls, reminders, memory, following a topic) are `ACT` by default.
 

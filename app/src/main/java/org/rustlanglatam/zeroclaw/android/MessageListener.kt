@@ -331,7 +331,7 @@ object Turns {
         show("← $sender: $text")
         val turn = open(context, "third_party", onFailure = { finish(null) }) { chat, frame ->
             when (frame.type) {
-                FrameType.SESSION_START -> chat.send("$sender wrote to ${Policy.owner}:\n$text\n\n(Your answer goes to $sender.)")
+                FrameType.SESSION_START -> chat.send(Guard.inert("$sender wrote to ${Policy.owner}:\n$text\n\n(Your answer goes to $sender.)"))
                 FrameType.TOOL_CALL -> show("  · ${frame.name} ${frame.args}")
                 FrameType.DONE -> { val answer = frame.done?.fullResponse.orEmpty(); show("→ $sender: $answer"); chat.close(); finish(answer) }
                 FrameType.ERROR -> { show("Error: ${frame.message}"); chat.close(); finish(null) }
@@ -344,18 +344,19 @@ object Turns {
     /**
      * Runs a turn not typed by the owner (a news briefing, the catch-up summary, reading an email aloud) on the
      * `scribe` agent, which has no tools, so third-party text in [prompt] cannot trigger actions (ADR-0018).
-     * Uses its own session; [done] receives the answer, or `null` on failure or timeout.
+     * Uses its own session; [done] receives the answer, or `null` on failure or timeout. An [image] (a picture's path)
+     * is attached as ZeroClaw's `[IMAGE:…]` marker; a model that cannot see pictures hands it to the one set for them.
      */
-    fun scribe(context: Context, prompt: String, done: (String?) -> Unit) {
+    fun scribe(context: Context, prompt: String, image: String? = null, done: (String?) -> Unit) {
         // Past the owner's monthly budget the caller uses its own plain text.
         if (Budget.reached()) return done(null)
         val finished = java.util.concurrent.atomic.AtomicBoolean()
         fun finish(answer: String?) { if (finished.compareAndSet(false, true)) done(answer) }
         val turn = open(context, AssistantService.SCRIBE, onFailure = { finish(null) }) { chat, frame ->
             when (frame.type) {
-                FrameType.SESSION_START -> chat.send(prompt)
+                FrameType.SESSION_START -> chat.send(Guard.inert(prompt) + image?.let { "\n[IMAGE:$it]" }.orEmpty())
                 FrameType.DONE -> { chat.close(); finish(frame.done?.fullResponse.orEmpty()) }
-                FrameType.ERROR -> { chat.close(); finish(null) }
+                FrameType.ERROR -> { Log.w(AssistantService.TAG, "scribe turn failed: ${frame.message}"); chat.close(); finish(null) }
             }
         }
         // On timeout the caller (a briefing, the catch-up) falls back to its own text.
