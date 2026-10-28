@@ -1290,7 +1290,7 @@ class MainActivity : ComponentActivity() {
     /** Returns the missing permissions, most important first, each with a localized message (the home screen shows one at a time). */
     fun lacking(): List<Missing> = buildList {
         val unlock = t(R.string.mainactivity_first_in_ksandra_s_info_menu)
-        if (!Keys.modelReady) add(Missing(t(R.string.mainactivity_i_have_no_model_to_think)) { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES })
+        if (!Keys.modelReady) add(Missing(t(if (Offline.wanted && Offline.ready) R.string.mainactivity_i_m_in_local_mode else R.string.mainactivity_i_have_no_model_to_think)) { Ui.place = Place.CONNECTORS; Ui.connector = Connectors.SERVICES })
         if (Inbox.apps.isNotEmpty() && !listening()) add(Missing(
             t(R.string.mainactivity_i_can_t_read_your_messages) +
                 (if (restricted()) unlock else t(R.string.mainactivity_turn_it_on_for_ksandra)),

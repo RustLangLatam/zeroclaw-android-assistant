@@ -1,6 +1,7 @@
 package org.rustlanglatam.zeroclaw.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -18,6 +19,24 @@ class OfflineTest {
         Offline.progress = 0.42f
         try { assertEquals("Descargando · 42 %", Offline.status) } finally { Offline.progress = null }
         assertEquals(if (Offline.configured) "Apagado" else t(R.string.offline_not_configured), Offline.status)
+    }
+
+    @Test fun localModeWhenNoCloudModelIsSet() {
+        // Offline: the local model answers when it is wanted and ready, as before.
+        assertTrue(Offline.local(online = false, wanted = true, ready = true, cloud = true))
+        // Online without a cloud model: local mode.
+        assertTrue(Offline.local(online = true, wanted = true, ready = true, cloud = false))
+        // Online with a cloud model, or without the local model: the cloud (or nothing) answers.
+        assertFalse(Offline.local(online = true, wanted = true, ready = true, cloud = true))
+        assertFalse(Offline.local(online = true, wanted = true, ready = false, cloud = false))
+        assertFalse(Offline.local(online = false, wanted = false, ready = true, cloud = false))
+    }
+
+    @Test fun failuresInPlainWords() {
+        val refused = "the model provider deepseek.warm returned 401 Unauthorized"
+        assertEquals(R.string.ownerchat_i_couldn_t_reach_my_model, OwnerChat.failure(refused, modelReady = true))
+        assertEquals(R.string.ownerchat_i_couldn_t_reach_my_model, OwnerChat.failure("timeout", modelReady = false))
+        assertEquals(R.string.ownerchat_i_couldn_t_answer_this_time, OwnerChat.failure("connection reset", modelReady = true))
     }
 
     @Test fun theChoiceIsSaved() {
