@@ -456,7 +456,6 @@
     <string name="offline_your_next_alarm_is_x_at">Your next alarm is %1$s at %%s:%%s.</string>
     <string name="ownerchat_still_working">Still working on it…</string>
     <string name="ownerchat_no_answer_try_again">I got no answer this time; ask me again.</string>
-    <string name="ownerchat_something_failed">"Something failed: "</string>
     <string name="ownerchat_without_internet_i_couldn_t_answer">Without internet I couldn\'t answer this time; try saying it another way.</string>
     <string name="ownerchat_without_internet_i_couldn_t_think">Without internet I couldn\'t think: the small brain didn\'t start.</string>
     <string name="ownerchat_without_internet_i_m_thinking_too">Without internet I\'m thinking too slowly on this phone; try something shorter, or when the connection is back.</string>
@@ -1059,4 +1058,13 @@
     <string name="connectors_api_key_of_x">API key of %1$s</string>
     <string name="connectors_voice_provider">Voice provider</string>
     <string name="connectors_other_my_own_url">Other (my own URL)</string>
+    <string name="offline_thinking_on_the_phone_x_s">Thinking on the phone… %1$s s</string>
+    <string name="ownerchat_the_phone_s_model_didn_t_start">The phone\'s model didn\'t start, so I couldn\'t think.</string>
+    <string name="ownerchat_on_the_phone_i_m_thinking_too_slowly">I\'m thinking too slowly on this phone; try something shorter, or add a model in Connectors › Services.</string>
+    <string name="ownerchat_with_the_phone_s_model_i_couldn_t_answer">With the phone\'s model I couldn\'t answer this time; try saying it another way.</string>
+    <string name="ownerchat_i_couldn_t_reach_my_model">I couldn\'t reach my model: check it in Connectors › Services.</string>
+    <string name="ownerchat_i_couldn_t_answer_this_time">I couldn\'t answer this time; try again in a moment.</string>
+    <string name="mainactivity_i_m_in_local_mode">I\'m in local mode: I answer with the model on this phone, more slowly and with fewer abilities. For full answers, add a model in Connectors › Services.</string>
+    <string name="screens_local_mode">Local mode</string>
+    <string name="connectors_not_set_local_mode">Not set: local mode, with the phone\'s model</string>
 </resources>

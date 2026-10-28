@@ -103,7 +103,7 @@ fun ConnectorsPlace(ui: MainActivity, onBack: () -> Unit) {
             )
             SectionLabel(t(R.string.connectors_services))
             // Computed here, not inside the panel's content, so a save (which bumps Ui.tick) redraws it.
-            val model = if (Keys.modelReady) "${ModelCatalog.label(Keys[Keys.Key.MODEL_PROVIDER])} · ${Keys[Keys.Key.MODEL]}" else t(R.string.connectors_not_set_i_can_t_think)
+            val model = if (Keys.modelReady) "${ModelCatalog.label(Keys[Keys.Key.MODEL_PROVIDER])} · ${Keys[Keys.Key.MODEL]}" else if (Offline.wanted && Offline.ready) t(R.string.connectors_not_set_local_mode) else t(R.string.connectors_not_set_i_can_t_think)
             Panel {
                 Item(
                     t(R.string.connectors_model),
